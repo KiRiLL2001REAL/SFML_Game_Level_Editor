@@ -21,15 +21,15 @@ namespace edt {
 	};
 
 	struct tEvent {
-		enum types { Nothing, Mouse, Keyboard, Broadcast, ShowText };
+		enum class types { Nothing, Mouse, Keyboard, Broadcast, Button };
 
-		enum codes {
+		enum class codes {
 			Activate, Deactivate, Show, Hide,
 			Move, Adopt, Delete, CloseApplication,
 			MouseMoved, MouseButton
 		};
 
-		unsigned int type = types::Nothing; // Из какой сферы событие (тип)
+		unsigned int type = static_cast<int>(types::Nothing); // Из какой сферы событие (тип)
 		unsigned int code = 0; // Код события (опционально)
 		tObject* from = nullptr;
 		tObject* address = nullptr;
@@ -155,9 +155,7 @@ namespace edt {
 	};
 
 	class tDesktop : public tGroup {
-	protected:
-		enum screen_codes { Menu, MapEditor, NPCEditor };
-		
+	protected:		
 		std::string path_to_folder;	// Путь до рабочей папки
 		sf::RenderWindow window;	// Главное окно
 		sf::Font font_default;		// Шрифт по умолчанию
@@ -214,6 +212,8 @@ namespace edt {
 	protected:
 		const unsigned char side_offset;
 
+		int self_code;						// Код, который посылает кнопка при нажатии на неё
+
 		sf::RenderTexture render_texture;	// Текстура
 		sf::VertexArray render_squad;		// Прямоугольник отрисовки
 		bool custom_skin_loaded;			// Флаг. Загружен ли пользовательский скин кнопки?
@@ -222,7 +222,7 @@ namespace edt {
 		sf::Vector2u text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		
 	public:
-		enum alignment_type { atLeft, atMiddle, atRight };
+		enum class alignment_type { Left, Middle, Right };
 
 		tButton(sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button");
 		virtual ~tButton();
@@ -233,6 +233,7 @@ namespace edt {
 		void loadCustomSkin(std::string path_to_skin);
 		void setAlignment(char new_alignment);
 		void setTextOffset(sf::Vector2u new_offset);
+		void setCode(int new_code);
 
 		bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();

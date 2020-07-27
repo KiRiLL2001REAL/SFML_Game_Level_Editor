@@ -3,36 +3,12 @@
 #include "other.h"
 #include "editor.h"
 
-class tCloseProgramButton : public edt::tButton {
-public:
-	tCloseProgramButton(sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button") :
-		edt::tButton(rect, text)
-	{
-	};
-
-	virtual void handleEvent(edt::tEvent& e) {
-		tButton::handleEvent(e);
-		switch (e.type) {
-		case edt::tEvent::types::Mouse:
-			switch (e.code) {
-			case edt::tEvent::codes::MouseButton:
-				if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
-					pointIsInsideMe({ e.mouse.x, e.mouse.y }))
-				{
-					e.type = edt::tEvent::types::Broadcast;
-					e.code = edt::tEvent::codes::CloseApplication;
-					e.address = nullptr;
-					putEvent(e);
-					clearEvent(e);
-				}
-				break;
-			}
-			break;
-		}
-	};
-};
+const unsigned char code_about_paragraph = 100;
 
 class myDesktop : public edt::tDesktop {
+protected:
+	enum class screen_codes { Menu, MapEditor, NPCEditor };
+
 public:
 	myDesktop(std::string path_to_folder) : edt::tDesktop(path_to_folder) {};
 	~myDesktop() { std::cout << "~myDesktop done.\n"; };
@@ -43,13 +19,13 @@ public:
 		edt::tRenderRect* render = new edt::tRenderRect(sf::FloatRect(0.f, 0.f, (float)window.getSize().x, (float)window.getSize().y));
 
 		switch (screen_code) {
-		case tDesktop::screen_codes::Mapedt:
+		case static_cast<int>(screen_codes::MapEditor):
 
 			break;
-		case tDesktop::screen_codes::NPCedt:
+		case static_cast<int>(screen_codes::NPCEditor):
 
 			break;
-		case tDesktop::screen_codes::Menu:
+		case static_cast<int>(screen_codes::Menu):
 		default:
 			edt::tRectShape* background = new edt::tRectShape;;
 			background->setPosition(sf::Vector2f(0.f, 0.f));
@@ -65,46 +41,67 @@ public:
 			render->_insert(text);
 
 			edt::tButton* button = new edt::tButton({ 0, 0, 600, 80 }, "Редактировать карту");
+			button->setCode(static_cast<int>(screen_codes::MapEditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor(sf::Color(255, 255, 0, 255));
-			button->setAlignment(edt::tButton::alignment_type::atMiddle);
+			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
 			button->setTextOffset(sf::Vector2u(0, 12));
 			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 0 + 300));
 			render->_insert(button);
 
 			button = new edt::tButton({ 0, 0, 600, 80 }, "Редакторовать NPC");
+			button->setCode(static_cast<int>(screen_codes::NPCEditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor(sf::Color(255, 255, 0, 255));
-			button->setAlignment(edt::tButton::alignment_type::atMiddle);
+			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
 			button->setTextOffset(sf::Vector2u(0, 12));
 			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 1 + 300));
 			render->_insert(button);
 
-			button = new edt::tButton({0, 0, 500, 80}, "О программе");
+			button = new edt::tButton({ 0, 0, 500, 80 }, "О программе");
+			button->setCode(code_about_paragraph);
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor(sf::Color(255, 255, 255, 255));
-			button->setAlignment(edt::tButton::alignment_type::atMiddle);
+			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
 			button->setTextOffset(sf::Vector2u(0, 12));
 			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 2 + 300));
 			render->_insert(button);
 
-			tCloseProgramButton* clButton = new tCloseProgramButton({ 0, 0, 500, 80 }, "Выход");
-			clButton->setFont(getFont());
-			clButton->setCharSize(60);
-			clButton->setTextColor(sf::Color(255, 0, 0, 255));
-			clButton->setAlignment(edt::tButton::alignment_type::atMiddle);
-			clButton->setTextOffset(sf::Vector2u(0, 8));
-			clButton->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 3 + 300));
-			render->_insert(clButton);
+			button = new edt::tButton({ 0, 0, 500, 80 }, "Выход");
+			button->setCode(static_cast<int>(edt::tEvent::codes::CloseApplication));
+			button->setFont(getFont());
+			button->setCharSize(60);
+			button->setTextColor(sf::Color(255, 0, 0, 255));
+			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
+			button->setTextOffset(sf::Vector2u(0, 8));
+			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 3 + 300));
+			render->_insert(button);
 
 			break;
 		}
 
 		_insert(render);
 	};
+	virtual void handleEvent(edt::tEvent& e) {
+		edt::tDesktop::handleEvent(e);
+		switch (e.type) {
+		case static_cast<int>(edt::tEvent::types::Button):
+			switch (e.code) {
+			case code_about_paragraph:
+				int i = 0;
+				if (i == 0) {
+					i = 1;
+				}
+				break;
+			}
+			break;
+		default:
+			break;
+		}
+	}
 };
 
 int main(int argc, char* argv[]) {
