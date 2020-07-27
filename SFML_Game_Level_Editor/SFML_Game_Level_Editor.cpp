@@ -3,9 +3,9 @@
 #include "other.h"
 #include "editor.h"
 
-class tCloseButton : public editor::tButton {
+class tCloseProgramButton : public editor::tButton {
 public:
-	tCloseButton(sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button") :
+	tCloseProgramButton(sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button") :
 		editor::tButton(rect, text)
 	{
 	};
@@ -16,8 +16,14 @@ public:
 		case editor::tEvent::types::Mouse:
 			switch (e.code) {
 			case editor::tEvent::codes::MouseButton:
-				if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left) {
-					int i = 0;
+				if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
+					pointIsInsideMe({e.mouse.x, e.mouse.y}))
+				{
+					e.type = editor::tEvent::types::Broadcast;
+					e.code = editor::tEvent::codes::CloseApplication;
+					e.address = nullptr;
+					putEvent(e);
+					clearEvent(e);
 				}
 				break;
 			}
@@ -85,7 +91,7 @@ public:
 			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 2 + 300));
 			render->_insert(button);
 
-			tCloseButton* clButton = new tCloseButton({ 0, 0, 500, 80 }, "Выход");
+			tCloseProgramButton* clButton = new tCloseProgramButton({ 0, 0, 500, 80 }, "Выход");
 			clButton->setFont(getFont());
 			clButton->setCharSize(60);
 			clButton->setTextColor(sf::Color(255, 0, 0, 255));

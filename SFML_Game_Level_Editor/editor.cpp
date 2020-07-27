@@ -431,12 +431,8 @@ namespace editor {
 		tGroup::handleEvent(e);
 		switch (e.type) {
 		case tEvent::types::Broadcast:	// Общего типа
-			if (e.address == this) {
+			if (e.address == this) {			// Обработка событий для этого объекта
 				switch (e.code) {
-				case tEvent::codes::CloseApplication:	// Закрыть программу
-					window.close();
-					clearEvent(e);
-					break;
 				case tEvent::codes::Delete:				// Удалить объект
 					delete e.from;
 					clearEvent(e);
@@ -462,7 +458,17 @@ namespace editor {
 					clearEvent(e);
 					break;
 				};
-			};
+			}
+			else if (e.address == nullptr) {	// Если адреса нет, значит было отправлено сообщение от какого-то далёкого объекта
+				switch (e.code) {
+				case tEvent::codes::CloseApplication:	// Закрыть программу
+					window.close();
+					clearEvent(e);
+					break;
+				default:
+					break;
+				}
+			}
 			break;
 		case tEvent::types::Keyboard:	// От клавиатуры
 			clearEvent(e);
