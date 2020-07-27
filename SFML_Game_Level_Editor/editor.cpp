@@ -1,6 +1,6 @@
 #include "editor.h"
 
-namespace editor {
+namespace edt {
 
 	tObject::tObject() :
 		x(0),

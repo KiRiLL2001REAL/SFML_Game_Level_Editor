@@ -3,24 +3,24 @@
 #include "other.h"
 #include "editor.h"
 
-class tCloseProgramButton : public editor::tButton {
+class tCloseProgramButton : public edt::tButton {
 public:
 	tCloseProgramButton(sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button") :
-		editor::tButton(rect, text)
+		edt::tButton(rect, text)
 	{
 	};
 
-	virtual void handleEvent(editor::tEvent& e) {
+	virtual void handleEvent(edt::tEvent& e) {
 		tButton::handleEvent(e);
 		switch (e.type) {
-		case editor::tEvent::types::Mouse:
+		case edt::tEvent::types::Mouse:
 			switch (e.code) {
-			case editor::tEvent::codes::MouseButton:
+			case edt::tEvent::codes::MouseButton:
 				if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
-					pointIsInsideMe({e.mouse.x, e.mouse.y}))
+					pointIsInsideMe({ e.mouse.x, e.mouse.y }))
 				{
-					e.type = editor::tEvent::types::Broadcast;
-					e.code = editor::tEvent::codes::CloseApplication;
+					e.type = edt::tEvent::types::Broadcast;
+					e.code = edt::tEvent::codes::CloseApplication;
 					e.address = nullptr;
 					putEvent(e);
 					clearEvent(e);
@@ -32,61 +32,61 @@ public:
 	};
 };
 
-class myDesktop : public editor::tDesktop {
+class myDesktop : public edt::tDesktop {
 public:
-	myDesktop(std::string path_to_folder) : editor::tDesktop(path_to_folder) {};
+	myDesktop(std::string path_to_folder) : edt::tDesktop(path_to_folder) {};
 	~myDesktop() { std::cout << "~myDesktop done.\n"; };
 
 	virtual void changeScreen(char new_screen_code) {
-		editor::tDesktop::changeScreen(new_screen_code);
+		edt::tDesktop::changeScreen(new_screen_code);
 
-		editor::tRenderRect* render = new editor::tRenderRect(sf::FloatRect(0.f, 0.f, (float)window.getSize().x, (float)window.getSize().y));
+		edt::tRenderRect* render = new edt::tRenderRect(sf::FloatRect(0.f, 0.f, (float)window.getSize().x, (float)window.getSize().y));
 
 		switch (screen_code) {
-		case tDesktop::screen_codes::MapEditor:
+		case tDesktop::screen_codes::Mapedt:
 
 			break;
-		case tDesktop::screen_codes::NPCEditor:
+		case tDesktop::screen_codes::NPCedt:
 
 			break;
 		case tDesktop::screen_codes::Menu:
 		default:
-			editor::tRectShape* background = new editor::tRectShape;;
+			edt::tRectShape* background = new edt::tRectShape;;
 			background->setPosition(sf::Vector2f(0.f, 0.f));
 			background->setSize(sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
 			background->setColor(sf::Color(40, 40, 40, 255));
 			render->_insert(background);
 
-			editor::tText* text = new editor::tText({0, 0}, "SFML_Game редактор карт");
+			edt::tText* text = new edt::tText({0, 0}, "SFML_Game редактор карт");
 			text->setFont(getFont());
 			text->setCharSize(72);
 			text->setTextColor(sf::Color(255, 255, 255, 255));
 			text->setPosition(sf::Vector2f(window.getSize().x / 2 - text->getLocalBounds().width / 2, 50));
 			render->_insert(text);
 
-			editor::tButton* button = new editor::tButton({ 0, 0, 600, 80 }, "Редактировать карту");
+			edt::tButton* button = new edt::tButton({ 0, 0, 600, 80 }, "Редактировать карту");
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor(sf::Color(255, 255, 0, 255));
-			button->setAlignment(editor::tButton::alignment_type::atMiddle);
+			button->setAlignment(edt::tButton::alignment_type::atMiddle);
 			button->setTextOffset(sf::Vector2u(0, 12));
 			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 0 + 300));
 			render->_insert(button);
 
-			button = new editor::tButton({ 0, 0, 600, 80 }, "Редакторовать NPC");
+			button = new edt::tButton({ 0, 0, 600, 80 }, "Редакторовать NPC");
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor(sf::Color(255, 255, 0, 255));
-			button->setAlignment(editor::tButton::alignment_type::atMiddle);
+			button->setAlignment(edt::tButton::alignment_type::atMiddle);
 			button->setTextOffset(sf::Vector2u(0, 12));
 			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 1 + 300));
 			render->_insert(button);
 
-			button = new editor::tButton({0, 0, 500, 80}, "О программе");
+			button = new edt::tButton({0, 0, 500, 80}, "О программе");
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor(sf::Color(255, 255, 255, 255));
-			button->setAlignment(editor::tButton::alignment_type::atMiddle);
+			button->setAlignment(edt::tButton::alignment_type::atMiddle);
 			button->setTextOffset(sf::Vector2u(0, 12));
 			button->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 2 + 300));
 			render->_insert(button);
@@ -95,7 +95,7 @@ public:
 			clButton->setFont(getFont());
 			clButton->setCharSize(60);
 			clButton->setTextColor(sf::Color(255, 0, 0, 255));
-			clButton->setAlignment(editor::tButton::alignment_type::atMiddle);
+			clButton->setAlignment(edt::tButton::alignment_type::atMiddle);
 			clButton->setTextOffset(sf::Vector2u(0, 8));
 			clButton->setPosition(sf::Vector2f(window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 3 + 300));
 			render->_insert(clButton);

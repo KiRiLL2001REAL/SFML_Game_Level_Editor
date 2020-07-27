@@ -11,7 +11,8 @@
 
 #define vec std::vector
 
-namespace editor {
+namespace edt {
+
 	class tObject;
 
 	struct sMovement { // Используется при перемещении объекта мышью
