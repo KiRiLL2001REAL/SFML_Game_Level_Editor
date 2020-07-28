@@ -146,12 +146,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="editor.cpp" />
+    <ClCompile Include="myEditor.cpp" />
     <ClCompile Include="other.cpp" />
     <ClCompile Include="SFML_Game_Level_Editor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="editor.h" />
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="myEditor.h" />
     <ClInclude Include="other.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
