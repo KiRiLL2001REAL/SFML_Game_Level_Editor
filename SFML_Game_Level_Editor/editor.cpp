@@ -255,6 +255,64 @@ namespace edt {
 		clear_color = color;
 	}
 
+	void tRenderRect::handleEvent(tEvent& e) {
+		tGroup::handleEvent(e);
+		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {
+				if (e.address == this) {			// Обработка событий для этого объекта
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+							delete e.from;
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
+							e.from->activate();
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+							e.from->deactivate();
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+							e.from->show();
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+							e.from->hide();
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+							e.from->setOwner(this);
+							clearEvent(e);
+							break;
+						}
+					};
+				}
+				break;
+			}
+			case static_cast<int>(tEvent::types::Button) : {
+				if (e.address == this) {
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::Delete) : {
+							e.type = static_cast<int>(tEvent::types::Broadcast);
+							e.code = static_cast<int>(tEvent::codes::Delete);
+							e.address = owner;
+							e.from = this;
+							putEvent(e);
+							break;
+						}
+					}
+				}
+				break;
+			}
+		}
+	}
+
 	void tRenderRect::setSize(sf::Vector2f new_size) {
 		render_squad[0].position = sf::Vector2f{ render_squad[0].position.x, render_squad[0].position.y };
 		render_squad[1].position = sf::Vector2f{ render_squad[0].position.x + new_size.x, render_squad[0].position.y };

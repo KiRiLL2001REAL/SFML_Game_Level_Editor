@@ -122,7 +122,7 @@ namespace edt {
 
 	class tRenderRect : public tGroup {
 	protected:
-		sf::VertexArray render_squad;	// Фигура, в которой выполняется отрисовка
+		sf::VertexArray render_squad;		// Фигура, в которой выполняется отрисовка
 		sf::RenderTexture render_texture;	// Текстура, в которой отрисовываются объекты
 		sf::Color clear_color;				// Цвет очистки текстуры
 
@@ -133,6 +133,7 @@ namespace edt {
 		void setTextureSize(sf::Vector2u new_size);
 		void setClearColor(sf::Color new_color);
 
+		virtual void handleEvent(tEvent& e);
 		virtual void setSize(sf::Vector2f new_size);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
