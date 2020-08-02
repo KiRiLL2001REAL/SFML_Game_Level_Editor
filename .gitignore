@@ -1,9 +1,3 @@
-*.obj
-*.iobj
-*.idb
-*.ilk
-*.pdb
-*.ipdb
 *.tlog
 *.log
 *.exe
