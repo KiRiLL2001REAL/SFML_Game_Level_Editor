@@ -182,16 +182,19 @@ namespace edt {
 		int size = elem.size();
 		for (int i = 0; i < size; i++) {
 			switch (code) {
-			case static_cast<int>(tEvent::codes::Deactivate):
-				message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Deactivate), this);
-				break;
-			case static_cast<int>(tEvent::codes::Show):
-				message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Show), this);
-				break;
-			case static_cast<int>(tEvent::codes::Hide):
-				message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Hide), this);
-				break;
-			};
+				case static_cast<int>(tEvent::codes::Deactivate) : {
+					message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Deactivate), this);
+					break;
+				}
+				case static_cast<int>(tEvent::codes::Show) : {
+					message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Show), this);
+					break;
+				}
+				case static_cast<int>(tEvent::codes::Hide) : {
+					message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Hide), this);
+					break;
+				}
+			}
 
 		}
 	}
@@ -291,7 +294,7 @@ namespace edt {
 							clearEvent(e);
 							break;
 						}
-					};
+					}
 				}
 				break;
 			}
@@ -447,43 +450,48 @@ namespace edt {
 			sf::Event event;
 			if (window.pollEvent(event)) {
 				switch (event.type) {
-				case sf::Event::Closed:					// Окно просит закрыться
-					e.type = static_cast<int>(tEvent::types::Button);
-					e.code = static_cast<int>(tEvent::codes::CloseApplication);
-					e.address = nullptr;
-					break;
-				case sf::Event::KeyPressed:				// Нажата или отпущена какая-либо кнопка на клавиатуре
-				case sf::Event::KeyReleased:
-					e.type = static_cast<int>(tEvent::types::Keyboard);
-					event.type == sf::Event::KeyPressed ?
-						e.key.what_happened = sf::Event::KeyPressed : e.key.what_happened = sf::Event::KeyReleased;
-					e.key.button = event.key.code;
-					e.key.control = event.key.control;
-					e.key.alt = event.key.alt;
-					e.key.shift = event.key.shift;
-					e.address = this;
-					break;
-				case sf::Event::MouseButtonPressed:		// Нажата или отпущена какая-либо кнопка мыши
-				case sf::Event::MouseButtonReleased:
-					e.type = static_cast<int>(tEvent::types::Mouse);
-					e.code = static_cast<int>(tEvent::codes::MouseButton);
-					event.type == sf::Event::MouseButtonPressed ?
-						e.mouse.what_happened = sf::Event::MouseButtonPressed : e.mouse.what_happened = sf::Event::MouseButtonReleased;
-					e.mouse.button = event.mouseButton.button;
-					e.mouse.x = event.mouseButton.x;
-					e.mouse.y = event.mouseButton.y;
-					e.address = this;
-					break;
-				case sf::Event::MouseMoved:				// Мышь двинулась куда-то
-					e.type = static_cast<int>(tEvent::types::Mouse);
-					e.code = static_cast<int>(tEvent::codes::MouseMoved);
-					e.mouse.x = event.mouseMove.x;
-					e.mouse.y = event.mouseMove.y;
-					e.address = this;
-					break;
-				default:	// Если ничего из перечня не подходит, тогда больше нечего делать (все события обработаны)
-					e.type = static_cast<int>(tEvent::types::Nothing);
-					break;
+					case sf::Event::Closed : {					// Окно просит закрыться
+						e.type = static_cast<int>(tEvent::types::Button);
+						e.code = static_cast<int>(tEvent::codes::CloseApplication);
+						e.address = nullptr;
+						break;
+					}
+					case sf::Event::KeyPressed :			// Нажата или отпущена какая-либо кнопка на клавиатуре
+					case sf::Event::KeyReleased : {
+						e.type = static_cast<int>(tEvent::types::Keyboard);
+						event.type == sf::Event::KeyPressed ?
+							e.key.what_happened = sf::Event::KeyPressed : e.key.what_happened = sf::Event::KeyReleased;
+						e.key.button = event.key.code;
+						e.key.control = event.key.control;
+						e.key.alt = event.key.alt;
+						e.key.shift = event.key.shift;
+						e.address = this;
+						break;
+					}
+					case sf::Event::MouseButtonPressed :	// Нажата или отпущена какая-либо кнопка мыши
+					case sf::Event::MouseButtonReleased : {
+						e.type = static_cast<int>(tEvent::types::Mouse);
+						e.code = static_cast<int>(tEvent::codes::MouseButton);
+						event.type == sf::Event::MouseButtonPressed ?
+							e.mouse.what_happened = sf::Event::MouseButtonPressed : e.mouse.what_happened = sf::Event::MouseButtonReleased;
+						e.mouse.button = event.mouseButton.button;
+						e.mouse.x = event.mouseButton.x;
+						e.mouse.y = event.mouseButton.y;
+						e.address = this;
+						break;
+					}
+					case sf::Event::MouseMoved : {			// Мышь двинулась куда-то
+						e.type = static_cast<int>(tEvent::types::Mouse);
+						e.code = static_cast<int>(tEvent::codes::MouseMoved);
+						e.mouse.x = event.mouseMove.x;
+						e.mouse.y = event.mouseMove.y;
+						e.address = this;
+						break;
+					}
+					default : {	// Если ничего из перечня не подходит, тогда больше нечего делать (все события обработаны)
+						e.type = static_cast<int>(tEvent::types::Nothing);
+						break;
+					}
 				}
 			}
 		}
@@ -495,42 +503,50 @@ namespace edt {
 		case static_cast<int>(tEvent::types::Broadcast):	// Общего типа
 			if (e.address == this) {			// Обработка событий для этого объекта
 				switch (e.code) {
-				case static_cast<int>(tEvent::codes::Delete):		// Удалить объект
-					delete e.from;
-					clearEvent(e);
-					break;
-				case static_cast<int>(tEvent::codes::Activate):		// Установить фокус на объект
-					e.from->activate();
-					clearEvent(e);
-					break;
-				case static_cast<int>(tEvent::codes::Deactivate):	// Снять фокус с объекта
-					e.from->deactivate();
-					clearEvent(e);
-					break;
-				case static_cast<int>(tEvent::codes::Show):			// Показать объект (если он скрыт)
-					e.from->show();
-					clearEvent(e);
-					break;
-				case static_cast<int>(tEvent::codes::Hide):			// Спрятать объект (если он не скрыт)
-					e.from->hide();
-					clearEvent(e);
-					break;
-				case static_cast<int>(tEvent::codes::Adopt):		// Стать владельцем объекта
-					e.from->setOwner(this);
-					clearEvent(e);
-					break;
-				};
+					case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+						delete e.from;
+						clearEvent(e);
+						break;
+					}
+					case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
+						e.from->activate();
+						clearEvent(e);
+						break;
+					}
+					case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+						e.from->deactivate();
+						clearEvent(e);
+						break;
+					}
+					case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+						e.from->show();
+						clearEvent(e);
+						break;
+					}
+					case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+						e.from->hide();
+						clearEvent(e);
+						break;
+					}
+					case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+						e.from->setOwner(this);
+						clearEvent(e);
+						break;
+					}
+				}
 			}
 			break;
-		case static_cast<int>(tEvent::types::Button) :
-			switch (e.code) {
-			case static_cast<int>(tEvent::codes::CloseApplication) :
-				window.close();
-				clearEvent(e);
-			break;
+			case static_cast<int>(tEvent::types::Button) : {
+				switch (e.code) {
+					case static_cast<int>(tEvent::codes::CloseApplication) : {
+						window.close();
+						clearEvent(e);
+						break;
+					}
+				}
+				break;
 			}
-			break;
-		};
+		}
 	}
 
 	tRectShape::tRectShape(sf::FloatRect rect, sf::Color fill_color) {
@@ -721,19 +737,22 @@ namespace edt {
 			updateTextObject();
 			sf::Text text_to_display = text_object;
 			switch (alignment) {			// Настройка выравнивания
-			case static_cast<int>(tButton::alignment_type::Right):
-				text_to_display.setOrigin(sf::Vector2f((float)text_to_display.getLocalBounds().width, (float)text_to_display.getLocalBounds().height));
-				text_to_display.setPosition(sf::Vector2f((float)render_texture.getSize().x - side_offset - text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y));
-				break;
-			case static_cast<int>(tButton::alignment_type::Middle):
-				text_to_display.setOrigin(sf::Vector2f(text_to_display.getLocalBounds().width / 2, (float)text_to_display.getLocalBounds().height));
-				text_to_display.setPosition(sf::Vector2f((float)render_texture.getSize().x / 2 + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y));
-				break;
-			case static_cast<int>(tButton::alignment_type::Left):
-			default:
-				text_to_display.setOrigin(sf::Vector2f(0, (float)text_to_display.getLocalBounds().height));
-				text_to_display.setPosition(sf::Vector2f((float)side_offset + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.x));
-				break;
+				case static_cast<int>(tButton::alignment_type::Right) : {
+					text_to_display.setOrigin(sf::Vector2f((float)text_to_display.getLocalBounds().width, (float)text_to_display.getLocalBounds().height));
+					text_to_display.setPosition(sf::Vector2f((float)render_texture.getSize().x - side_offset - text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y));
+					break;
+				}
+				case static_cast<int>(tButton::alignment_type::Middle) : {
+					text_to_display.setOrigin(sf::Vector2f(text_to_display.getLocalBounds().width / 2, (float)text_to_display.getLocalBounds().height));
+					text_to_display.setPosition(sf::Vector2f((float)render_texture.getSize().x / 2 + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y));
+					break;
+				}
+				case static_cast<int>(tButton::alignment_type::Left) :
+				default: {
+					text_to_display.setOrigin(sf::Vector2f(0, (float)text_to_display.getLocalBounds().height));
+					text_to_display.setPosition(sf::Vector2f((float)side_offset + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.x));
+					break;
+				}
 			}
 			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Underlined) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
 			text_to_display.setOutlineThickness(outline_thickness);
@@ -761,14 +780,16 @@ namespace edt {
 
 	void tButton::setAlignment(char new_alignment) {
 		switch (new_alignment) {
-		case static_cast<int>(tButton::alignment_type::Middle):
-		case static_cast<int>(tButton::alignment_type::Right):
-			alignment = new_alignment;
-			break;
-		case static_cast<int>(tButton::alignment_type::Left):
-		default:
-			alignment = static_cast<int>(tButton::alignment_type::Left);
-			break;
+			case static_cast<int>(tButton::alignment_type::Middle) :
+				case static_cast<int>(tButton::alignment_type::Right) : {
+				alignment = new_alignment;
+				break;
+			}
+			case static_cast<int>(tButton::alignment_type::Left) : {
+			default:
+				alignment = static_cast<int>(tButton::alignment_type::Left);
+				break;
+			}
 		}
 		updateTexture();
 	}
@@ -817,29 +838,32 @@ namespace edt {
 
 	void tButton::handleEvent(tEvent& e) {
 		switch (e.type) {
-		case static_cast<int>(tEvent::types::Mouse):
-			switch (e.code) {
-			case static_cast<int>(tEvent::codes::MouseMoved):
-				mouse_inside[1] = mouse_inside[0];	// Предыдущее и текущее состояние флага
-				mouse_inside[0] = pointIsInsideMe(sf::Vector2i(e.mouse.x, e.mouse.y));
-				if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
-					updateTexture();
-					clearEvent(e);
-				}
-				break;
-			case static_cast<int>(edt::tEvent::codes::MouseButton):
-				if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
-					pointIsInsideMe({ e.mouse.x, e.mouse.y }))
-				{
-					e.type = static_cast<int>(edt::tEvent::types::Button);
-					e.code = self_code;
-					e.address = owner;
-					putEvent(e);
-					clearEvent(e);
+			case static_cast<int>(tEvent::types::Mouse) : {
+				switch (e.code) {
+					case static_cast<int>(tEvent::codes::MouseMoved) : {
+						mouse_inside[1] = mouse_inside[0];	// Предыдущее и текущее состояние флага
+						mouse_inside[0] = pointIsInsideMe(sf::Vector2i(e.mouse.x, e.mouse.y));
+						if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
+							updateTexture();
+							clearEvent(e);
+						}
+						break;
+					}
+					case static_cast<int>(edt::tEvent::codes::MouseButton) : {
+						if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
+							pointIsInsideMe({ e.mouse.x, e.mouse.y }))
+						{
+							e.type = static_cast<int>(edt::tEvent::types::Button);
+							e.code = self_code;
+							e.address = owner;
+							putEvent(e);
+							clearEvent(e);
+						}
+						break;
+					}
 				}
 				break;
 			}
-			break;
 		}
 	}
 
@@ -922,9 +946,9 @@ namespace edt {
 	void tWindow::handleEvent(tEvent& e) {
 		tGroup::handleEvent(e);
 		switch (e.type) {
-		case 0:
-		default:
-			break;
+			case 0: {
+				break;
+			}
 		}
 	}
 

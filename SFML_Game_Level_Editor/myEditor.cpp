@@ -6,14 +6,16 @@ void myDesktop::changeScreen(char new_screen_code) {
 	edt::tRenderRect* render = new edt::tRenderRect(sf::FloatRect(0.f, 0.f, (float)window.getSize().x, (float)window.getSize().y));
 
 	switch (screen_code) {
-		case static_cast<int>(screen_codes::MapEditor) :
+		case static_cast<int>(screen_codes::MapEditor) : {
 
 			break;
-		case static_cast<int>(screen_codes::NPCEditor) :
+		}
+		case static_cast<int>(screen_codes::NPCEditor) : {
 
 			break;
+		}
 		case static_cast<int>(screen_codes::Menu) :
-		default:
+		default: {
 			edt::tRectShape* background = new edt::tRectShape;;
 			background->setPosition(sf::Vector2f(0.f, 0.f));
 			background->setSize(sf::Vector2f((float)window.getSize().x, (float)window.getSize().y));
@@ -68,6 +70,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			render->_insert(button);
 
 			break;
+		}
 	}
 	_insert(render);
 }
@@ -75,17 +78,17 @@ void myDesktop::changeScreen(char new_screen_code) {
 void myDesktop::handleEvent(edt::tEvent& e) {
 	edt::tDesktop::handleEvent(e);
 	switch (e.type) {
-		case static_cast<int>(edt::tEvent::types::Button) :
+		case static_cast<int>(edt::tEvent::types::Button) : {
 			switch (e.code) {
-			case code_about_paragraph:
-				int i = 0;
-				if (i == 0) {
-					i = 1;
+				case code_about_paragraph: {
+					int i = 0;
+					if (i == 0) {
+						i = 1;
+					}
+					break;
 				}
-				break;
 			}
-		break;
-	default:
-		break;
+			break;
+		}
 	}
 }
