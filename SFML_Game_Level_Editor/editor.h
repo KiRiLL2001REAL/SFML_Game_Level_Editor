@@ -25,7 +25,7 @@ namespace edt {
 
 		enum class codes {
 			Activate, Deactivate, Show, Hide,
-			Move, Adopt, Delete, CloseApplication,
+			Move, Adopt, Delete, Close, CloseApplication,
 			MouseMoved, MouseButton
 		};
 
@@ -83,7 +83,7 @@ namespace edt {
 		void setMoveAbility(bool can_move);
 
 		virtual sMovement getMovementStates();
-		virtual void move(sf::Vector2f deltaPos);
+		virtual void move(sf::Vector2f delta);
 		virtual void show();
 		virtual void hide();
 		virtual void activate();
@@ -96,7 +96,9 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void setSize(sf::Vector2f new_size);
-		virtual sf::FloatRect getLocalBounds();
+
+		virtual sf::FloatRect getLocalBounds() = 0;
+		virtual sf::FloatRect getGlobalBounds();
 	};
 
 	class tGroup : public tObject { // Класс-контейнер
@@ -138,6 +140,7 @@ namespace edt {
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
 
+		virtual sf::FloatRect getLocalBounds();
 	};
 
 	class tRectShape : public tObject {
@@ -153,6 +156,8 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void setSize(sf::Vector2f new_size);
+
+		virtual sf::FloatRect getLocalBounds();
 	};
 
 	class tDesktop : public tGroup {
@@ -247,7 +252,7 @@ namespace edt {
 	class tWindow : public tRenderRect {
 	private:
 		static const int heap_height = 32;
-		static const unsigned char caption_char_size = 30;
+		static const unsigned char caption_char_size = 24;
 
 	protected:
 		bool font_loaded;	// Флаг. Загружен ли шрифт?
@@ -261,8 +266,10 @@ namespace edt {
 		sf::Vector2f caption_offset;		// Настройка смещения заголовка, в случае, если он криво выводится (это всё из-за шрифтов)
 
 	public:
-		tWindow(sf::FloatRect rect = { 0, 0, 300, 300 }, std::string caption = "Default caption" );
+		tWindow(sf::FloatRect rect = { 0, 0, 300, 300 }, std::string caption = "Default caption" );	// Необходимо так же вызвать метод initWindow()
 		virtual ~tWindow();
+
+		void initWindow();	// Обязательно к выполнению после вызова конструктора
 
 		void setCaption(std::string new_caption);
 		std::string getCaption();
@@ -272,6 +279,8 @@ namespace edt {
 		void setColorCaptionInactive(sf::Color new_color);
 		void setFont(sf::Font new_font);
 		void setCaptionOffset(sf::Vector2f new_offset);
+
+		virtual sf::FloatRect getLocalBounds();
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);

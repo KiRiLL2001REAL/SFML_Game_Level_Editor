@@ -77,18 +77,31 @@ void myDesktop::changeScreen(char new_screen_code) {
 
 void myDesktop::handleEvent(edt::tEvent& e) {
 	edt::tDesktop::handleEvent(e);
-	switch (e.type) {
-		case static_cast<int>(edt::tEvent::types::Button) : {
-			switch (e.code) {
-				case code_about_paragraph: {
-					int i = 0;
-					if (i == 0) {
-						i = 1;
+	if (e.address == this) {
+		switch (e.type) {
+			case static_cast<int>(edt::tEvent::types::Button) : {
+				switch (e.code) {
+					case code_about_paragraph : {
+						sf::FloatRect rect;
+						rect.width = 600;
+						rect.height = 400;
+						rect.left = (window.getSize().x - rect.width) / 2;
+						rect.top = (window.getSize().y - rect.height) / 2 - 100;
+						edt::tWindow* w = new edt::tWindow(rect, "О программе");
+						w->setFont(getFont());
+						w->initWindow();
+						w->setCaptionOffset({4, 0});
+						_insert(w);
+						clearEvent(e);
+						break;
 					}
-					break;
 				}
+				break;
 			}
-			break;
 		}
 	}
+}
+
+sf::FloatRect myDesktop::getLocalBounds() {
+	return { 0, 0, 0, 0 };
 }

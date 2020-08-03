@@ -15,4 +15,6 @@ public:
 
 	virtual void changeScreen(char new_screen_code);
 	virtual void handleEvent(edt::tEvent& e);
+
+	virtual sf::FloatRect getLocalBounds();
 };
