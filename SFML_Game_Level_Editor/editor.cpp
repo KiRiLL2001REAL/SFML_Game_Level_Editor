@@ -64,7 +64,7 @@ namespace edt {
 		movement = new_movement;
 	}
 
-	void tObject::setOwner(tObject* new_owner) {
+	void tObject::setOwner(tObject *new_owner) {
 		owner = new_owner;
 	}
 
@@ -72,7 +72,7 @@ namespace edt {
 		return sf::Vector2i(-1, -1);
 	}
 
-	void tObject::message(tObject* addr, int type, int code, tObject* from) {
+	void tObject::message(tObject *addr, int type, int code, tObject *from) {
 		tEvent e;
 		e.address = addr;
 		e.from = from;
@@ -141,7 +141,7 @@ namespace edt {
 		}
 	}
 
-	void tGroup::_insert(tObject* object) {
+	void tGroup::_insert(tObject *object) {
 		if (elem.size() != 0) {
 			elem[current]->deactivate();
 		}
@@ -151,7 +151,7 @@ namespace edt {
 		elem[current]->activate();
 	}
 
-	bool tGroup::_delete(tObject* object) {
+	bool tGroup::_delete(tObject *object) {
 		bool success = false;
 		int size = elem.size();
 		int i = 0;
@@ -172,7 +172,7 @@ namespace edt {
 		return success;
 	}
 
-	void tGroup::select(tObject* object) {
+	void tGroup::select(tObject *object) {
 		bool success = false;
 		int size = elem.size();
 		int i = 0;
@@ -912,13 +912,13 @@ namespace edt {
 
 	void tWindow::initWindow() {
 		sf::FloatRect rect = getLocalBounds();
-		tRectShape* r = new tRectShape({ 0, 0, rect.width, heap_height }, color_heap);	// Шапка
+		tRectShape *r = new tRectShape({ 0, 0, rect.width, heap_height }, color_heap);	// Шапка
 		_insert(r);
 
 		r = new tRectShape({ 0, heap_height, rect.width, rect.height - heap_height }, color_space);	// Рабочее пространство
 		_insert(r);
 
-		tButton* b = new tButton({ rect.width - heap_height + 2, 2, heap_height - 4, heap_height - 4 }, "");
+		tButton *b = new tButton({ rect.width - heap_height + 2, 2, heap_height - 4, heap_height - 4 }, "");
 		b->setCode(static_cast<int>(edt::tEvent::codes::Close));
 		_insert(b);
 	}
@@ -963,6 +963,10 @@ namespace edt {
 				render_squad[1].position.x - render_squad[0].position.x,
 				render_squad[3].position.y - render_squad[0].position.y
 			);
+	}
+
+	const int tWindow::getHeapHeight() {
+		return heap_height;
 	}
 
 	void tWindow::draw(sf::RenderTarget& target) {

@@ -31,8 +31,8 @@ namespace edt {
 
 		unsigned int type = static_cast<int>(types::Nothing); // Из какой сферы событие (тип)
 		unsigned int code = 0; // Код события (опционально)
-		tObject* from = nullptr;
-		tObject* address = nullptr;
+		tObject *from = nullptr;
+		tObject *address = nullptr;
 
 		struct sMouse { // Событие от мыши
 			char button = 0;
@@ -61,7 +61,7 @@ namespace edt {
 		bool mouse_inside[2];	// Флаг. Находится ли мышь внутри кнопки?
 
 		float x, y;				// Координаты объекта
-		tObject* owner;			// Указатель на владельца
+		tObject *owner;			// Указатель на владельца
 
 		bool can_be_drawn;		// Флаг. Может ли данный объект быть нарисованным?
 		bool is_active;			// Флаг. Активен ли данный элемент?
@@ -78,7 +78,7 @@ namespace edt {
 		bool canMove();
 
 		void setMovementStates(sMovement new_movement);
-		void setOwner(tObject* new_owner);
+		void setOwner(tObject *new_owner);
 		void clearEvent(tEvent& e);
 		void setMoveAbility(bool can_move);
 
@@ -89,7 +89,7 @@ namespace edt {
 		virtual void activate();
 		virtual void deactivate();
 		virtual sf::Vector2i getCursorPos();
-		virtual void message(tObject* addr, int type, int code, tObject* from);
+		virtual void message(tObject *addr, int type, int code, tObject *from);
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e);
@@ -111,9 +111,9 @@ namespace edt {
 		tGroup();
 		virtual ~tGroup();
 
-		void _insert(tObject* object);		// Внесение элемента в список подэлементов
-		bool _delete(tObject* object);		// Удаление элемента из списка
-		void select(tObject* object);		// Установка флага "активен" у элемента
+		void _insert(tObject *object);		// Внесение элемента в список подэлементов
+		bool _delete(tObject *object);		// Удаление элемента из списка
+		void select(tObject *object);		// Установка флага "активен" у элемента
 		void forEach(unsigned int code);	// Выполнить команду для всех подэлементов
 
 		virtual void draw(sf::RenderTarget& target);
@@ -281,6 +281,7 @@ namespace edt {
 		void setCaptionOffset(sf::Vector2f new_offset);
 
 		virtual sf::FloatRect getLocalBounds();
+		const int getHeapHeight();
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
