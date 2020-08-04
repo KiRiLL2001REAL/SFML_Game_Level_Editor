@@ -85,6 +85,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 				switch (e.code) {
 					case code_about_paragraph : {
 						sf::FloatRect rect;
+						unsigned int font_size = 48;
 						rect.width = 630;
 						rect.height = 350;
 						rect.left = (window.getSize().x - rect.width) / 2;
@@ -100,21 +101,29 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 						_font.loadFromFile(path_to_folder + "\\Content\\Fonts\\MurreyC.ttf");
 
 						std::ifstream file(path_to_folder + "\\Content\\Texts\\about.txt");
+						edt::tText* t;	// Текст для вывода в окно
+
 						if (!file.is_open()) {
-							str = "Файл по адресу \"..\\Content\\Texts\\about.txt\" не найден";
-							edt::tText* t = new edt::tText({ content_position.x, content_position.y }, str);
+							str = "Файл ''../Content/Texts/about.txt'' не найден.";
+							t = new edt::tText({ content_position.x, content_position.y }, str);
 							t->setFont(_font);
-							t->setCharSize(48);
+							t->setCharSize(font_size);
+							w->_insert(t);
+							content_position.y += std::max<float>(t->getLocalBounds().height, font_size);
+							str = "Вызывайте экзорцистов!";
+							t = new edt::tText({ content_position.x, content_position.y }, str);
+							t->setFont(_font);
+							t->setCharSize(font_size);
 							w->_insert(t);
 						}
 						else {
 							while (!file.eof()) {
 								std::getline(file, str);
-								edt::tText* t = new edt::tText({ content_position.x, content_position.y }, str);
+								t = new edt::tText({ content_position.x, content_position.y }, str);
 								t->setFont(_font);
-								t->setCharSize(48);
-								content_position.y += std::max<float>(t->getLocalBounds().height, 48);
+								t->setCharSize(font_size);
 								w->_insert(t);
+								content_position.y += std::max<float>(t->getLocalBounds().height, font_size);
 							}
 						}
 
