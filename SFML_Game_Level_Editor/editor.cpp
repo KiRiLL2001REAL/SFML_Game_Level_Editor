@@ -1,4 +1,5 @@
-#include "editor.h"
+п»ї#include "editor.h"
+#include <iterator>
 
 namespace edt {
 
@@ -34,20 +35,12 @@ namespace edt {
 		return can_be_moved;
 	}
 
-	void tObject::show() {
-		this->can_be_drawn = true;
+	void tObject::makeVisible(bool flag) {
+		this->can_be_drawn = flag;
 	}
 
-	void tObject::hide() {
-		this->can_be_drawn = false;
-	}
-
-	void tObject::activate() {
-		is_active = true;
-	}
-
-	void tObject::deactivate() {
-		is_active = false;
+	void tObject::makeActive(bool flag) {
+		is_active = flag;
 	}
 
 	void tObject::move(sf::Vector2f deltaPos) {
@@ -76,8 +69,8 @@ namespace edt {
 		tEvent e;
 		e.address = addr;
 		e.from = from;
-		e.type = type; // Из какой сферы событие
-		e.code = code; // Код события
+		e.type = type; // РР· РєР°РєРѕР№ СЃС„РµСЂС‹ СЃРѕР±С‹С‚РёРµ
+		e.code = code; // РљРѕРґ СЃРѕР±С‹С‚РёСЏ
 		if (addr != nullptr) addr->handleEvent(e);
 		else putEvent(e);
 	}
@@ -127,14 +120,13 @@ namespace edt {
 	}
 
 	tGroup::tGroup() : 
-		elem({}),
-		current(0)
+		elem({})
 	{
 	}
 
 	tGroup::~tGroup() {
 		int i = elem.size();
-		while (i != 0) { // Удаление всех элементов в контейнере
+		while (i != 0) { // РЈРґР°Р»РµРЅРёРµ РІСЃРµС… СЌР»РµРјРµРЅС‚РѕРІ РІ РєРѕРЅС‚РµР№РЅРµСЂРµ
 			delete elem.back();
 			elem.pop_back();
 			i--;
@@ -142,66 +134,69 @@ namespace edt {
 	}
 
 	void tGroup::_insert(tObject *object) {
-		if (elem.size() != 0) {
-			elem[current]->deactivate();
-		}
 		object->setOwner(this);
+		if (elem.size() != 0) {
+			elem.back()->makeActive(false);
+		}
 		elem.push_back(object);
-		current = elem.size() - 1;
-		elem[current]->activate();
+		elem.back()->makeActive(true);
 	}
 
 	bool tGroup::_delete(tObject *object) {
 		bool success = false;
-		int size = elem.size();
-		int i = 0;
-		for (i = 0; i < size; i++) // Поиск удаляемого элемента
-			if (elem[i] == object) {
+		list<tObject*>::iterator it;
+
+		for (it = elem.begin(); it != elem.end(); it++) {	// РџРѕРёСЃРє СѓРґР°Р»СЏРµРјРѕРіРѕ СЌР»РµРјРµРЅС‚Р°
+			if (*it == object) {
 				success = true;
-				break;
+				bool act = false;
+				if (*it == elem.back()) {
+					act = true;
+				}
+				delete* it;		// РЈРґР°Р»СЏРµРј РµРіРѕ	1) РёР· РїР°РјСЏС‚Рё
+				elem.erase(it);	//				2) РёР· РєРѕРЅС‚РµР№РЅРµСЂР°
+				elem.back()->makeActive(true);
+				break;	// Р’С‹РІР°Р»РёРІР°РµРјСЃСЏ РёР· РїРµСЂРµР±РѕСЂР°, С‡С‚РѕР±С‹ РЅРµ РїРѕР№РјР°С‚СЊ Р°РєСЃРµСЃ РІРёРѕР»СЌС‘С€РЅ
 			}
-		if (success) { // Если нашли...
-			if (i == current && size != 1) { // Если он был выбран, то выбираем предыдущий
-				elem[current]->deactivate();
-				current--;
-				elem[current]->activate();
-			}
-			delete elem[i];		// Удаляем его	1) из памяти
-			elem.erase(elem.begin() + i);	//	2) из контейнера
 		}
 		return success;
 	}
 
 	void tGroup::select(tObject *object) {
-		bool success = false;
-		int size = elem.size();
-		int i = 0;
-		for (i = 0; i < size; i++) // Поиск элемента
-			if (elem[i] == object) {
-				success = true;
+		list<tObject*>::iterator it;
+		for (it = elem.begin(); it != elem.end(); it++) {	// РџРѕРєР° РЅРµ РЅР°С€Р»Рё, РїРµСЂРµР±РёСЂР°РµРј СЃРїРёСЃРѕРє
+			if (*it == object) {
+				tObject* obj = *it;		// Р—Р°РїРѕРјРёРЅР°РµРј РѕР±СЉРµРєС‚
+				obj->makeActive(true);
+				elem.erase(it);			// РЈРґР°Р»СЏРµРј РёР· СЃРїРёСЃРєР°
+				elem.back()->makeActive(false);
+				elem.push_back(obj);	// РљРёРґР°РµРј РІ РєРѕРЅРµС† СЃРїРёСЃРєР°
 				break;
 			}
-		if (success) { // Если нашли...
-			elem[current]->deactivate();
-			current = i;
-			elem[current]->activate();
 		}
 	}
 
-	void tGroup::forEach(unsigned int code) {
-		int size = elem.size();
-		for (int i = 0; i < size; i++) {
+	void tGroup::forEach(unsigned int code, tObject* from = nullptr) {
+		list<tObject*>::iterator it;
+		if (!from) {	// Р•СЃР»Рё РЅРµ СЃРєР°Р·Р°РЅРѕ РѕС‚ РєРѕРіРѕ СЃРѕР±С‹С‚РёРµ, С‚Рѕ РѕС‚РїСЂР°РІРёС‚РµР»РµРј СЃС‚Р°РЅРѕРІРёС‚СЃСЏ СЃР°Рј РїРѕС‡С‚Р°Р»СЊРѕРЅ
+			from = this;
+		}
+		for (it = elem.begin(); it != elem.end(); it++) {
 			switch (code) {
 				case static_cast<int>(tEvent::codes::Deactivate) : {
-					message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Deactivate), this);
+					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Deactivate), from);
 					break;
 				}
 				case static_cast<int>(tEvent::codes::Show) : {
-					message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Show), this);
+					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Show), from);
 					break;
 				}
 				case static_cast<int>(tEvent::codes::Hide) : {
-					message(elem[i], static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Hide), this);
+					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Hide), from);
+					break;
+				}
+				case static_cast<int>(tEvent::codes::ResetButtons) : {
+					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::ResetButtons), from);
 					break;
 				}
 			}
@@ -210,30 +205,24 @@ namespace edt {
 	}
 
 	void tGroup::draw(sf::RenderTarget& target) {
-		int size = elem.size();
-		if (size != 0) {
-			for (int i = 0; i < size; i++) // Рисуем все элементы контейнера
-				elem[i]->draw(target);
-			elem[current]->draw(target); // Отдельное внимание уделяем выбранному элементу
-		};
+		list<tObject*>::iterator it;
+		for (it = elem.begin(); it != elem.end(); it++) {
+			(*it)->draw(target);
+		}
 	}
 
 	void tGroup::handleEvent(tEvent& e) {
-		int size = elem.size();
-		for (int i = 0; i < size; i++)
-			elem[i]->handleEvent(e);
+		list<tObject*>::reverse_iterator it;
+		for (it = elem.rbegin(); it != elem.rend(); it++) {
+			(*it)->handleEvent(e);
+		}
 	}
 
-	void tGroup::show() {
-		int size = elem.size();
-		for (int i = 0; i < size; i++)
-			elem[i]->show();
-	}
-
-	void tGroup::hide() {
-		int size = elem.size();
-		for (int i = 0; i < size; i++)
-			elem[i]->hide();
+	void tGroup::makeVisible(bool flag) {
+		list<tObject*>::iterator it;
+		for (it = elem.begin(); it != elem.end(); it++) {
+			(*it)->makeVisible(flag);
+		}
 	}
 
 	tRenderRect::tRenderRect(sf::FloatRect rect) :
@@ -267,51 +256,62 @@ namespace edt {
 	}
 
 	void tRenderRect::handleEvent(tEvent& e) {
-		tGroup::handleEvent(e);
-		if (e.address == this) {
-			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
+		tGroup::handleEvent(e);		
+		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {
+				if (e.address == this) {
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+						case static_cast<int>(tEvent::codes::Delete) : {		// РЈРґР°Р»РёС‚СЊ РѕР±СЉРµРєС‚
 							_delete(e.from);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-							e.from->activate();
+						case static_cast<int>(tEvent::codes::Activate) : {		// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ С„РѕРєСѓСЃ РЅР° РѕР±СЉРµРєС‚
+							e.from->makeActive(true);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->deactivate();
+						case static_cast<int>(tEvent::codes::Deactivate) : {	// РЎРЅСЏС‚СЊ С„РѕРєСѓСЃ СЃ РѕР±СЉРµРєС‚Р°
+							e.from->makeActive(false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->show();
+						case static_cast<int>(tEvent::codes::Show) : {			// РџРѕРєР°Р·Р°С‚СЊ РѕР±СЉРµРєС‚ (РµСЃР»Рё РѕРЅ СЃРєСЂС‹С‚)
+							e.from->makeVisible(true);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->hide();
+						case static_cast<int>(tEvent::codes::Hide) : {			// РЎРїСЂСЏС‚Р°С‚СЊ РѕР±СЉРµРєС‚ (РµСЃР»Рё РѕРЅ РЅРµ СЃРєСЂС‹С‚)
+							e.from->makeVisible(false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+						case static_cast<int>(tEvent::codes::Adopt) : {			// РЎС‚Р°С‚СЊ РІР»Р°РґРµР»СЊС†РµРј РѕР±СЉРµРєС‚Р°
 							e.from->setOwner(this);
 							clearEvent(e);
 							break;
 						}
-						default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+						default: {				// Р•СЃР»Рё РЅРµ РѕР±СЂР°Р±РѕС‚Р°Р»РѕСЃСЊ, С‚Рѕ "РїСЂРѕС‚Р°Р»РєРёРІР°РµРј" РЅР° СѓСЂРѕРІРµРЅСЊ РЅРёР¶Рµ
 							e.address = owner;
 							putEvent(e);
 							clearEvent(e);
 							break;
 						}
 					}
-					break;
 				}
-				case static_cast<int>(tEvent::types::Button) : {
+				if (e.type != static_cast<int>(tEvent::types::Nothing)) {
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::ResetButtons) : {
+							// РќРµ РѕР±СЂР°Р±Р°С‚С‹РІР°С‚СЊ.
+							clearEvent(e);
+							break;
+						}
+					}
+				}
+				break;
+			}
+			case static_cast<int>(tEvent::types::Button) : {
+				if (e.address == this) {
 					switch (e.code) {
 						case static_cast<int>(tEvent::codes::CloseApplication) : {
 							e.type = static_cast<int>(tEvent::types::Broadcast);
@@ -321,16 +321,17 @@ namespace edt {
 							clearEvent(e);
 							break;
 						}
-						default : {				// Если не обработалось, то "проталкиваем" на уровень ниже
+						default: {				// Р•СЃР»Рё РЅРµ РѕР±СЂР°Р±РѕС‚Р°Р»РѕСЃСЊ, С‚Рѕ "РїСЂРѕС‚Р°Р»РєРёРІР°РµРј" РЅР° СѓСЂРѕРІРµРЅСЊ РЅРёР¶Рµ
 							e.address = owner;
 							putEvent(e);
 							clearEvent(e);
 						}
 					}
-					break;
 				}
+				break;
 			}
 		}
+		
 	}
 
 	void tRenderRect::setSize(sf::Vector2f new_size) {
@@ -349,10 +350,10 @@ namespace edt {
 
 	void tRenderRect::draw(sf::RenderTarget& target) {
 		if (can_be_drawn) {
-			render_texture.clear(clear_color);	// Очиститься
-			tGroup::draw(render_texture);		// Нарисовать на себе все подэлементы
-			render_texture.display();			// Обновить "лицевую" текстуру
-			target.draw(render_squad, &render_texture.getTexture());	// Отобразиться
+			render_texture.clear(clear_color);	// РћС‡РёСЃС‚РёС‚СЊСЃСЏ
+			tGroup::draw(render_texture);		// РќР°СЂРёСЃРѕРІР°С‚СЊ РЅР° СЃРµР±Рµ РІСЃРµ РїРѕРґСЌР»РµРјРµРЅС‚С‹
+			render_texture.display();			// РћР±РЅРѕРІРёС‚СЊ "Р»РёС†РµРІСѓСЋ" С‚РµРєСЃС‚СѓСЂСѓ
+			target.draw(render_squad, &render_texture.getTexture());	// РћС‚РѕР±СЂР°Р·РёС‚СЊСЃСЏ
 		}
 	}
 
@@ -430,13 +431,13 @@ namespace edt {
 
 		saveData();
 
-		int i = elem.size();	// Очистить все подэлементы
+		int i = elem.size();	// РћС‡РёСЃС‚РёС‚СЊ РІСЃРµ РїРѕРґСЌР»РµРјРµРЅС‚С‹
 		while (i > 0) {
-			_delete(elem[i - 1]);
+			_delete(elem.back());
 			elem.pop_back();
 			i--;
 		};
-		i = events.size();	// Очистить список событий
+		i = events.size();	// РћС‡РёСЃС‚РёС‚СЊ СЃРїРёСЃРѕРє СЃРѕР±С‹С‚РёР№
 		while (i > 0) {
 			events.pop_back();
 			i--;
@@ -475,13 +476,13 @@ namespace edt {
 			sf::Event event;
 			if (window.pollEvent(event)) {
 				switch (event.type) {
-					case sf::Event::Closed : {				// Окно просит закрыться
+					case sf::Event::Closed : {				// РћРєРЅРѕ РїСЂРѕСЃРёС‚ Р·Р°РєСЂС‹С‚СЊСЃСЏ
 						e.type = static_cast<int>(tEvent::types::Broadcast);
 						e.code = static_cast<int>(tEvent::codes::CloseApplication);
 						e.address = this;
 						break;
 					}
-					case sf::Event::KeyPressed :			// Нажата или отпущена какая-либо кнопка на клавиатуре
+					case sf::Event::KeyPressed :			// РќР°Р¶Р°С‚Р° РёР»Рё РѕС‚РїСѓС‰РµРЅР° РєР°РєР°СЏ-Р»РёР±Рѕ РєРЅРѕРїРєР° РЅР° РєР»Р°РІРёР°С‚СѓСЂРµ
 					case sf::Event::KeyReleased : {
 						e.type = static_cast<int>(tEvent::types::Keyboard);
 						event.type == sf::Event::KeyPressed ?
@@ -493,7 +494,7 @@ namespace edt {
 						e.address = this;
 						break;
 					}
-					case sf::Event::MouseButtonPressed :	// Нажата или отпущена какая-либо кнопка мыши
+					case sf::Event::MouseButtonPressed :	// РќР°Р¶Р°С‚Р° РёР»Рё РѕС‚РїСѓС‰РµРЅР° РєР°РєР°СЏ-Р»РёР±Рѕ РєРЅРѕРїРєР° РјС‹С€Рё
 					case sf::Event::MouseButtonReleased : {
 						e.type = static_cast<int>(tEvent::types::Mouse);
 						e.code = static_cast<int>(tEvent::codes::MouseButton);
@@ -505,7 +506,7 @@ namespace edt {
 						e.address = this;
 						break;
 					}
-					case sf::Event::MouseMoved : {			// Мышь двинулась куда-то
+					case sf::Event::MouseMoved : {			// РњС‹С€СЊ РґРІРёРЅСѓР»Р°СЃСЊ РєСѓРґР°-С‚Рѕ
 						e.type = static_cast<int>(tEvent::types::Mouse);
 						e.code = static_cast<int>(tEvent::codes::MouseMoved);
 						e.mouse.x = event.mouseMove.x;
@@ -520,48 +521,60 @@ namespace edt {
 
 	void tDesktop::handleEvent(tEvent& e) {
 		tGroup::handleEvent(e);
-		if (e.address == this) {			// Обработка событий для этого объекта
-			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {	// Общего типа
+		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {	// РћР±С‰РµРіРѕ С‚РёРїР°
+				if (e.address == this) {			// РћР±СЂР°Р±РѕС‚РєР° СЃРѕР±С‹С‚РёР№ РґР»СЏ СЌС‚РѕРіРѕ РѕР±СЉРµРєС‚Р°
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+						case static_cast<int>(tEvent::codes::Delete) : {		// РЈРґР°Р»РёС‚СЊ РѕР±СЉРµРєС‚
 							_delete(e.from);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-							e.from->activate();
+						case static_cast<int>(tEvent::codes::Activate) : {		// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ С„РѕРєСѓСЃ РЅР° РѕР±СЉРµРєС‚
+							e.from->makeActive(true);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->deactivate();
+						case static_cast<int>(tEvent::codes::Deactivate) : {	// РЎРЅСЏС‚СЊ С„РѕРєСѓСЃ СЃ РѕР±СЉРµРєС‚Р°
+							e.from->makeActive(false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->show();
+						case static_cast<int>(tEvent::codes::Show) : {			// РџРѕРєР°Р·Р°С‚СЊ РѕР±СЉРµРєС‚ (РµСЃР»Рё РѕРЅ СЃРєСЂС‹С‚)
+							e.from->makeVisible(true);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->hide();
+						case static_cast<int>(tEvent::codes::Hide) : {			// РЎРїСЂСЏС‚Р°С‚СЊ РѕР±СЉРµРєС‚ (РµСЃР»Рё РѕРЅ РЅРµ СЃРєСЂС‹С‚)
+							e.from->makeVisible(false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+						case static_cast<int>(tEvent::codes::Adopt) : {			// РЎС‚Р°С‚СЊ РІР»Р°РґРµР»СЊС†РµРј РѕР±СЉРµРєС‚Р°
 							e.from->setOwner(this);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::CloseApplication) : {	// Закрыть приложение
+						case static_cast<int>(tEvent::codes::CloseApplication) : {	// Р—Р°РєСЂС‹С‚СЊ РїСЂРёР»РѕР¶РµРЅРёРµ
 							window.close();
 							clearEvent(e);
 							break;
 						}
 					}
-					break;
 				}
+				break;
+			}
+			case static_cast<int>(tEvent::types::Button) : {	// РћС‚ РєРЅРѕРїРєРё
+				if (e.type != static_cast<int>(tEvent::types::Nothing)) {
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::ResetButtons) : {
+							forEach(static_cast<int>(tEvent::codes::ResetButtons), e.from);
+							clearEvent(e);
+							break;
+						}
+					}
+				}
+				break;
 			}
 		}
 	}
@@ -708,13 +721,13 @@ namespace edt {
 
 	void tButton::updateTexture() {
 		render_texture.clear(sf::Color(0, 0, 0, 255));
-		if (custom_skin_loaded) {	// Если загружен пользовательский скин кнопки, то выводим его
+		if (custom_skin_loaded) {	// Р•СЃР»Рё Р·Р°РіСЂСѓР¶РµРЅ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊСЃРєРёР№ СЃРєРёРЅ РєРЅРѕРїРєРё, С‚Рѕ РІС‹РІРѕРґРёРј РµРіРѕ
 			sf::Sprite spr;
 			spr.setTexture(custom_skin);
 			spr.setPosition(sf::Vector2f(0, 0));
 			render_texture.draw(spr);
 		}
-		else {						// Иначе - рисуем стандартную кнопку
+		else {						// РРЅР°С‡Рµ - СЂРёСЃСѓРµРј СЃС‚Р°РЅРґР°СЂС‚РЅСѓСЋ РєРЅРѕРїРєСѓ
 			sf::Vector2f tex_size = (sf::Vector2f)render_texture.getSize();
 			float offset = (float)side_offset / 2;
 			sf::VertexArray arr(sf::Quads, 4);
@@ -722,21 +735,21 @@ namespace edt {
 			sf::Color top_color = sf::Color(120, 120, 120, 255);
 			sf::Color side_color = sf::Color(70, 70, 70, 255);
 			sf::Color bottom_color = sf::Color(20, 20, 20, 255);
-			for (int i = 0; i < 4; i++)						// Лицевая сторона
+			for (int i = 0; i < 4; i++)						// Р›РёС†РµРІР°СЏ СЃС‚РѕСЂРѕРЅР°
 				arr[i].color = front_color;
 			arr[0].position = sf::Vector2f(offset, offset);
 			arr[1].position = sf::Vector2f(tex_size.x - offset, offset);
 			arr[2].position = sf::Vector2f(tex_size.x - offset, tex_size.y - offset);
 			arr[3].position = sf::Vector2f(offset, tex_size.y - offset);
 			render_texture.draw(arr);
-			for (int i = 0; i < 4; i++)						// Верхняя сторона
+			for (int i = 0; i < 4; i++)						// Р’РµСЂС…РЅСЏСЏ СЃС‚РѕСЂРѕРЅР°
 				arr[i].color = top_color;
 			arr[0].position = sf::Vector2f(0, 0);
 			arr[1].position = sf::Vector2f(tex_size.x, 0);
 			arr[2].position = sf::Vector2f(tex_size.x - offset, offset);
 			arr[3].position = sf::Vector2f(offset, offset);
 			render_texture.draw(arr);
-			for (int i = 0; i < 4; i++)						// Боковые стороны
+			for (int i = 0; i < 4; i++)						// Р‘РѕРєРѕРІС‹Рµ СЃС‚РѕСЂРѕРЅС‹
 				arr[i].color = side_color;
 			arr[0].position = sf::Vector2f(0, 0);
 			arr[1].position = sf::Vector2f(offset, offset);
@@ -748,7 +761,7 @@ namespace edt {
 			arr[2].position = sf::Vector2f(tex_size.x, tex_size.y);
 			arr[3].position = sf::Vector2f(tex_size.x - offset, tex_size.y - offset);
 			render_texture.draw(arr);
-			for (int i = 0; i < 4; i++)						// Нижжняя сторона
+			for (int i = 0; i < 4; i++)						// РќРёР¶Р¶РЅСЏСЏ СЃС‚РѕСЂРѕРЅР°
 				arr[i].color = bottom_color;
 			arr[0].position = sf::Vector2f(offset, tex_size.y - offset);
 			arr[1].position = sf::Vector2f(tex_size.x - offset, tex_size.y - offset);
@@ -756,10 +769,12 @@ namespace edt {
 			arr[3].position = sf::Vector2f(0, tex_size.y);
 			render_texture.draw(arr);
 		}
-		if (font_loaded) {				// Если подгружен шрифт, то выводим текст
+		if (font_loaded) {				// Р•СЃР»Рё РїРѕРґРіСЂСѓР¶РµРЅ С€СЂРёС„С‚, С‚Рѕ РІС‹РІРѕРґРёРј С‚РµРєСЃС‚
 			updateTextObject();
 			sf::Text text_to_display = text_object;
-			switch (alignment) {			// Настройка выравнивания
+			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// РџСЂРё РЅР°РІРµРґРµРЅРёРё РЅР° РєРЅРѕРїРєСѓ РјС‹С€СЊСЋ, С‚РµРєСЃС‚ РїРѕРґС‡С‘СЂРєРёРІР°РµС‚СЃСЏ
+			text_to_display.setOutlineThickness(outline_thickness);
+			switch (alignment) {			// РќР°СЃС‚СЂРѕР№РєР° РІС‹СЂР°РІРЅРёРІР°РЅРёСЏ
 				case static_cast<int>(tButton::alignment_type::Right) : {
 					text_to_display.setOrigin(sf::Vector2f((float)text_to_display.getLocalBounds().width, (float)text_to_display.getLocalBounds().height));
 					text_to_display.setPosition(sf::Vector2f((float)render_texture.getSize().x - side_offset - text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y));
@@ -777,12 +792,10 @@ namespace edt {
 					break;
 				}
 			}
-			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Underlined) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
-			text_to_display.setOutlineThickness(outline_thickness);
-			text_to_display.setFillColor(sf::Color::Black);	// Немного контраста
+			text_to_display.setFillColor(sf::Color::Black);	// РќРµРјРЅРѕРіРѕ РєРѕРЅС‚СЂР°СЃС‚Р°
 			text_to_display.move(sf::Vector2f(1, 1));
 			render_texture.draw(text_to_display);
-			text_to_display.setFillColor(text_color);		// А это уже сам вывод текста
+			text_to_display.setFillColor(text_color);		// Рђ СЌС‚Рѕ СѓР¶Рµ СЃР°Рј РІС‹РІРѕРґ С‚РµРєСЃС‚Р°
 			text_to_display.move(sf::Vector2f(-1, -1));
 			render_texture.draw(text_to_display);
 		}
@@ -817,7 +830,7 @@ namespace edt {
 		updateTexture();
 	}
 
-	void tButton::setTextOffset(sf::Vector2u new_offset) {
+	void tButton::setTextOffset(sf::Vector2i new_offset) {
 		text_offset = new_offset;
 		updateTexture();
 	}
@@ -862,26 +875,38 @@ namespace edt {
 
 	void tButton::handleEvent(tEvent& e) {
 		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {
+				switch (e.code) {
+					case static_cast<int>(tEvent::codes::ResetButtons) : {
+						if (e.from != this) {
+							mouse_inside[0] = false;
+							updateTexture();
+						}
+						break;
+					}
+				}
+				break;
+			}
 			case static_cast<int>(tEvent::types::Mouse) : {
 				switch (e.code) {
 					case static_cast<int>(tEvent::codes::MouseMoved) : {
-						mouse_inside[1] = mouse_inside[0];	// Предыдущее и текущее состояние флага
-						mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
-						if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
+						bool flag = pointIsInsideMe({ e.mouse.x, e.mouse.y });
+						mouse_inside[1] = mouse_inside[0];	// РџСЂРµРґС‹РґСѓС‰РµРµ Рё С‚РµРєСѓС‰РµРµ СЃРѕСЃС‚РѕСЏРЅРёРµ С„Р»Р°РіР°
+						mouse_inside[0] = flag;
+						if (mouse_inside[0] != mouse_inside[1]) {	// Р•СЃР»Рё РїСЂРѕРёР·РѕС€Р»Рѕ РёР·РјРµРЅРµРЅРёРµ, С‚Рѕ РіРµРЅРµСЂРёСЂСѓРµРј С‚РµРєСЃС‚СѓСЂСѓ Р·Р°РЅРѕРІРѕ СЃ РїРѕРґС‡С‘СЂРєРЅСѓС‚С‹Рј С‚РµРєСЃС‚РѕРј
 							updateTexture();
 							clearEvent(e);
+						}
+						if (flag) {
+							message(nullptr, static_cast<int>(tEvent::types::Button), static_cast<int>(tEvent::codes::ResetButtons), this);
 						}
 						break;
 					}
 					case static_cast<int>(edt::tEvent::codes::MouseButton) : {
 						if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
-							pointIsInsideMe({ e.mouse.x, e.mouse.y }))	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
+							pointIsInsideMe({ e.mouse.x, e.mouse.y }))	// Р•СЃР»Рё Р»РµРІР°СЏ РєРЅРѕРїРєР° РјС‹С€Рё РѕС‚РїСѓС‰РµРЅР°, Рё РјС‹С€СЊ РЅР°С…РѕРґРёС‚СЃСЏ РІРЅСѓС‚СЂРё РєРЅРѕРїРєРё, С‚Рѕ РїРµСЂРµРґР°С‘Рј РїРѕСЃР»Р°РЅРёРµ
 						{
-							e.type = static_cast<int>(edt::tEvent::types::Button);
-							e.code = self_code;
-							e.from = this;
-							e.address = owner;
-							putEvent(e);
+							message(owner, static_cast<int>(edt::tEvent::types::Button), self_code, this);
 							clearEvent(e);
 						}
 						break;
@@ -912,14 +937,22 @@ namespace edt {
 
 	void tWindow::initWindow() {
 		sf::FloatRect rect = getLocalBounds();
-		tRectShape *r = new tRectShape({ 0, 0, rect.width, heap_height }, color_heap);	// Шапка
+		tRectShape *r = new tRectShape({ 0, 0, rect.width, heap_height }, color_heap);	// РЁР°РїРєР°
 		_insert(r);
 
-		r = new tRectShape({ 0, heap_height, rect.width, rect.height - heap_height }, color_space);	// Рабочее пространство
+		r = new tRectShape({ 0, heap_height, rect.width, rect.height - heap_height }, color_space);	// Р Р°Р±РѕС‡РµРµ РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІРѕ
 		_insert(r);
 
 		tButton *b = new tButton({ rect.width - heap_height + 2, 2, heap_height - 4, heap_height - 4 }, "");
 		b->setCode(static_cast<int>(edt::tEvent::codes::Close));
+		b->setString("x");
+		b->setFont(font);
+		b->setTextColor({255, 255, 255, 255});
+		b->setCharSize(20);
+		b->setOutlineThickness(1);
+		b->setAlignment(static_cast<int>(tButton::alignment_type::Middle));
+		b->setTextOffset({0, -2});
+		b->updateTexture();
 		_insert(b);
 	}
 
@@ -990,52 +1023,63 @@ namespace edt {
 
 	void tWindow::handleEvent(tEvent& e) {
 		tGroup::handleEvent(e);
-		if (e.address == this) {
-			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
+		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {
+				if (e.address == this) {
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+						case static_cast<int>(tEvent::codes::Delete) : {		// РЈРґР°Р»РёС‚СЊ РѕР±СЉРµРєС‚
 							_delete(e.from);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-							e.from->activate();
+						case static_cast<int>(tEvent::codes::Activate) : {		// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ С„РѕРєСѓСЃ РЅР° РѕР±СЉРµРєС‚
+							e.from->makeActive(true);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->deactivate();
+						case static_cast<int>(tEvent::codes::Deactivate) : {	// РЎРЅСЏС‚СЊ С„РѕРєСѓСЃ СЃ РѕР±СЉРµРєС‚Р°
+							e.from->makeActive(false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->show();
+						case static_cast<int>(tEvent::codes::Show) : {			// РџРѕРєР°Р·Р°С‚СЊ РѕР±СЉРµРєС‚ (РµСЃР»Рё РѕРЅ СЃРєСЂС‹С‚)
+							e.from->makeVisible(true);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->hide();
+						case static_cast<int>(tEvent::codes::Hide) : {			// РЎРїСЂСЏС‚Р°С‚СЊ РѕР±СЉРµРєС‚ (РµСЃР»Рё РѕРЅ РЅРµ СЃРєСЂС‹С‚)
+							e.from->makeVisible(false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+						case static_cast<int>(tEvent::codes::Adopt) : {			// РЎС‚Р°С‚СЊ РІР»Р°РґРµР»СЊС†РµРј РѕР±СЉРµРєС‚Р°
 							e.from->setOwner(this);
 							clearEvent(e);
 							break;
 						}
-						default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+						default: {				// Р•СЃР»Рё РЅРµ РѕР±СЂР°Р±РѕС‚Р°Р»РѕСЃСЊ, С‚Рѕ "РїСЂРѕС‚Р°Р»РєРёРІР°РµРј" РЅР° СѓСЂРѕРІРµРЅСЊ РЅРёР¶Рµ
 							e.address = owner;
 							putEvent(e);
 							clearEvent(e);
 							break;
 						}
 					}
-					break;
 				}
-				case static_cast<int>(tEvent::types::Button) : {
+				if (e.type != static_cast<int>(tEvent::types::Nothing)) {
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::Close) : {			// Закрыть окно
+						case static_cast<int>(tEvent::codes::ResetButtons) : {
+							// РќРµ РѕР±СЂР°Р±Р°С‚С‹РІР°С‚СЊ.
+							clearEvent(e);
+							break;
+						}
+					}
+				}
+				break;
+			}
+			case static_cast<int>(tEvent::types::Button) : {
+				if (e.address == this) {
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::Close) : {			// Р—Р°РєСЂС‹С‚СЊ РѕРєРЅРѕ
 							e.type = static_cast<int>(tEvent::types::Broadcast);
 							e.code = static_cast<int>(tEvent::codes::Delete);
 							e.address = owner;
@@ -1044,14 +1088,14 @@ namespace edt {
 							clearEvent(e);
 							break;
 						}
-						default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+						default: {				// Р•СЃР»Рё РЅРµ РѕР±СЂР°Р±РѕС‚Р°Р»РѕСЃСЊ, С‚Рѕ "РїСЂРѕС‚Р°Р»РєРёРІР°РµРј" РЅР° СѓСЂРѕРІРµРЅСЊ РЅРёР¶Рµ
 							e.address = owner;
 							putEvent(e);
 							clearEvent(e);
 						}
 					}
-					break;
 				}
+				break;
 			}
 		}
 	}

@@ -2,14 +2,14 @@
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include <vector>
+#include <list>
 #include <string>
 #include <thread>
 #include <chrono>
 #include <fstream>
 #include "json.hpp"
 
-#define vec std::vector
+#define list std::list
 
 namespace edt {
 
@@ -26,7 +26,7 @@ namespace edt {
 		enum class codes {
 			Activate, Deactivate, Show, Hide,
 			Move, Adopt, Delete, Close, CloseApplication,
-			MouseMoved, MouseButton
+			MouseMoved, MouseButton, ResetButtons
 		};
 
 		unsigned int type = static_cast<int>(types::Nothing); // Из какой сферы событие (тип)
@@ -77,6 +77,7 @@ namespace edt {
 		bool isActive();
 		bool canMove();
 
+		void message(tObject* addr, int type, int code, tObject* from);
 		void setMovementStates(sMovement new_movement);
 		void setOwner(tObject *new_owner);
 		void clearEvent(tEvent& e);
@@ -84,12 +85,9 @@ namespace edt {
 
 		virtual sMovement getMovementStates();
 		virtual void move(sf::Vector2f delta);
-		virtual void show();
-		virtual void hide();
-		virtual void activate();
-		virtual void deactivate();
+		virtual void makeVisible(bool flag);
+		virtual void makeActive(bool flag);
 		virtual sf::Vector2i getCursorPos();
-		virtual void message(tObject *addr, int type, int code, tObject *from);
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e);
@@ -103,9 +101,7 @@ namespace edt {
 
 	class tGroup : public tObject { // Класс-контейнер
 	protected:
-		unsigned int current;	// Указатель на текущий выбранный элемент контейнера объектов
-
-		vec<tObject*> elem;		// Контейнер элементов, хранящихся в данном классе
+		list<tObject*> elem;		// Контейнер элементов, хранящихся в данном классе
 
 	public:
 		tGroup();
@@ -114,12 +110,11 @@ namespace edt {
 		void _insert(tObject *object);		// Внесение элемента в список подэлементов
 		bool _delete(tObject *object);		// Удаление элемента из списка
 		void select(tObject *object);		// Установка флага "активен" у элемента
-		void forEach(unsigned int code);	// Выполнить команду для всех подэлементов
+		void forEach(unsigned int code, tObject* from);	// Выполнить команду для всех подэлементов
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
-		virtual void show();
-		virtual void hide();
+		virtual void makeVisible(bool flag);
 	};
 
 	class tRenderRect : public tGroup {
@@ -167,7 +162,7 @@ namespace edt {
 		sf::Font font_default;		// Шрифт по умолчанию
 		sf::Font custom_font;		// Пользовательский шрифт
 		bool custom_font_loaded;	// Флаг. Загружен ли пользовательский шрифт?
-		vec<tEvent> events;			// Список событий к обработке
+		list<tEvent> events;		// Список событий к обработке
 
 		char screen_code;			// Код текущего экрана
 	
@@ -225,7 +220,7 @@ namespace edt {
 		bool custom_skin_loaded;			// Флаг. Загружен ли пользовательский скин кнопки?
 		sf::Texture custom_skin;			// Пользовательский скин кпопки
 		char alignment;						// Тип выравнивания
-		sf::Vector2u text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
+		sf::Vector2i text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		
 	public:
 		enum class alignment_type { Left, Middle, Right };
@@ -238,7 +233,7 @@ namespace edt {
 		void updateTexture();
 		void loadCustomSkin(std::string path_to_skin);
 		void setAlignment(char new_alignment);
-		void setTextOffset(sf::Vector2u new_offset);
+		void setTextOffset(sf::Vector2i new_offset);
 		void setCode(int new_code);
 
 		bool pointIsInsideMe(sf::Vector2i point);
