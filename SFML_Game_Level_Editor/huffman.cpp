@@ -1,18 +1,19 @@
 #include "huffman.h"
+#include <queue>
 
 namespace huf {
 
-	void huffman_compression::makeCodes(tTree* root, std::map<char, std::vector<bool>>& codes, std::vector<bool>& current_code) {
+	void huffman_compression::makeCodes(tTree* root, std::map<unsigned char, std::vector<bool>>& codes, std::vector<bool>& current_code) {
 		if (root->c != 0) {
 			codes[root->c] = current_code;
 		}
 		else {
-			if (root->left) {
+			if (root->left) {	// 0
 				current_code.push_back(false);
 				makeCodes(root->left, codes, current_code);
 				current_code.pop_back();
 			}
-			if (root->right) {
+			if (root->right) {	// 1
 				current_code.push_back(true);
 				makeCodes(root->right, codes, current_code);
 				current_code.pop_back();
@@ -20,7 +21,7 @@ namespace huf {
 		}
 	}
 
-	huffman_compression::tTree* huffman_compression::makeTree(std::map<char, unsigned int>& freq) {
+	huffman_compression::tTree* huffman_compression::makeTree(std::map<unsigned char, unsigned int>& freq) {
 		std::list<tTree*> list;	// Вспомогательный список с найденными символами для построения дерева кодов
 
 		for (auto& it : freq) {	// Инициализация списка
@@ -40,7 +41,6 @@ namespace huf {
 		return list.front();
 	}
 
-	/*
 	void huffman_compression::printTree(tTree* root, unsigned int tabs) {
 		if (root->left) {
 			printTree(root->left, tabs + 1);
@@ -51,14 +51,13 @@ namespace huf {
 		for (unsigned int i = 0; i < tabs; i++) {
 			std::cout << "\t";
 		}
-		if (!root->left && !root->right) {
+		if (root->c != 0) {
 			std::cout << "'" << root->c << "' : " << root->count << "\n";
 		}
 		else {
 			std::cout << root->count << "\n";
 		}
 	}
-	*/
 
 	huffman_compression::huffman_compression(std::string _path_to_folder) :
 		path_to_folder(_path_to_folder),
@@ -67,7 +66,7 @@ namespace huf {
 	{
 	}
 
-	void huffman_compression::selectFileToCompress(std::string path_to_file_from_folder) {
+	void huffman_compression::selectFile(std::string path_to_file_from_folder) {
 		filename = path_to_file_from_folder;
 		resFilename = filename;
 		std::string::iterator it;
@@ -78,24 +77,26 @@ namespace huf {
 	}
 
 	void huffman_compression::compress(std::string path_to_file_from_folder, std::string resulting_file_extention) {
-		selectFileToCompress(path_to_file_from_folder);
+		selectFile(path_to_file_from_folder);
 		std::ifstream file(path_to_folder + filename);
 		if (file.is_open() && resFilename != "") {
 			resFilename += resulting_file_extention;
 
-			std::map<char, unsigned int> freq;	// Ассоциативный массив для подсчёта кол-ва вхождений каждого из символов
+			std::map<unsigned char, unsigned int> freq;	// Ассоциативный массив для подсчёта кол-ва вхождений каждого из символов
 			unsigned int dictionary_size = 0;	// Кол-во символов в словаре
 			while (!file.eof()) {	// Подсчёт вхождений
-				char c;
-				file >> c;
+				unsigned char c;
+				c = file.get();
+				//if (c == 255) continue;	// Если не EOF, то считаем символ
 				freq[c]++;
 				if (freq[c] == 1) dictionary_size++;
 			}
 			
 			tTree* huffman_root = makeTree(freq);					// Корень дерева хаффмана
-			std::map<char, std::vector<bool> > codes;	// Ассоциативный массив для хранения символов и кодов к ним в виде vector<bool>
+			//printTree(huffman_root);
+			std::map<unsigned char, std::vector<bool> > codes;	// Ассоциативный массив для хранения символов и кодов к ним в виде vector<bool>
 			std::vector<bool> temp_vec = {};	// Просто надо
-			makeCodes(huffman_root, codes, temp_vec);	// Генерация кодов в виде vector<bool>
+			makeCodes(huffman_root, codes, temp_vec);			// Генерация кодов в виде vector<bool>
 			delete huffman_root;									// Коды сгенерированы, хранение дерева больше не требуется
 			
 			std::ofstream ofile(path_to_folder + resFilename, std::ofstream::binary);	// Открытие файла для записи
@@ -108,25 +109,38 @@ namespace huf {
 
 			file.clear(); file.seekg(0);	// Переходим на начало кодируемого файла
 			unsigned int byte = 0;
+			unsigned char bit_count = 0;	// Кол-во полезных бит в последнем байте
+
+			std::list<char> buffer = {};	// Зафигачим код в него (побайтно), вычислим 'bit_count', а затем запишем буфер в файл
+
 			while (!file.eof()) {	// Читаем файл
-				char c;
-				file >> c;
+				unsigned char c;
+				c = file.get();
 				std::vector<bool> bits = codes[c];	// Соотносим код (vector<bool>) с только что считанным символом
-				for (unsigned int i = 0; i < bits.size(); i++) {	// Получаем код символа в переменную 'byte'
-					byte = byte << 1;
-					if (bits[i]) {
-						byte |= 1;
-					}
+				for (std::vector<bool>::iterator it = bits.begin(); it != bits.end(); it++) {
+					byte = byte << 1;	// Получаем код символа в переменную 'byte'
+					byte |= (*it) && true;
+					bit_count++;
 				}
-				if (byte >= 255) {	// Если собрали 8 бит, то записываем их в результирующий файл
-					unsigned char a = byte % 256;
-					byte = byte >> 8;
-					ofile.write((char*)&a, sizeof(a));
+				while (bit_count >= 8) {	// Если собрали 8 бит, то записываем их в буфер
+					unsigned char a = byte >> (bit_count - 8);	// Теперь в 'a' первые 8 бит кода
+					buffer.push_back(a);
+					a = 0;	// теперь 'a' станет маской
+					for (unsigned char i = 0; i < (bit_count - 8); i++) {
+						a = a << 1;
+						a |= 1;
+					}
+					byte &= a;	// Оставим то, что не записали в буфер (начало следующего байта)
+					bit_count -= 8;
 				}
 			}
-			if (byte != 0) {		// Записываем в результирующий файл то, что осталось
-				unsigned char a = byte;
-				ofile.write((char*)&a, sizeof(a));
+			if (byte != 0) {		// Записываем в буфер то, что осталось
+				buffer.push_back(byte);
+			}
+
+			ofile.write((char*)&bit_count, sizeof(bit_count));	// Записываем в результирующий файл кол-во полезных бит в последнем байте
+			for (auto& it : buffer) {	// Записываем в результирующий файл 'арабскую вязь' из буфера
+				ofile.write((char*)&it, sizeof(it));
 			}
 
 			file.close();
@@ -137,7 +151,70 @@ namespace huf {
 		}
 	}
 
-	huffman_compression::tTree::tTree(char _c, unsigned int _count) :
+	void huffman_compression::decompress(std::string path_to_file_from_folder, std::string resulting_file_extention) {
+		selectFile(path_to_file_from_folder);
+		std::ifstream file(path_to_folder + filename);
+		if (file.is_open() && resFilename != "") {
+			resFilename += resulting_file_extention;
+
+			unsigned int dictionary_size;
+			file.read((char*)&dictionary_size, sizeof(dictionary_size));
+			
+			std::map<unsigned char, unsigned int> freq;	// Ассоциативный массив для хранения кол-ва вхождений каждого из символов
+			for (unsigned int i = 0; i < dictionary_size; i++) {	// Считывание
+				unsigned char c;
+				file.read((char*)&c, sizeof(c));
+				unsigned int f;
+				file.read((char*)&f, sizeof(f));
+				freq[c] = f;
+				//std::cout << "'" << c << "' (" << (int)c << ") : " << f << "\n";
+			}
+
+			unsigned char last_byte_bit_count;
+			file.read((char*)&last_byte_bit_count, sizeof(last_byte_bit_count));
+
+			std::ofstream ofile(path_to_folder + resFilename);	// Открытие файла для записи
+
+			tTree* huffman_root = makeTree(freq);				// Корень дерева хаффмана
+			//std::cout << "\n\n\n\n\n\n\n\n\n\n\n\n";
+			//printTree(huffman_root);
+			tTree* p = huffman_root;							// Указатель, прыгающий по дереву и собирающий код в буквы
+
+			while (!file.eof()) {
+				unsigned char c;
+				file.read((char*)&c, sizeof(c));
+				std::list<bool> char_bits = {};
+				for (int i = 0; i < 8; i++) {
+					unsigned char a = c % 2;
+					char_bits.push_front(a);	// 1 - true, 0 - false
+					c = c >> 1;
+				}
+				if (file.eof() && last_byte_bit_count != 0) {	// Последний байт надо подготовить
+					for (char i = 0; i < 8 - last_byte_bit_count; i++) {
+						char_bits.pop_front();
+					}
+				}
+				if (!file.eof())
+				for (auto& it : char_bits) {
+					if (it) { p = p->right; }
+					else { p = p->left; }
+					if (p->c != 0) {
+						ofile.write((char*)&p->c, sizeof(p->c));
+						p = huffman_root;
+					}
+				}
+			}
+
+			delete huffman_root;
+			file.close();
+			ofile.close();
+		}
+		else {
+			std::cout << "huffman error: file '.." << filename << "' does not exist.\n";
+		}
+	}
+
+	huffman_compression::tTree::tTree(unsigned char _c, unsigned int _count) :
 		c(_c),
 		count(_count),
 		left(nullptr),

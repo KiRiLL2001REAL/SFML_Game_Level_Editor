@@ -16,11 +16,11 @@ namespace huf {
 
 		class tTree {
 		public:
-			char c;
+			unsigned char c;
 			unsigned int count;
 			
 			tTree* left, * right;
-			tTree(char _c, unsigned int _count);
+			tTree(unsigned char _c, unsigned int _count);
 			tTree(tTree* _left, tTree* _right);
 			~tTree();
 		};
@@ -30,16 +30,17 @@ namespace huf {
 			bool operator()(tTree* a, tTree* b) const;
 		};
 
-		void selectFileToCompress(std::string path_to_file_from_folder);
-		void makeCodes(tTree* root, std::map<char, std::vector<bool> >& codes, std::vector<bool>& current_code);
-		tTree* makeTree(std::map<char, unsigned int> &freq);
+		void selectFile(std::string path_to_file_from_folder);
+		void makeCodes(tTree* root, std::map<unsigned char, std::vector<bool> >& codes, std::vector<bool>& current_code);
+		tTree* makeTree(std::map<unsigned char, unsigned int> &freq);
 
-		//void printTree(tTree* root, unsigned int tabs = 0);
+		void printTree(tTree* root, unsigned int tabs = 0);
 
 	public:
 		huffman_compression(std::string path_to_folder);
 
 		void compress(std::string path_to_file_from_folder, std::string resulting_file_extention = ".huf");
+		void decompress(std::string path_to_file_from_folder, std::string resulting_file_extention = ".txt");
 
 	};
 }

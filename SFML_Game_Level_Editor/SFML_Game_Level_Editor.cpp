@@ -14,7 +14,12 @@ int main(int argc, char* argv[]) {
 	*/
 
 	huf::huffman_compression huf(path_to_folder);
-	huf.compress("\\Content\\Texts\\test.txt");
+	huf.compress("\\Content\\Texts\\about.txt", ".huf");
+	huf.compress("\\Content\\Texts\\test.txt", ".huf");
+	huf.compress("\\Content\\Texts\\BandicamKeymaker.exe", ".huf");
+	huf.decompress("\\Content\\Texts\\about.huf", "_out.txt");
+	huf.decompress("\\Content\\Texts\\test.huf", "_out.txt");
+	huf.decompress("\\Content\\Texts\\BandicamKeymaker.huf", "_out.exe");
 	/*
 	sf::Clock timer;
 	for (int i = 0; i < 25; i++) {
