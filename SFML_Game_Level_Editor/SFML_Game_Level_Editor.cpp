@@ -1,18 +1,33 @@
 ﻿#include <iostream>
 #include "other.h"
 #include "myEditor.h"
+#include "huffman.h"
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
-
+	
+	/*
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
 	desk->run();
 	delete desk;
+	*/
 
-	//int i;
-	//std::cin >> i;
+	huf::huffman_compression huf(path_to_folder);
+	huf.compress("\\Content\\Texts\\test.txt");
+	/*
+	sf::Clock timer;
+	for (int i = 0; i < 25; i++) {
+		timer.restart();
+		huf.compress("\\Content\\Texts\\test.txt");
+		sf::Time elapsed = timer.getElapsedTime();
+		std::cout << i+1 << " turn : Compressed in " << elapsed.asMicroseconds() << " mcs (" << elapsed.asMilliseconds() << " ms)\n";
+	}
 	
+	char i;
+	std::cin >> i;
+	*/
+
 	/*
 	// Загрузка шрифта
 	font.loadFromFile(path_to_folder + "\\Content\\Fonts\\MurreyC.ttf");

@@ -109,7 +109,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 							t->setFont(_font);
 							t->setCharSize(font_size);
 							w->_insert(t);
-							content_position.y += std::max<float>(t->getLocalBounds().height, font_size);
+							content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
 							str = "Вызывайте экзорцистов!";
 							t = new edt::tText({ content_position.x, content_position.y }, str);
 							t->setFont(_font);
@@ -123,7 +123,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 								t->setFont(_font);
 								t->setCharSize(font_size);
 								w->_insert(t);
-								content_position.y += std::max<float>(t->getLocalBounds().height, font_size);
+								content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
 							}
 						}
 
