@@ -6,12 +6,6 @@
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
-	
-	//std::fstream file(path_to_folder + "\\test.txt", std::fstream::in);
-
-	//unsigned char buf[4];
-
-	//file.close();
 
 	/*
 	myDesktop* desk = new myDesktop(path_to_folder);
@@ -19,7 +13,6 @@ int main(int argc, char* argv[]) {
 	desk->run();
 	delete desk;
 	*/
-
 	
 	sf::Clock timer;
 	sf::Time elapsed;
@@ -28,8 +21,7 @@ int main(int argc, char* argv[]) {
 	timer.restart();
 
 	//huf.compress("\\Content\\Texts\\test.png", ".huf");
-	huf.compress("\\Content\\Texts\\test.txt", ".huf");
-	//huf.compress("\\Content\\Texts\\about.txt", ".huf");
+	huf.compress("\\Content\\Texts\\about.txt", ".huf");
 	//huf.compress("\\config.conf", ".huf");
 
 	elapsed = timer.getElapsedTime();
@@ -37,17 +29,14 @@ int main(int argc, char* argv[]) {
 	timer.restart();
 
 	//huf.decompress("\\Content\\Texts\\test.huf", "_out.png");
-	huf.decompress("\\Content\\Texts\\test.huf", "_out.txt");
-	//huf.decompress("\\Content\\Texts\\about.huf", "_out.txt");
+	huf.decompress("\\Content\\Texts\\about.huf", "_out.txt");
 	//huf.decompress("\\config.huf", "_out.conf");
 
 	elapsed = timer.getElapsedTime();
 	std::cout << "Decompressed in " << elapsed.asMicroseconds() << " mcs (" << elapsed.asMilliseconds() << " ms) (" << elapsed.asSeconds() << " s)\n";
 
 
-	
 	std::cin.get();
-	
 
 	/*
 	// Загрузка шрифта

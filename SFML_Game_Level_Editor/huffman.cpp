@@ -102,6 +102,7 @@ namespace huf {
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Подсчёт вхождений символов
 				unsigned char c;
 				file.read((char*)&c, sizeof(c));
+				//c = file.get();
 				freq[c]++;
 			}
 			unsigned int dictionary_size = freq.size();;	// Кол-во символов в словаре
@@ -174,13 +175,13 @@ namespace huf {
 
 			ofile.write((char*)&bit_count, sizeof(bit_count));	// Записываем в результирующий файл кол-во полезных бит в последнем байте
 			
-			bit_count = 0;
+			bit_count = 0;	// Теперь здесь лежит кол-во бит, собранных в byte
 
 			unsigned char c;
 			
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Читаем файл	
-			//while (fread(&c, 1, 1, &file)) {	// Читаем файл	
 				file.read((char*)&c, sizeof(c));
+				//c = file.get();
 				std::vector<bool> bits = codes[c];	// Соотносим код (vector<bool>) с только что считанным символом
 				for (std::vector<bool>::iterator it = bits.begin(); it != bits.end(); it++) {
 					byte = byte << 1;	// Получаем код символа в переменную 'byte'
@@ -200,7 +201,7 @@ namespace huf {
 				}
 				
 			}
-			if (byte != 0) {		// Записываем в буфер то, что осталось
+			if (bit_count != 0) {		// Записываем в буфер то, что осталось
 				unsigned char a = byte;
 				ofile.write((char*)&a, sizeof(a));
 			}
