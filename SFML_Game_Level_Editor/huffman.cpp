@@ -280,7 +280,7 @@ namespace huf {
 				// ТЕПЕРЬ file_size СОДЕРЖИТ В СЕБЕ РАЗМЕР, НЕПОСРЕДСТВЕННО, ИНТЕРЕСУЮЩЕЙ НАС ЧАСТИ ФАЙЛА (той, где код)
 				//
 
-				std::fstream ofile(path_to_folder + resFilename, std::fstream::out);	// Открытие файла для записи
+				std::fstream ofile(path_to_folder + resFilename, std::fstream::out | std::fstream::binary);	// Открытие файла для записи
 
 				tTree* huffman_root = makeTree(freq);				// Корень дерева хаффмана
 				if (debug) {

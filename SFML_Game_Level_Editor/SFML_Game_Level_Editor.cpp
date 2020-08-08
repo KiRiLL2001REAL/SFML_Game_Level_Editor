@@ -7,37 +7,11 @@
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
 
-	/*
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
 	desk->run();
 	delete desk;
-	*/
 	
-	sf::Clock timer;
-	sf::Time elapsed;
-	huf::huffman_compression huf(path_to_folder);
-
-	timer.restart();
-
-	//huf.compress("\\Content\\Texts\\test.png", ".huf");
-	huf.compress("\\Content\\Texts\\about.txt", ".huf");
-	//huf.compress("\\config.conf", ".huf");
-
-	elapsed = timer.getElapsedTime();
-	std::cout << "Compressed in " << elapsed.asMicroseconds() << " mcs (" << elapsed.asMilliseconds() << " ms) (" << elapsed.asSeconds() << " s)\n";
-	timer.restart();
-
-	//huf.decompress("\\Content\\Texts\\test.huf", "_out.png");
-	huf.decompress("\\Content\\Texts\\about.huf", "_out.txt");
-	//huf.decompress("\\config.huf", "_out.conf");
-
-	elapsed = timer.getElapsedTime();
-	std::cout << "Decompressed in " << elapsed.asMicroseconds() << " mcs (" << elapsed.asMilliseconds() << " ms) (" << elapsed.asSeconds() << " s)\n";
-
-
-	std::cin.get();
-
 	/*
 	// Загрузка шрифта
 	font.loadFromFile(path_to_folder + "\\Content\\Fonts\\MurreyC.ttf");
