@@ -2,10 +2,17 @@
 #include "other.h"
 #include "myEditor.h"
 #include "huffman.h"
+#include <fstream>
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
 	
+	//std::fstream file(path_to_folder + "\\test.txt", std::fstream::in);
+
+	//unsigned char buf[4];
+
+	//file.close();
+
 	/*
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
@@ -13,25 +20,34 @@ int main(int argc, char* argv[]) {
 	delete desk;
 	*/
 
-	huf::huffman_compression huf(path_to_folder);
-	huf.compress("\\Content\\Texts\\about.txt", ".huf");
-	huf.compress("\\Content\\Texts\\test.txt", ".huf");
-	huf.compress("\\Content\\Texts\\BandicamKeymaker.exe", ".huf");
-	huf.decompress("\\Content\\Texts\\about.huf", "_out.txt");
-	huf.decompress("\\Content\\Texts\\test.huf", "_out.txt");
-	huf.decompress("\\Content\\Texts\\BandicamKeymaker.huf", "_out.exe");
-	/*
-	sf::Clock timer;
-	for (int i = 0; i < 25; i++) {
-		timer.restart();
-		huf.compress("\\Content\\Texts\\test.txt");
-		sf::Time elapsed = timer.getElapsedTime();
-		std::cout << i+1 << " turn : Compressed in " << elapsed.asMicroseconds() << " mcs (" << elapsed.asMilliseconds() << " ms)\n";
-	}
 	
-	char i;
-	std::cin >> i;
-	*/
+	sf::Clock timer;
+	sf::Time elapsed;
+	huf::huffman_compression huf(path_to_folder);
+
+	timer.restart();
+
+	//huf.compress("\\Content\\Texts\\test.png", ".huf");
+	huf.compress("\\Content\\Texts\\test.txt", ".huf");
+	//huf.compress("\\Content\\Texts\\about.txt", ".huf");
+	//huf.compress("\\config.conf", ".huf");
+
+	elapsed = timer.getElapsedTime();
+	std::cout << "Compressed in " << elapsed.asMicroseconds() << " mcs (" << elapsed.asMilliseconds() << " ms) (" << elapsed.asSeconds() << " s)\n";
+	timer.restart();
+
+	//huf.decompress("\\Content\\Texts\\test.huf", "_out.png");
+	huf.decompress("\\Content\\Texts\\test.huf", "_out.txt");
+	//huf.decompress("\\Content\\Texts\\about.huf", "_out.txt");
+	//huf.decompress("\\config.huf", "_out.conf");
+
+	elapsed = timer.getElapsedTime();
+	std::cout << "Decompressed in " << elapsed.asMicroseconds() << " mcs (" << elapsed.asMilliseconds() << " ms) (" << elapsed.asSeconds() << " s)\n";
+
+
+	
+	std::cin.get();
+	
 
 	/*
 	// Загрузка шрифта
