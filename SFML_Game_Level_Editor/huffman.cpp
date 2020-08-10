@@ -181,7 +181,6 @@ namespace huf {
 			
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Читаем файл	
 				file.read((char*)&c, sizeof(c));
-				//c = file.get();
 				std::vector<bool> bits = codes[c];	// Соотносим код (vector<bool>) с только что считанным символом
 				for (std::vector<bool>::iterator it = bits.begin(); it != bits.end(); it++) {
 					byte = byte << 1;	// Получаем код символа в переменную 'byte'
@@ -289,24 +288,23 @@ namespace huf {
 					std::cout << "End of Huffman tree.\n\n";
 				}
 				tTree* p = huffman_root;							// Указатель, прыгающий по дереву и собирающий код в буквы
-
+				
+				unsigned char mask[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
+				unsigned begI = 0; 
 				for (unsigned long long iii = 0; iii < file_size; iii++) {
 					unsigned char c;
 					file.read((char*)&c, sizeof(c));
-					std::list<bool> char_bits = {};
-					for (int i = 0; i < 8; i++) {
-						unsigned char a = c % 2;
-						char_bits.push_front(a);	// 1 - true, 0 - false
-						c = c >> 1;
-					}
-					if ((iii == file_size - 1) && (last_byte_bit_count != 0)) {	// Последний байт надо подготовить
-						for (char i = 0; i < 8 - last_byte_bit_count; i++) {
-							char_bits.pop_front();
+					if (last_byte_bit_count != 0)
+						if (iii == file_size - 1) {
+							begI = 8 - last_byte_bit_count;
 						}
-					}
-					for (auto& it : char_bits) {
-						if (it) { p = p->right; }
-						else { p = p->left; }
+					for (int i = begI; i < 8; i++) {
+						if ((c & mask[i]) == 0) {
+							p = p->left;
+						}
+						else {
+							p = p->right;
+						}
 						if (p->is_letter) {
 							ofile.write((char*)&p->c, sizeof(p->c));
 							p = huffman_root;

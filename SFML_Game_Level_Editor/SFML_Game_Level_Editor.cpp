@@ -2,18 +2,48 @@
 #include "other.h"
 #include "myEditor.h"
 #include "huffman.h"
-#include <fstream>
+#include <sfml/Graphics.hpp>
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
-
+	/*
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
 	desk->run();
 	delete desk;
-	
+	*/
+	sf::Time elapsed;
+	sf::Clock timer;
+
+	std::string in[] = { "output.txt", "wiki1.txt", "zap.txt", "about.txt" };
+	std::string out[] = { "output.huf", "wiki1.huf", "zap.huf", "about.huf" };
+
+	huf::huffman_compression h(path_to_folder);
+
+	for (int i = 0; i < 4; i++) {
+		timer.restart();
+		h.compress("\\Content\\Texts\\" + in[i], ".huf");
+		elapsed = timer.getElapsedTime();
+		std::cout << "File '" << in[i] << "' compressed in " << elapsed.asMilliseconds() << " ms.\n";
+		timer.restart();
+		h.decompress("\\Content\\Texts\\" + out[i], "_out.txt");
+		elapsed = timer.getElapsedTime();
+		std::cout << "File '" << in[i] << "' decompressed in " << elapsed.asMilliseconds() << " ms.\n";
+		std::cout << "\n";
+	}
+
+	std::cin.get();
+
 	/*
 	// Загрузка шрифта
+	sf::Font font;
+	sf::Text text;
+	sf::VertexArray render_squad(sf::Quads, 4);
+	sf::RenderWindow window(sf::VideoMode(1920, 1080), "window", sf::Style::Close);
+	sf::RenderTexture canvas;
+	sf::RectangleShape background;
+	sf::RectangleShape instrumental_panel_background;
+
 	font.loadFromFile(path_to_folder + "\\Content\\Fonts\\MurreyC.ttf");
 	text.setFont(font);
 	text.setCharacterSize(48);
@@ -67,10 +97,10 @@ int main(int argc, char* argv[]) {
 		window.clear();
 
 		window.draw(background);
-		window.draw(render_squad, &canvas.getTexture());
+		window.draw(render_squad);
 		window.draw(instrumental_panel_background);
 
-		string = "кукусики";
+		std::string string = "кукусики";
 		text.setString(string);
 
 		text.setPosition(6, -9);
@@ -82,7 +112,7 @@ int main(int argc, char* argv[]) {
 
 		window.display();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		/std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	}
 	*/
 }
