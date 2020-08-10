@@ -35,8 +35,8 @@ namespace huf {
 		void selectFile(std::string path_to_file_from_folder);
 		void makeCodes(
 			tTree* root, 						// Корень словаря
-			std::map<unsigned char,	std::vector<bool> >& codes, // Ассоциативный массив символов с их кодами в виде vector<bool>
-			std::vector<bool>& current_code		// ССылка на пустой массив (так надо)
+			std::map<unsigned char,	std::string>& codes, // Ассоциативный массив символов с их кодами в виде vector<bool>
+			std::string& current_code		// ССылка на пустой массив (так надо)
 		);
 		tTree* makeTree(std::map<unsigned char, unsigned int> &freq);
 

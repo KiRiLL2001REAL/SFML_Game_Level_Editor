@@ -6,33 +6,11 @@
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
-	/*
+
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
 	desk->run();
 	delete desk;
-	*/
-	sf::Time elapsed;
-	sf::Clock timer;
-
-	std::string in[] = { "output.txt", "wiki1.txt", "zap.txt", "about.txt" };
-	std::string out[] = { "output.huf", "wiki1.huf", "zap.huf", "about.huf" };
-
-	huf::huffman_compression h(path_to_folder);
-
-	for (int i = 0; i < 4; i++) {
-		timer.restart();
-		h.compress("\\Content\\Texts\\" + in[i], ".huf");
-		elapsed = timer.getElapsedTime();
-		std::cout << "File '" << in[i] << "' compressed in " << elapsed.asMilliseconds() << " ms.\n";
-		timer.restart();
-		h.decompress("\\Content\\Texts\\" + out[i], "_out.txt");
-		elapsed = timer.getElapsedTime();
-		std::cout << "File '" << in[i] << "' decompressed in " << elapsed.asMilliseconds() << " ms.\n";
-		std::cout << "\n";
-	}
-
-	std::cin.get();
 
 	/*
 	// Загрузка шрифта

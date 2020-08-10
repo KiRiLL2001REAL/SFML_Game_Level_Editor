@@ -3,20 +3,20 @@
 
 namespace huf {
 
-	void huffman_compression::makeCodes(tTree* root, std::map<unsigned char, std::vector<bool>>& codes, std::vector<bool>& current_code) {
+	void huffman_compression::makeCodes(tTree* root, std::map<unsigned char, std::string>& codes, std::string& current_code) {
 		if (root->is_letter) {
 			codes[root->c] = current_code;
 		}
 		else {
-			if (root->left) {	// 0
-				current_code.push_back(false);
+			if (root->left) {
+				current_code += "0";
 				makeCodes(root->left, codes, current_code);
-				current_code.pop_back();
+				current_code.erase(current_code.end() - 1);
 			}
-			if (root->right) {	// 1
-				current_code.push_back(true);
+			if (root->right) {
+				current_code += "1";
 				makeCodes(root->right, codes, current_code);
-				current_code.pop_back();
+				current_code.erase(current_code.end() - 1);
 			}
 		}
 	}
@@ -102,7 +102,6 @@ namespace huf {
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Подсчёт вхождений символов
 				unsigned char c;
 				file.read((char*)&c, sizeof(c));
-				//c = file.get();
 				freq[c]++;
 			}
 			unsigned int dictionary_size = freq.size();;	// Кол-во символов в словаре
@@ -126,9 +125,9 @@ namespace huf {
 				printTree(huffman_root);
 				std::cout << "End of Huffman tree.\n\n";
 			}
-			std::map<unsigned char, std::vector<bool> > codes;	// Ассоциативный массив для хранения символов и кодов к ним в виде vector<bool>
-			std::vector<bool> temp_vec = {};	// Просто надо
-			makeCodes(huffman_root, codes, temp_vec);			// Генерация кодов в виде vector<bool>
+			std::map<unsigned char, std::string> codes;	// Ассоциативный массив для хранения символов и кодов к ним в виде string
+			std::string temp_str = {};	// Просто надо
+			makeCodes(huffman_root, codes, temp_str);	// Генерация кодов в виде string
 			delete huffman_root;									// Коды сгенерированы, хранение дерева больше не требуется
 			
 			if (debug) {
@@ -136,7 +135,7 @@ namespace huf {
 				for (auto& it : codes) {
 					std::cout << "'" << it.first << "' (" << (int)it.first << ") : ";
 					for (unsigned int i = 0; i < it.second.size(); i++) {
-						it.second[i] ? std::cout << 1 : std::cout << 0;
+						(it.second[i] == '1') ? std::cout << 1 : std::cout << 0;
 					}
 					std::cout << "\n";
 				}
@@ -161,7 +160,6 @@ namespace huf {
 			*/
 
 			file.clear(); file.seekg(0);	// Переходим на начало кодируемого файла
-			unsigned int byte = 0;
 
 			unsigned long long bc = 0;	// Найду кол-во полезных бит в последнем байте
 			for (auto& it : freq) {
@@ -178,30 +176,32 @@ namespace huf {
 			bit_count = 0;	// Теперь здесь лежит кол-во бит, собранных в byte
 
 			unsigned char c;
-			
+			std::string byte = "";
+
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Читаем файл	
 				file.read((char*)&c, sizeof(c));
-				std::vector<bool> bits = codes[c];	// Соотносим код (vector<bool>) с только что считанным символом
-				for (std::vector<bool>::iterator it = bits.begin(); it != bits.end(); it++) {
-					byte = byte << 1;	// Получаем код символа в переменную 'byte'
-					byte |= (*it) && true;
-					bit_count++;
-				}
+				byte += codes[c];
+				bit_count += codes[c].size();
 				while (bit_count >= 8) {	// Если собрали хотя бы 8 бит, то записываем их (8) в файл
-					unsigned char a = byte >> (bit_count - 8);	// В 'a' находятся первые 8 бит кода
-					ofile.write((char*)&a, sizeof(a));
-					a = 0;	// Теперь 'a' станет маской
-					for (unsigned char i = 0; i < (bit_count - 8); i++) {
-						a = a << 1;	// a = a * 2;
-						a |= 1;		// a = a + 1;
+					std::string tmp = "        ";	// В 'a' находятся первые 8 бит кода
+					for (int i = 0; i < 8; i++) { tmp[i] = byte[i]; }
+					unsigned char a = 0;
+					for (unsigned char i = 0; i < 8; i++) {
+						a = a << 1;
+						a |= tmp[i] == '1';
 					}
-					byte &= a;	// Оставим то, что не записали в файл (начало следующего байта)
+					ofile.write((char*)&a, sizeof(a));
+					byte.erase(0, 8);	// Оставим то, что не записали в файл (начало следующего байта(-ов))
 					bit_count -= 8;
 				}
 				
 			}
 			if (bit_count != 0) {		// Записываем в буфер то, что осталось
-				unsigned char a = byte;
+				unsigned char a = 0;
+				for (unsigned char i = 0; i < byte.size(); i++) {
+					a = a << 1;
+					a |= byte[i] == '1';
+				}
 				ofile.write((char*)&a, sizeof(a));
 			}
 
