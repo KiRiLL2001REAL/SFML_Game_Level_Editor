@@ -24,7 +24,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			background->setColor(sf::Color(40, 40, 40, 255));
 			render->_insert(background);
 
-			edt::tText* text = new edt::tText({ 0, 0 }, "SFML_Game редактор карт");
+			edt::tText* text = new edt::tText({ 0, 0 }, "SFML_Game редактор игрового окружения");
 			text->setFont(getFont());
 			text->setCharSize(72);
 			text->setTextColor({ 255, 255, 255, 255 });
@@ -85,9 +85,9 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 				switch (e.code) {
 					case code_about_paragraph : {
 						sf::FloatRect rect;
-						unsigned int font_size = 48;
-						rect.width = 630;
-						rect.height = 350;
+						unsigned int font_size = 32;
+						rect.width = 640;
+						rect.height = 340;
 						rect.left = (window.getSize().x - rect.width) / 2;
 						rect.top = (window.getSize().y - rect.height) / 2;
 						edt::tWindow *w = new edt::tWindow(rect, "О программе");
@@ -96,31 +96,31 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 						w->setCaptionOffset({4, 0});
 
 						sf::Vector2f content_position = { 10, (float)w->getHeapHeight() };
-						std::string str;
-						sf::Font _font;
-						_font.loadFromFile(path_to_folder + "\\Content\\Fonts\\MurreyC.ttf");
 
 						std::ifstream file(path_to_folder + "\\Content\\Texts\\about.txt");
 						edt::tText* t;	// Текст для вывода в окно
 
 						if (!file.is_open()) {
-							str = "Файл ''../Content/Texts/about.txt'' не найден.";
-							t = new edt::tText({ content_position.x, content_position.y }, str);
-							t->setFont(_font);
-							t->setCharSize(font_size);
-							w->_insert(t);
-							content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
-							str = "Вызывайте экзорцистов!";
-							t = new edt::tText({ content_position.x, content_position.y }, str);
-							t->setFont(_font);
-							t->setCharSize(font_size);
-							w->_insert(t);
+							font_size -= 2;
+							std::string texts[] = {
+								"Файл ''..\\Content\\Texts\\about.txt'' не найден.",
+								"\nСтранно всё это...",
+								"\nНа всякий случай вызовите экзорцистов."
+							};
+							for (int i = 0; i < 3; i++) {
+								t = new edt::tText({ content_position.x, content_position.y }, texts[i]);
+								t->setFont(getFont());
+								t->setCharSize(font_size);
+								w->_insert(t);
+								content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
+							}
 						}
 						else {
+							std::string str;
 							while (!file.eof()) {
 								std::getline(file, str);
 								t = new edt::tText({ content_position.x, content_position.y }, str);
-								t->setFont(_font);
+								t->setFont(getFont());
 								t->setCharSize(font_size);
 								w->_insert(t);
 								content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
