@@ -6,14 +6,13 @@
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
-
+	
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
 	desk->run();
 	delete desk;
 
 	/*
-	// Загрузка шрифта
 	sf::Font font;
 	sf::Text text;
 	sf::VertexArray render_squad(sf::Quads, 4);
@@ -22,6 +21,7 @@ int main(int argc, char* argv[]) {
 	sf::RectangleShape background;
 	sf::RectangleShape instrumental_panel_background;
 
+	// Загрузка шрифта
 	font.loadFromFile(path_to_folder + "\\Content\\Fonts\\MurreyC.ttf");
 	text.setFont(font);
 	text.setCharacterSize(48);

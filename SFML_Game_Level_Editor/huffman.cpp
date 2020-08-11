@@ -4,7 +4,7 @@
 namespace huf {
 
 	void huffman_compression::makeCodes(tTree* root, std::map<unsigned char, std::string>& codes, std::string& current_code) {
-		if (root->is_letter) {
+		if (!root->left && !root->right) {
 			codes[root->c] = current_code;
 		}
 		else {
@@ -21,42 +21,83 @@ namespace huf {
 		}
 	}
 
-	huffman_compression::tTree* huffman_compression::makeTree(std::map<unsigned char, unsigned int>& freq) {
-		std::list<tTree*> list;	// Вспомогательный список с найденными символами для построения дерева кодов
+	huffman_compression::tListNode* huffman_compression::makeTree(std::map<unsigned char, unsigned int>& freq) {
+		std::map<unsigned char, unsigned int>::iterator it = freq.begin();
+		
+		tListNode* list_first, * list_last, * p;
+		unsigned int list_count_elements = 0;
 
-		for (auto& it : freq) {	// Инициализация списка
-			list.push_back(new tTree(it.first, it.second));
+		list_first = new tListNode();						// Инициализация списка, заполнение первой ячейки
+		list_first->el = new tTree(it->first, it->second);
+		list_last = list_first;
+
+		it++;
+		list_count_elements++;
+		while (it != freq.end()) {	// Заполнение списка
+			p = new tListNode();
+			p->el = new tTree(it->first, it->second);
+			list_last->next = p;
+			p->prev = list_last;
+			list_last = p;
+
+			it++;
+			list_count_elements++;
 		}
 
-		while (list.size() != 1) {	// Создание дерева кодов
-			list.sort(myCompare());
-			tTree* first = list.front();
-			list.pop_front();
-			tTree* second = list.front();
-			list.pop_front();
-			tTree* node = new tTree(first, second);
-			list.push_front(node);
+		tListNode* min[2];
+		while (list_count_elements != 1) {
+			/*
+			
+			Поиск двух минимумов типа tListNode;
+
+			*/
+			min[0] = nullptr; min[1] = nullptr;		
+			p = list_first;
+			while (p) {
+				if (!min[0] || p->el->count < min[0]->el->count) {
+					min[1] = min[0];
+					min[0] = p;
+				}
+				else if (!min[1] || p->el->count < min[1]->el->count) {
+					min[1] = p;
+				}
+				p = p->next;
+			}
+
+			list_count_elements--;		// Каждую итерацию "извлекается" 1 элемент списка, а второй изменяется.
+
+			tTree* m[2];	// Созраняем tTree элементы, 
+			for (char i = 0; i < 2; i++) m[i] = min[i]->el;
+
+			/*
+			
+			Удаление первого минимума из списка
+			
+			*/
+			p = min[0]->prev;
+			if (min[0]->prev) {			// Если min[0] не является началом списка
+				p->next = min[0]->next;			// Пробрасываем "next" указатель элемента "p" через "min[0]" к "min[0]->next"
+			}
+			else {
+				list_first = list_first->next;	// Иначе переставляем list_first на элемент вперёд, чтобы не испортить указатель
+			}
+			if (min[0]->next) {			// Если min[0] не является концом списка
+				min[0]->next->prev = p;			// Пробрасываем "prev" указатель элемента "min[0]->next" через "min[0]" к "p"
+			}
+			else {
+				list_last = list_last->prev;	// Иначе переставляем list_last на элемент назад, чтобы не испортить указатель
+			}
+			delete min[0];
+
+			/*
+			
+			Создание нового узла tTree и помещение его во второй минимум
+			
+			*/
+			min[1]->el = new tTree(m[0], m[1]);
 		}
 
-		return list.front();
-	}
-
-	void huffman_compression::printTree(tTree* root, unsigned int tabs) {
-		if (root->left) {
-			printTree(root->left, tabs + 1);
-		}
-		if (root->right) {
-			printTree(root->right, tabs + 1);
-		}
-		for (unsigned int i = 0; i < tabs; i++) {
-			std::cout << "\t";
-		}
-		if (root->is_letter) {
-			std::cout << "'" << root->c << "' : " << root->count << "\n";
-		}
-		else {
-			std::cout << root->count << "\n";
-		}
+		return list_first;
 	}
 
 	huffman_compression::huffman_compression(std::string _path_to_folder) :
@@ -76,7 +117,7 @@ namespace huf {
 		resFilename.erase(it, resFilename.end());
 	}
 
-	void huffman_compression::compress(std::string path_to_file_from_folder, std::string resulting_file_extention, bool debug) {
+	bool huffman_compression::compress(std::string path_to_file_from_folder, std::string resulting_file_extention) {
 		selectFile(path_to_file_from_folder);
 		std::fstream file(path_to_folder + filename, std::fstream::binary | std::fstream::in);
 		if (file.is_open() && resFilename != "") {
@@ -95,53 +136,27 @@ namespace huf {
 
 			std::map<unsigned char, unsigned int> freq;	// Ассоциативный массив для подсчёта кол-ва вхождений каждого из символов
 
-			if (debug) {
-				std::cout << "\n>>>>>DEBUG Huffman compressing...\n\n";
-			}
-
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Подсчёт вхождений символов
 				unsigned char c;
 				file.read((char*)&c, sizeof(c));
 				freq[c]++;
 			}
 			unsigned int dictionary_size = freq.size();;	// Кол-во символов в словаре
-			if (debug) {
-				std::cout << "Dictionary size: " << dictionary_size << " symbols.\n";
-				for (auto& it : freq) {
-					std::cout << "'" << it.first << "' (" << (int)it.first << ") : " << it.second << "\n";
-				}
-				std::cout << "End of dictionary.\n\n";
-			}
-			
+
 			/*
 
 			ПОСТРОЕНИЕ КОДОВ
 
 			*/
 
-			tTree* huffman_root = makeTree(freq);					// Корень дерева хаффмана
-			if (debug) {
-				std::cout << "Huffman tree:\n";
-				printTree(huffman_root);
-				std::cout << "End of Huffman tree.\n\n";
-			}
+			tListNode* ln = makeTree(freq);
+			tTree* huffman_root = ln->el;					// Корень дерева хаффмана
+			delete ln;
 			std::map<unsigned char, std::string> codes;	// Ассоциативный массив для хранения символов и кодов к ним в виде string
 			std::string temp_str = {};	// Просто надо
 			makeCodes(huffman_root, codes, temp_str);	// Генерация кодов в виде string
 			delete huffman_root;									// Коды сгенерированы, хранение дерева больше не требуется
 			
-			if (debug) {
-				std::cout << "Huffman codes for each symbol of dictionary:\n";
-				for (auto& it : codes) {
-					std::cout << "'" << it.first << "' (" << (int)it.first << ") : ";
-					for (unsigned int i = 0; i < it.second.size(); i++) {
-						(it.second[i] == '1') ? std::cout << 1 : std::cout << 0;
-					}
-					std::cout << "\n";
-				}
-				std::cout << "End of Huffman codes.\n\n";
-			}
-
 			std::fstream ofile(path_to_folder + resFilename, std::ofstream::binary | std::fstream::out);	// Открытие файла для записи
 
 			std::string head = "HUF00";
@@ -167,10 +182,6 @@ namespace huf {
 			}
 			unsigned char bit_count = bc % 8;	// <--- Вот оно
 
-			if (debug) {
-				std::cout << "Last byte length (in bits): " << (int)bit_count << ".\n\n";
-			}
-
 			ofile.write((char*)&bit_count, sizeof(bit_count));	// Записываем в результирующий файл кол-во полезных бит в последнем байте
 			
 			bit_count = 0;	// Теперь здесь лежит кол-во бит, собранных в byte
@@ -181,7 +192,7 @@ namespace huf {
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Читаем файл	
 				file.read((char*)&c, sizeof(c));
 				byte += codes[c];
-				bit_count += codes[c].size();
+				bit_count += (unsigned char)codes[c].size();
 				while (bit_count >= 8) {	// Если собрали хотя бы 8 бит, то записываем их (8) в файл
 					std::string tmp = "        ";	// В 'a' находятся первые 8 бит кода
 					for (int i = 0; i < 8; i++) { tmp[i] = byte[i]; }
@@ -206,27 +217,20 @@ namespace huf {
 			}
 
 			ofile.close();
-			
 			file.close();
-
-			if (debug) {
-				std::cout << ">>>>>DEBUG Huffman compressing done. Check the file '.." << resFilename << "'.\n\n";
-			}
+			return true;
 		}
 		else {
 			std::cout << "Huffman error: file '.." << filename << "' does not exist.\n";
 		}
+		return false;
 	}
 
-	void huffman_compression::decompress(std::string path_to_file_from_folder, std::string resulting_file_extention, bool debug) {
+	bool huffman_compression::decompress(std::string path_to_file_from_folder, std::string resulting_file_extention) {
 		selectFile(path_to_file_from_folder);
 		std::fstream file(path_to_folder + filename, std::fstream::binary | std::fstream::in);
 		if (file.is_open() && resFilename != "") {
 			resFilename += resulting_file_extention;
-
-			if (debug) {
-				std::cout << "\n>>>>>DEBUG Huffman decompressing...\n\n";
-			}
 
 			unsigned long long file_size;	// Вычислим размер файла в байтах
 			file.seekg(0, std::fstream::end);
@@ -259,20 +263,8 @@ namespace huf {
 					file_size -= sizeof(c) + sizeof(f);
 				}
 
-				if (debug) {
-					std::cout << "Dictionary size: " << dictionary_size << " symbols.\n";
-					for (auto& it : freq) {
-						std::cout << "'" << it.first << "' (" << (int)it.first << ") : " << it.second << "\n";
-					}
-					std::cout << "End of dictionary.\n\n";
-				}
-
 				unsigned char last_byte_bit_count;
 				file.read((char*)&last_byte_bit_count, sizeof(last_byte_bit_count));
-
-				if (debug) {
-					std::cout << "Last byte length (in bits): " << (int)last_byte_bit_count << ".\n\n";
-				}
 
 				file_size -= sizeof(last_byte_bit_count);
 				//
@@ -281,12 +273,10 @@ namespace huf {
 
 				std::fstream ofile(path_to_folder + resFilename, std::fstream::out | std::fstream::binary);	// Открытие файла для записи
 
-				tTree* huffman_root = makeTree(freq);				// Корень дерева хаффмана
-				if (debug) {
-					std::cout << "Huffman tree:\n";
-					printTree(huffman_root);
-					std::cout << "End of Huffman tree.\n\n";
-				}
+				tListNode* ln = makeTree(freq);
+				tTree* huffman_root = ln->el;				// Корень дерева хаффмана
+				delete ln;
+				
 				tTree* p = huffman_root;							// Указатель, прыгающий по дереву и собирающий код в буквы
 				
 				unsigned char mask[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
@@ -305,7 +295,7 @@ namespace huf {
 						else {
 							p = p->right;
 						}
-						if (p->is_letter) {
+						if (!p->left && !p->right) {
 							ofile.write((char*)&p->c, sizeof(p->c));
 							p = huffman_root;
 						}
@@ -316,26 +306,21 @@ namespace huf {
 				file.close();
 				ofile.close();
 
-				if (debug) {
-					std::cout << ">>>>>DEBUG Huffman decompressing done. Check the file '.." << resFilename << "'.\n\n";
-				}
+				return true;
 			}
 			else {
-				if (debug) {
-					std::cout << ">>>>> DEBUG ";
-				}
 				std::cout << "Huffman decompressing failed. Signature of file '.." << filename << "' does not match with huffman's one.\n";
 			}
 		}
 		else {
 			std::cout << "Huffman error: file '.." << filename << "' does not exist.\n";
 		}
+		return false;
 	}
 
 	huffman_compression::tTree::tTree(unsigned char _c, unsigned int _count) :
 		c(_c),
-		count(_count), 
-		is_letter(true),
+		count(_count),
 		left(nullptr),
 		right(nullptr)
 	{
@@ -344,7 +329,6 @@ namespace huf {
 	huffman_compression::tTree::tTree(tTree* _left, tTree* _right) :
 		c(0),
 		count(_left->count + _right->count),
-		is_letter(false),
 		left(_left),
 		right(_right)
 	{
@@ -359,7 +343,11 @@ namespace huf {
 		}
 	}
 	
-	bool huffman_compression::myCompare::operator()(tTree* a, tTree* b) const {
-		return a->count < b->count;
+	huffman_compression::tListNode::tListNode() :
+		el(nullptr),
+		next(nullptr),
+		prev(nullptr)
+	{
+
 	}
 }
