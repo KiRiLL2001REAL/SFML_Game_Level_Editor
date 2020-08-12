@@ -7,11 +7,8 @@ namespace edt {
 		x(0),
 		y(0),
 		owner(nullptr),
-		is_active(false),
-		can_be_drawn(true),
-		can_be_moved(true)
+		options(option_mask.can_be_drawn)
 	{
-		movement.active = false;
 		mouse_inside[0] = false;
 		mouse_inside[1] = false;
 	};
@@ -19,28 +16,31 @@ namespace edt {
 	tObject::~tObject() {
 	}
 
-	sMovement tObject::getMovementStates() {
-		return this->movement;
-	}
-
 	sf::Vector2f tObject::getPosition() {
 		return sf::Vector2f(x, y);
 	}
 
-	bool tObject::isActive() {
-		return this->is_active;
+	unsigned char tObject::getOptions() {
+		return options;
 	}
 
-	bool tObject::canMove() {
-		return can_be_moved;
+	bool tObject::checkOption(unsigned char option) {
+		unsigned char result = options & option;
+		if (result == option)	// Если результат побитовой конъюнкции совпал с "option", то всё окей
+			return true;
+		return false;
 	}
 
-	void tObject::makeVisible(bool flag) {
-		this->can_be_drawn = flag;
+	void tObject::changeOneOption(unsigned char one_option, bool state) {
+		if (state) {	// Если нужно взвести бит
+			options |= one_option;	// Применяем результат побитового ИЛИ от "options" и параметра "one_option"
+			return;
+		}
+		options &= ~one_option;	// Иначе применяем результат побитового И от "options" и инвертированного параметра "one_option"
 	}
 
-	void tObject::makeActive(bool flag) {
-		is_active = flag;
+	void tObject::setOptions(unsigned char new_options) {
+		options = new_options;
 	}
 
 	void tObject::move(sf::Vector2f deltaPos) {
@@ -51,10 +51,6 @@ namespace edt {
 	void tObject::setPosition(sf::Vector2f new_position) {
 		x = new_position.x;
 		y = new_position.y;
-	}
-
-	void tObject::setMovementStates(sMovement new_movement) {
-		movement = new_movement;
 	}
 
 	void tObject::setOwner(tObject *new_owner) {
@@ -77,10 +73,6 @@ namespace edt {
 
 	void tObject::clearEvent(tEvent& e) {
 		e.type = static_cast<int>(tEvent::types::Nothing);
-	}
-
-	void tObject::setMoveAbility(bool can_move) {
-		can_be_moved = can_move;
 	}
 
 	void tObject::putEvent(tEvent e) {
@@ -136,10 +128,10 @@ namespace edt {
 	void tGroup::_insert(tObject *object) {
 		object->setOwner(this);
 		if (elem.size() != 0) {
-			elem.back()->makeActive(false);
+			elem.back()->changeOneOption(option_mask.is_active, false);
 		}
 		elem.push_back(object);
-		elem.back()->makeActive(true);
+		elem.back()->changeOneOption(option_mask.is_active, true);
 	}
 
 	bool tGroup::_delete(tObject *object) {
@@ -155,8 +147,8 @@ namespace edt {
 				}
 				delete* it;		// Удаляем его	1) из памяти
 				elem.erase(it);	//				2) из контейнера
-				elem.back()->makeActive(true);
-				break;	// Вываливаемся из перебора, чтобы не поймать аксес виолэёшн
+				elem.back()->changeOneOption(option_mask.is_active, true);
+				break;	// Вываливаемся из перебора, чтобы не поймать аксес виолэйшн
 			}
 		}
 		return success;
@@ -167,9 +159,9 @@ namespace edt {
 		for (it = elem.begin(); it != elem.end(); it++) {	// Пока не нашли, перебираем список
 			if (*it == object) {
 				tObject* obj = *it;		// Запоминаем объект
-				obj->makeActive(true);
+				obj->changeOneOption(option_mask.is_active, true);
 				elem.erase(it);			// Удаляем из списка
-				elem.back()->makeActive(false);
+				elem.back()->changeOneOption(option_mask.is_active, false);
 				elem.push_back(obj);	// Кидаем в конец списка
 				break;
 			}
@@ -218,13 +210,6 @@ namespace edt {
 		}
 	}
 
-	void tGroup::makeVisible(bool flag) {
-		list<tObject*>::iterator it;
-		for (it = elem.begin(); it != elem.end(); it++) {
-			(*it)->makeVisible(flag);
-		}
-	}
-
 	tRenderRect::tRenderRect(sf::FloatRect rect) :
 		render_squad(sf::VertexArray(sf::Quads, 4))
 	{
@@ -267,22 +252,22 @@ namespace edt {
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-							e.from->makeActive(true);
+							e.from->changeOneOption(option_mask.is_active, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->makeActive(false);
+							e.from->changeOneOption(option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->makeVisible(true);
+							e.from->changeOneOption(option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->makeVisible(false);
+							e.from->changeOneOption(option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
@@ -349,7 +334,7 @@ namespace edt {
 	}
 
 	void tRenderRect::draw(sf::RenderTarget& target) {
-		if (can_be_drawn) {
+		if (checkOption(option_mask.can_be_drawn)) {
 			render_texture.clear(clear_color);	// Очиститься
 			tGroup::draw(render_texture);		// Нарисовать на себе все подэлементы
 			render_texture.display();			// Обновить "лицевую" текстуру
@@ -531,22 +516,22 @@ namespace edt {
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-							e.from->makeActive(true);
+							e.from->changeOneOption(option_mask.is_active, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->makeActive(false);
+							e.from->changeOneOption(option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->makeVisible(true);
+							e.from->changeOneOption(option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->makeVisible(false);
+							e.from->changeOneOption(option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
@@ -593,7 +578,7 @@ namespace edt {
 	}
 
 	void tRectShape::draw(sf::RenderTarget& target) {
-		if (can_be_drawn) {
+		if (checkOption(option_mask.can_be_drawn)) {
 			target.draw(shape);
 		}
 	}
@@ -670,7 +655,7 @@ namespace edt {
 	}
 
 	void tText::draw(sf::RenderTarget& target) {
-		if (font_loaded && can_be_drawn) {
+		if (font_loaded && checkOption(option_mask.can_be_drawn)) {
 			target.draw(text_object);
 		}
 	}
@@ -860,7 +845,7 @@ namespace edt {
 	}
 
 	void tButton::draw(sf::RenderTarget& target) {
-		if (can_be_drawn) {
+		if (checkOption(option_mask.can_be_drawn)) {
 			target.draw(render_squad, &render_texture.getTexture());
 		}
 	}
@@ -927,6 +912,9 @@ namespace edt {
 		color_caption_inactive(sf::Color(150, 150, 150, 255)),
 		caption_offset({2, 2})
 	{
+		changeOneOption(option_mask.can_be_moved, true);
+		changeOneOption(option_mask.can_be_resized, true);
+
 		setPosition({rect.left, rect.top});
 		setSize({rect.width, rect.height});
 		setTextureSize({(unsigned int)rect.width, (unsigned int)rect.height});
@@ -1003,22 +991,24 @@ namespace edt {
 	}
 
 	void tWindow::draw(sf::RenderTarget& target) {
-		render_texture.clear();
-		tGroup::draw(render_texture);
+		if (checkOption(option_mask.can_be_drawn)) {
+			render_texture.clear();
+			tGroup::draw(render_texture);
 
-		if (font_loaded) {
-			sf::Text text;
-			text.setString(caption);
-			text.setCharacterSize(caption_char_size);
-			text.setFont(font);
-			text.setFillColor(isActive() ? color_caption_active : color_caption_inactive);
-			text.setPosition(caption_offset);
-			text.setOutlineThickness(1);
-			render_texture.draw(text);
+			if (font_loaded) {
+				sf::Text text;
+				text.setString(caption);
+				text.setCharacterSize(caption_char_size);
+				text.setFont(font);
+				text.setFillColor(checkOption(option_mask.is_active) ? color_caption_active : color_caption_inactive);
+				text.setPosition(caption_offset);
+				text.setOutlineThickness(1);
+				render_texture.draw(text);
+			}
+
+			render_texture.display();
+			target.draw(render_squad, &render_texture.getTexture());
 		}
-
-		render_texture.display();
-		target.draw(render_squad, &render_texture.getTexture());
 	}
 
 	void tWindow::handleEvent(tEvent& e) {
@@ -1033,22 +1023,22 @@ namespace edt {
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-							e.from->makeActive(true);
+							e.from->changeOneOption(option_mask.is_active, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->makeActive(false);
+							e.from->changeOneOption(option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->makeVisible(true);
+							e.from->changeOneOption(option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->makeVisible(false);
+							e.from->changeOneOption(option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
@@ -1098,6 +1088,23 @@ namespace edt {
 				break;
 			}
 		}
+	}
+
+	tMoveable::tMoveable() {
+		movement.active = false;
+		movement.mX = 0;
+		movement.mY = 0;
+	}
+
+	tMoveable::~tMoveable() {
+	}
+
+	void tMoveable::setMovementStates(sMovement new_movement) {
+		movement = new_movement;
+	}
+
+	tMoveable::sMovement tMoveable::getMovementStates() {
+		return movement;
 	}
 
 }

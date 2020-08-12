@@ -15,11 +15,6 @@ namespace edt {
 
 	class tObject;
 
-	struct sMovement { // Используется при перемещении объекта мышью
-		bool active;		// Отвечает за "прилипание" данного объекта к курсору мыши
-		int mX, mY;			// Смещение мыши относительно верхнего левого угла объекта
-	};
-
 	struct tEvent {
 		enum class types { Nothing, Mouse, Keyboard, Broadcast, Button };
 
@@ -56,37 +51,59 @@ namespace edt {
 		} text;
 	};
 
+	class tMoveable { // Класс для элементов, которые можно "таскать" мышью
+	public:
+		struct sMovement { // Используется при перемещении объекта мышью
+			bool active;		// Отвечает за "прилипание" данного объекта к курсору мыши
+			int mX, mY;			// Смещение мыши относительно верхнего левого угла объекта
+		};
+
+		tMoveable();
+		virtual ~tMoveable();
+
+		void setMovementStates(sMovement new_movement);
+		sMovement getMovementStates();
+
+	protected:
+		sMovement movement;	// Перемещая объект, следует заполнить данную структуру
+
+	};
+
 	class tObject { // Базовый класс
 	protected:
+		static const struct sOptionMask {
+			static const unsigned char is_moving = 1;		// Объект перемещается при помощи мыши
+			static const unsigned char is_resizing = 2;		// Объект меняет размер при помощи мыши
+			static const unsigned char can_be_drawn = 4;	// Можно ли выводить этот объект на экран
+			static const unsigned char is_active = 8;		// Активен ли объект
+			static const unsigned char dummy_1 = 16;		// Бит не задействован
+			static const unsigned char dummy_2 = 32;		// Бит не задействован
+			static const unsigned char can_be_resized = 64;	// Можно ли менять размер объекта при помощи мыши
+			static const unsigned char can_be_moved	= 128;	// Можно ли перемещать объект при помощи мыши
+		} option_mask;
+		
 		bool mouse_inside[2];	// Флаг. Находится ли мышь внутри кнопки?
 
 		float x, y;				// Координаты объекта
 		tObject *owner;			// Указатель на владельца
 
-		bool can_be_drawn;		// Флаг. Может ли данный объект быть нарисованным?
-		bool is_active;			// Флаг. Активен ли данный элемент?
-		bool can_be_moved;		// Флаг. Может ли объект быть сдвинутым?
-
-		sMovement movement;		// Структура-помощник при событии перетаскивания мышью
+		unsigned char options;	// Битовая штука. Смотри "tObject::option_mask"
 
 	public:
 		tObject();
 		virtual ~tObject();
 
 		sf::Vector2f getPosition();
-		bool isActive();
-		bool canMove();
+		unsigned char getOptions();
+		bool checkOption(unsigned char option);
+		void changeOneOption(unsigned char one_option, bool state);
+		void setOptions(unsigned char new_options);
 
 		void message(tObject* addr, int type, int code, tObject* from);
-		void setMovementStates(sMovement new_movement);
 		void setOwner(tObject *new_owner);
 		void clearEvent(tEvent& e);
-		void setMoveAbility(bool can_move);
 
-		virtual sMovement getMovementStates();
 		virtual void move(sf::Vector2f delta);
-		virtual void makeVisible(bool flag);
-		virtual void makeActive(bool flag);
 		virtual sf::Vector2i getCursorPos();
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
@@ -114,7 +131,6 @@ namespace edt {
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
-		virtual void makeVisible(bool flag);
 	};
 
 	class tRenderRect : public tGroup {
@@ -244,7 +260,7 @@ namespace edt {
 		virtual void handleEvent(tEvent& e);
 	};
 
-	class tWindow : public tRenderRect {
+	class tWindow : public tRenderRect, public tMoveable{
 	private:
 		static const int heap_height = 32;
 		static const unsigned char caption_char_size = 24;
