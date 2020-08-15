@@ -17,4 +17,5 @@ public:
 	virtual void handleEvent(edt::tEvent& e);
 
 	virtual sf::FloatRect getLocalBounds();
+	virtual bool pointIsInsideMe(sf::Vector2i point);
 };

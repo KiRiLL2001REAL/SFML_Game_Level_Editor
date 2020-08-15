@@ -34,6 +34,8 @@ namespace edt {
 			char what_happened = 0;
 			int x = 0;
 			int y = 0;
+			int dX = 0;
+			int dY = 0;
 		} mouse;
 		struct sKey { // Событие от клавиатуры
 			char button = 0;
@@ -54,7 +56,7 @@ namespace edt {
 	class tMoveable { // Класс для элементов, которые можно "таскать" мышью
 	public:
 		struct sMovement { // Используется при перемещении объекта мышью
-			bool active;		// Отвечает за "прилипание" данного объекта к курсору мыши
+			//bool active;		// Отвечает за "прилипание" данного объекта к курсору мыши
 			int mX, mY;			// Смещение мыши относительно верхнего левого угла объекта
 		};
 
@@ -113,6 +115,7 @@ namespace edt {
 		virtual void setSize(sf::Vector2f new_size);
 
 		virtual sf::FloatRect getLocalBounds() = 0;
+		virtual bool pointIsInsideMe(sf::Vector2i point) = 0;
 		virtual sf::FloatRect getGlobalBounds();
 	};
 
@@ -150,7 +153,9 @@ namespace edt {
 		virtual void setSize(sf::Vector2f new_size);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
+		virtual void move(sf::Vector2f delta);
 
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
 	};
 
@@ -167,6 +172,7 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void setSize(sf::Vector2f new_size);
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 
 		virtual sf::FloatRect getLocalBounds();
 	};
@@ -179,6 +185,8 @@ namespace edt {
 		sf::Font custom_font;		// Пользовательский шрифт
 		bool custom_font_loaded;	// Флаг. Загружен ли пользовательский шрифт?
 		list<tEvent> events;		// Список событий к обработке
+
+		sf::Vector2i old_mouse_position;
 
 		char screen_code;			// Код текущего экрана
 	
@@ -220,6 +228,7 @@ namespace edt {
 		void updateTextObject();	// Не использовать в классе tButton
 
 		virtual sf::FloatRect getLocalBounds();
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
@@ -252,7 +261,7 @@ namespace edt {
 		void setTextOffset(sf::Vector2i new_offset);
 		void setCode(int new_code);
 
-		bool pointIsInsideMe(sf::Vector2i point);
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
 
 		virtual void draw(sf::RenderTarget& target);
@@ -260,7 +269,7 @@ namespace edt {
 		virtual void handleEvent(tEvent& e);
 	};
 
-	class tWindow : public tRenderRect, public tMoveable{
+	class tWindow : public tRenderRect/*, public tMoveable*/ {
 	private:
 		static const int heap_height = 32;
 		static const unsigned char caption_char_size = 24;
@@ -293,7 +302,9 @@ namespace edt {
 
 		virtual sf::FloatRect getLocalBounds();
 		const int getHeapHeight();
+		bool pointIsInHeap(sf::Vector2i point);
 
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 	};

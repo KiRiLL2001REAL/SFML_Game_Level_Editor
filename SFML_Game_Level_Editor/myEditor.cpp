@@ -141,3 +141,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 sf::FloatRect myDesktop::getLocalBounds() {
 	return { 0, 0, 0, 0 };
 }
+
+bool myDesktop::pointIsInsideMe(sf::Vector2i point) {
+	return false;
+}
