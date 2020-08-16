@@ -1,6 +1,5 @@
+#include "stdafx.h"
 #include "myEditor.h"
-#include <fstream>
-#include <string>
 
 void myDesktop::changeScreen(char new_screen_code) {
 	edt::tDesktop::changeScreen(new_screen_code);
@@ -13,6 +12,10 @@ void myDesktop::changeScreen(char new_screen_code) {
 			break;
 		}
 		case static_cast<int>(screen_codes::NPCEditor) : {
+
+			break;
+		}
+		case static_cast<int>(screen_codes::SPREditor) : {
 
 			break;
 		}
@@ -31,6 +34,9 @@ void myDesktop::changeScreen(char new_screen_code) {
 			text->setPosition({ window.getSize().x / 2 - text->getLocalBounds().width / 2, 50 });
 			render->_insert(text);
 
+			unsigned int upper_offset = 300;
+			unsigned char count_buttons = 5;
+
 			edt::tButton* button = new edt::tButton({ 0, 0, 600, 80 }, "Редактировать карту");
 			button->setCode(static_cast<int>(screen_codes::MapEditor));
 			button->setFont(getFont());
@@ -38,7 +44,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setTextColor({ 255, 255, 0, 255 });
 			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
 			button->setTextOffset({ 0, 12 });
-			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 0 + 300 });
+			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 0 + upper_offset });
 			render->_insert(button);
 
 			button = new edt::tButton({ 0, 0, 600, 80 }, "Редакторовать NPC");
@@ -48,7 +54,17 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setTextColor({ 255, 255, 0, 255 });
 			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
 			button->setTextOffset({ 0, 12 });
-			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 1 + 300 });
+			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 1 + upper_offset });
+			render->_insert(button);
+
+			button = new edt::tButton({ 0, 0, 600, 80 }, "Редактор спрайтов");
+			button->setCode(static_cast<int>(screen_codes::SPREditor));
+			button->setFont(getFont());
+			button->setCharSize(60);
+			button->setTextColor({ 255, 255, 0, 255 });
+			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
+			button->setTextOffset({ 0, 12 });
+			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 2 + upper_offset });
 			render->_insert(button);
 
 			button = new edt::tButton({ 0, 0, 500, 80 }, "О программе");
@@ -58,7 +74,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setTextColor({ 255, 255, 255, 255 });
 			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
 			button->setTextOffset({ 0, 12 });
-			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 2 + 300 });
+			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 3 + upper_offset });
 			render->_insert(button);
 
 			button = new edt::tButton({ 0, 0, 500, 80 }, "Выход");
@@ -68,7 +84,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setTextColor({ 255, 0, 0, 255 });
 			button->setAlignment(static_cast<int>(edt::tButton::alignment_type::Middle));
 			button->setTextOffset({0, 8});
-			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - 300) / 4) * 3 + 300 });
+			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 4 + upper_offset });
 			render->_insert(button);
 
 			break;
@@ -119,11 +135,16 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 							std::string str;
 							while (!file.eof()) {
 								std::getline(file, str);
-								t = new edt::tText({ content_position.x, content_position.y }, str);
-								t->setFont(getFont());
-								t->setCharSize(font_size);
-								w->_insert(t);
-								content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
+								if (str != "") {
+									t = new edt::tText({ content_position.x, content_position.y }, str);
+									t->setFont(getFont());
+									t->setCharSize(font_size);
+									w->_insert(t);
+									content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
+								}
+								else {
+									content_position.y += font_size;
+								}
 							}
 						}
 

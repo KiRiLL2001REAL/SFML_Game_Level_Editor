@@ -1,17 +1,12 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <iostream>
-#include <list>
-#include <string>
-#include <thread>
-#include <chrono>
-#include <fstream>
-#include "json.hpp"
-
 #define list std::list
 
 namespace edt {
+
+	enum class objects_json_ids {
+		tRectShape, tRenderRect, tText, tWindow, tButton
+	};
 
 	class tObject;
 
@@ -189,7 +184,7 @@ namespace edt {
 		sf::Vector2i old_mouse_position;
 
 		char screen_code;			// Код текущего экрана
-	
+		
 	public:
 		tDesktop(std::string path_to_folder);
 		~tDesktop();

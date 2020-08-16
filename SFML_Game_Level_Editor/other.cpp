@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "other.h"
 
 std::string cutOffLast(std::string str, int count_words) {

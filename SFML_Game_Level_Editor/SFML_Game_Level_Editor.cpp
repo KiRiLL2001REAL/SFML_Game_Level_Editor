@@ -1,16 +1,33 @@
-﻿#include <iostream>
-#include "other.h"
+﻿#include "stdafx.h"
+
 #include "myEditor.h"
-#include "huffman.h"
-#include <sfml/Graphics.hpp>
+
+#define json nlohmann::json
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
+
+	json j;
+	j["Menu"]["background"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRectShape);
+	j["Menu"]["background"]["position"]["x"] = 0;
+	j["Menu"]["background"]["position"]["y"] = 0;
+	j["Menu"]["background"]["color"]["r"] = 40;
+	j["Menu"]["background"]["color"]["g"] = 40;
+	j["Menu"]["background"]["color"]["b"] = 40;
+	j["Menu"]["background"]["color"]["s"] = 255;
+	j["Menu"]["background"]["size"]["x"] = 0;
+	j["Menu"]["background"]["size"]["y"] = 0;
 	
+	std::fstream file(path_to_folder + "\\Content\\Config\\editor_screens.conf", std::fstream::out);
+	file << j;
+	file.close();
+
+	/*
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
 	desk->run();
 	delete desk;
+	*/
 
 	/*
 	sf::Font font;

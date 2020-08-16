@@ -1,5 +1,5 @@
+#include "stdafx.h"
 #include "huffman.h"
-#include <queue>
 
 namespace huf {
 
