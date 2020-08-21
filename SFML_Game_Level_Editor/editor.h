@@ -15,7 +15,7 @@ namespace edt {
 		enum class types { Nothing, Mouse, Keyboard, Broadcast, Button };
 
 		enum class codes {
-			Activate, Deactivate, Show, Hide,
+			Nothing, Activate, Deactivate, Show, Hide,
 			Move, Adopt, Delete, Close, CloseApplication,
 			MouseMoved, MouseButton, ResetButtons, UpdateTexture
 		};
@@ -237,6 +237,10 @@ namespace edt {
 		void setCharSize(unsigned int new_char_size);
 		void setOutlineThickness(unsigned char new_thickness);
 
+		bool getFontState();	// Загружен или нет
+		sf::Text getTextObject();
+		sf::Color getFillColor();
+
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 
@@ -244,35 +248,35 @@ namespace edt {
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 	};
 
-	class tButton : public tText {		
+	class tButton : public tRenderRect {		
 	protected:
 		const unsigned char side_offset;
 
 		int self_code;						// Код, который посылает кнопка при нажатии на неё
-
-		sf::RenderTexture render_texture;	// Текстура
-		sf::VertexArray render_squad;		// Прямоугольник отрисовки
 		bool custom_skin_loaded;			// Флаг. Загружен ли пользовательский скин кнопки?
-		sf::Texture custom_skin;			// Пользовательский скин кпопки
 		char alignment;						// Тип выравнивания
+		sf::Texture custom_skin;			// Пользовательский скин кпопки
 		sf::Vector2i text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		
 	public:
 		enum class alignment_type { Left, Middle, Right };
 
-		tButton(tObject* _owner, sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button");
+		tButton(tObject* _owner, sf::FloatRect rect = { 0, 0, 128, 48 });
 		virtual ~tButton();
 
-		void setSize(sf::Vector2f new_size);
-		void setTextureSize(sf::Vector2u new_size);
 		void updateTexture();
 		void loadCustomSkin(std::string path_to_skin);
 		void setAlignment(char new_alignment);
 		void setTextOffset(sf::Vector2i new_offset);
 		void setCode(int new_code);
+		void initButton();	// Обязательно к выполнению после вызова конструктора!
+		void setFont(sf::Font new_font);
+		void setString(std::string new_string);
+		void setTextColor(sf::Color new_color);
+		void setCharSize(unsigned int new_char_size);
+		void setOutlineThickness(unsigned char new_thickness);
 
 		virtual void draw(sf::RenderTarget& target);
-		virtual void setPosition(sf::Vector2f new_position);
 		virtual void handleEvent(tEvent& e);
 
 		virtual bool pointIsInsideMe(sf::Vector2i point);

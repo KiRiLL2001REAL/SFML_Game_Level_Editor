@@ -35,7 +35,9 @@ void myDesktop::changeScreen(char new_screen_code) {
 			unsigned int upper_offset = 300;
 			unsigned char count_buttons = 5;
 
-			edt::tButton* button = new edt::tButton(this, { 0, 0, 600, 80 }, "Редактировать карту");
+			edt::tButton* button = new edt::tButton(this, { 0, 0, 600, 80 });
+			button->initButton();
+			button->setString("Редактировать карту");
 			button->setCode(static_cast<int>(screen_codes::MapEditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -45,7 +47,9 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 0 + upper_offset });
 			_insert(button);
 
-			button = new edt::tButton(this, { 0, 0, 600, 80 }, "Редакторовать NPC");
+			button = new edt::tButton(this, { 0, 0, 600, 80 });
+			button->initButton();
+			button->setString("Редакторовать NPC");
 			button->setCode(static_cast<int>(screen_codes::NPCEditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -55,7 +59,9 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 1 + upper_offset });
 			_insert(button);
 
-			button = new edt::tButton(this, { 0, 0, 600, 80 }, "Редактор спрайтов");
+			button = new edt::tButton(this, { 0, 0, 600, 80 });
+			button->initButton();
+			button->setString("Редактор спрайтов");
 			button->setCode(static_cast<int>(screen_codes::SPREditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -65,7 +71,9 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 2 + upper_offset });
 			_insert(button);
 
-			button = new edt::tButton(this, { 0, 0, 500, 80 }, "О программе");
+			button = new edt::tButton(this, { 0, 0, 500, 80 });
+			button->initButton();
+			button->setString("О программе");
 			button->setCode(code_about_paragraph);
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -75,7 +83,9 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setPosition({ window.getSize().x / 2 - button->getLocalBounds().width / 2, ((float)(window.getSize().y - upper_offset) / count_buttons) * 3 + upper_offset });
 			_insert(button);
 
-			button = new edt::tButton(this, { 0, 0, 500, 80 }, "Выход");
+			button = new edt::tButton(this, { 0, 0, 500, 80 });
+			button->initButton();
+			button->setString("Выход");
 			button->setCode(static_cast<int>(edt::tEvent::codes::CloseApplication));
 			button->setFont(getFont());
 			button->setCharSize(60);

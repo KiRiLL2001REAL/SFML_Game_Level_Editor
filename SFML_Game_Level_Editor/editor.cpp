@@ -244,14 +244,14 @@ namespace edt {
 	{
 		clear_color = sf::Color(0, 0, 0, 255);
 		render_texture.create((unsigned int)rect.width, (unsigned int)rect.height);
-		render_squad[0].position = sf::Vector2f{ rect.left, rect.top };
-		render_squad[1].position = sf::Vector2f{ rect.left + rect.width, rect.top };
-		render_squad[2].position = sf::Vector2f{ rect.left + rect.width, rect.top + rect.height };
-		render_squad[3].position = sf::Vector2f{ rect.left, rect.top + rect.height };
-		render_squad[0].texCoords = sf::Vector2f{ 0, 0 };
-		render_squad[1].texCoords = sf::Vector2f{ rect.width - 1, 0 };
-		render_squad[2].texCoords = sf::Vector2f{ rect.width - 1, rect.height - 1 };
-		render_squad[3].texCoords = sf::Vector2f{ 0, rect.height - 1 };
+		render_squad[0].position = { rect.left, rect.top };
+		render_squad[1].position = { rect.left + rect.width, rect.top };
+		render_squad[2].position = { rect.left + rect.width, rect.top + rect.height };
+		render_squad[3].position = { rect.left, rect.top + rect.height };
+		render_squad[0].texCoords = { 0, 0 };
+		render_squad[1].texCoords = { rect.width - 1, 0 };
+		render_squad[2].texCoords = { rect.width - 1, rect.height - 1 };
+		render_squad[3].texCoords = { 0, rect.height - 1 };
 	}
 
 	tRenderRect::~tRenderRect() {
@@ -259,10 +259,10 @@ namespace edt {
 
 	void tRenderRect::setTextureSize(sf::Vector2u new_size) {
 		render_texture.create(new_size.x, new_size.y);
-		render_squad[0].texCoords = sf::Vector2f{ 0.f, 0.f };
-		render_squad[1].texCoords = sf::Vector2f{ (float)new_size.x - 1, 0.f };
-		render_squad[2].texCoords = sf::Vector2f{ (float)new_size.x - 1, (float)new_size.y - 1 };
-		render_squad[3].texCoords = sf::Vector2f{ 0.f, (float)new_size.y - 1 };
+		render_squad[0].texCoords = { 0.f, 0.f };
+		render_squad[1].texCoords = { (float)new_size.x - 1, 0.f };
+		render_squad[2].texCoords = { (float)new_size.x - 1, (float)new_size.y - 1 };
+		render_squad[3].texCoords = { 0.f, (float)new_size.y - 1 };
 	}
 
 	void tRenderRect::setClearColor(sf::Color color) {
@@ -341,18 +341,18 @@ namespace edt {
 	}
 
 	void tRenderRect::setSize(sf::Vector2f new_size) {
-		render_squad[0].position = sf::Vector2f{ render_squad[0].position.x, render_squad[0].position.y };
-		render_squad[1].position = sf::Vector2f{ render_squad[0].position.x + new_size.x, render_squad[0].position.y };
-		render_squad[2].position = sf::Vector2f{ render_squad[0].position.x + new_size.x, render_squad[0].position.y + new_size.y };
-		render_squad[3].position = sf::Vector2f{ render_squad[0].position.x, render_squad[0].position.y + new_size.y };
+		render_squad[0].position = { render_squad[0].position.x, render_squad[0].position.y };
+		render_squad[1].position = { render_squad[0].position.x + new_size.x, render_squad[0].position.y };
+		render_squad[2].position = { render_squad[0].position.x + new_size.x, render_squad[0].position.y + new_size.y };
+		render_squad[3].position = { render_squad[0].position.x, render_squad[0].position.y + new_size.y };
 	}
 
 	void tRenderRect::setPosition(sf::Vector2f new_position) {
 		tObject::setPosition(new_position);
-		render_squad[1].position = sf::Vector2f{ x + render_squad[1].position.x - render_squad[0].position.x, y + render_squad[1].position.y - render_squad[0].position.y };
-		render_squad[2].position = sf::Vector2f{ x + render_squad[2].position.x - render_squad[0].position.x, y + render_squad[2].position.y - render_squad[0].position.y };
-		render_squad[3].position = sf::Vector2f{ x + render_squad[3].position.x - render_squad[0].position.x, y + render_squad[3].position.y - render_squad[0].position.y };
-		render_squad[0].position = sf::Vector2f{ x, y };
+		render_squad[1].position = { x + render_squad[1].position.x - render_squad[0].position.x, y + render_squad[1].position.y - render_squad[0].position.y };
+		render_squad[2].position = { x + render_squad[2].position.x - render_squad[0].position.x, y + render_squad[2].position.y - render_squad[0].position.y };
+		render_squad[3].position = { x + render_squad[3].position.x - render_squad[0].position.x, y + render_squad[3].position.y - render_squad[0].position.y };
+		render_squad[0].position = { x, y };
 	}
 
 	void tRenderRect::draw(sf::RenderTarget& target) {
@@ -707,6 +707,18 @@ namespace edt {
 		text_object.setOutlineThickness(new_thickness);
 	}
 
+	bool tText::getFontState() {
+		return font_loaded;
+	}
+
+	sf::Text tText::getTextObject() {
+		return text_object;
+	}
+
+	sf::Color tText::getFillColor() {
+		return text_object.getFillColor();
+	}
+
 	sf::FloatRect tText::getLocalBounds() {
 		return text_object.getLocalBounds();
 	}
@@ -726,44 +738,17 @@ namespace edt {
 		text_object.setPosition(new_position);
 	}
 
-	tButton::tButton(tObject* _owner, sf::FloatRect rect, std::string text) :
-		tText(_owner),
-		render_squad(sf::VertexArray(sf::Quads, 4)),
+	tButton::tButton(tObject* _owner, sf::FloatRect rect) :
+		tRenderRect(_owner, rect),
 		custom_skin_loaded(false),
 		alignment(static_cast<int>(alignment_type::Left)),
 		side_offset(10),
 		text_offset(sf::Vector2u(0, 0)),
-		self_code(static_cast<int>(tEvent::codes::CloseApplication))
+		self_code(static_cast<int>(tEvent::codes::Nothing))
 	{
-		setString(text);
-		render_texture.create((unsigned int)rect.width, (unsigned int)rect.height);
-		render_squad[0].position = sf::Vector2f{ rect.left, rect.top };
-		render_squad[1].position = sf::Vector2f{ rect.left + rect.width, rect.top };
-		render_squad[2].position = sf::Vector2f{ rect.left + rect.width, rect.top + rect.height };
-		render_squad[3].position = sf::Vector2f{ rect.left, rect.top + rect.height };
-		render_squad[0].texCoords = sf::Vector2f{ 0, 0 };
-		render_squad[1].texCoords = sf::Vector2f{ rect.width - 1, 0 };
-		render_squad[2].texCoords = sf::Vector2f{ rect.width - 1, rect.height - 1 };
-		render_squad[3].texCoords = sf::Vector2f{ 0, rect.height - 1 };
-		updateTexture();
 	}
 
 	tButton::~tButton() {
-	}
-
-	void tButton::setSize(sf::Vector2f new_size) {
-		render_squad[0].position = sf::Vector2f{ render_squad[0].position.x, render_squad[0].position.y };
-		render_squad[1].position = sf::Vector2f{ render_squad[0].position.x + new_size.x, render_squad[0].position.y };
-		render_squad[2].position = sf::Vector2f{ render_squad[0].position.x + new_size.x, render_squad[0].position.y + new_size.y };
-		render_squad[3].position = sf::Vector2f{ render_squad[0].position.x, render_squad[0].position.y + new_size.y };
-	}
-
-	void tButton::setTextureSize(sf::Vector2u new_size) {
-		render_texture.create(new_size.x, new_size.y);
-		render_squad[0].texCoords = sf::Vector2f{ 0, 0 };
-		render_squad[1].texCoords = sf::Vector2f{ (float)new_size.x - 1, 0 };
-		render_squad[2].texCoords = sf::Vector2f{ (float)new_size.x - 1, (float)new_size.y - 1 };
-		render_squad[3].texCoords = sf::Vector2f{ 0, (float)new_size.y - 1 };
 	}
 
 	void tButton::updateTexture() {
@@ -827,8 +812,9 @@ namespace edt {
 			arr[3].position = point[3];
 			render_texture.draw(arr);
 		}
-		if (font_loaded) {				// Если подгружен шрифт, то выводим текст
-			sf::Text text_to_display = text_object;
+		tText* text_object = (tText*)elem.front();
+		if (text_object->getFontState()) {				// Если подгружен шрифт, то выводим текст
+			sf::Text text_to_display = text_object->getTextObject();
 			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
 			//text_to_display.setOutlineThickness(outline_thickness);
 			switch (alignment) {			// Настройка выравнивания
@@ -852,7 +838,7 @@ namespace edt {
 			text_to_display.setFillColor(sf::Color::Black);	// Немного контраста
 			text_to_display.move({ 1, 1 });
 			render_texture.draw(text_to_display);
-			text_to_display.setFillColor(text_object.getFillColor());		// А это уже сам вывод текста
+			text_to_display.setFillColor(text_object->getFillColor());		// А это уже сам вывод текста
 			text_to_display.move({ -1, -1 });
 			render_texture.draw(text_to_display);
 		}
@@ -896,6 +882,35 @@ namespace edt {
 		self_code = new_code;
 	}
 
+	void tButton::initButton() {
+		elem.push_back(new tText(this));
+	}
+
+	void tButton::setFont(sf::Font new_font) {
+		tText* text = (tText*)elem.front();
+		text->setFont(new_font);
+	}
+
+	void tButton::setString(std::string new_string) {
+		tText* text = (tText*)elem.front();
+		text->setString(new_string);
+	}
+
+	void tButton::setTextColor(sf::Color new_color) {
+		tText* text = (tText*)elem.front();
+		text->setTextColor(new_color);
+	}
+
+	void tButton::setCharSize(unsigned int new_char_size) {
+		tText* text = (tText*)elem.front();
+		text->setCharSize(new_char_size);
+	}
+
+	void tButton::setOutlineThickness(unsigned char new_thickness) {
+		tText* text = (tText*)elem.front();
+		text->setOutlineThickness(new_thickness);
+	}
+
 	bool tButton::pointIsInsideMe(sf::Vector2i point) {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
@@ -915,14 +930,6 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			target.draw(render_squad, &render_texture.getTexture());
 		}
-	}
-
-	void tButton::setPosition(sf::Vector2f new_position) {
-		tObject::setPosition(new_position);
-		render_squad[1].position = sf::Vector2f{ x + render_squad[1].position.x - render_squad[0].position.x, y + render_squad[1].position.y - render_squad[0].position.y };
-		render_squad[2].position = sf::Vector2f{ x + render_squad[2].position.x - render_squad[0].position.x, y + render_squad[2].position.y - render_squad[0].position.y };
-		render_squad[3].position = sf::Vector2f{ x + render_squad[3].position.x - render_squad[0].position.x, y + render_squad[3].position.y - render_squad[0].position.y };
-		render_squad[0].position = sf::Vector2f{ x, y };
 	}
 
 	void tButton::handleEvent(tEvent& e) {
@@ -1002,6 +1009,7 @@ namespace edt {
 		_insert(r);
 
 		tButton* b = new tButton(this, {0, 0, heap_height - 4 , heap_height - 4 });
+		b->initButton();
 		b->setAnchor(tObject::anchors.upper_right_corner);
 		b->setPosition({ -heap_height + 2, 2});
 		b->setCode(static_cast<int>(edt::tEvent::codes::Close));
