@@ -11,13 +11,12 @@ namespace edt {
 	class tObject;
 
 	struct tEvent {
-
 		enum class types { Nothing, Mouse, Keyboard, Broadcast, Button };
 
 		enum class codes {
 			Activate, Deactivate, Show, Hide,
 			Move, Adopt, Delete, Close, CloseApplication,
-			MouseMoved, MouseButton, ResetButtons, UpdateTexture
+			MouseMoved, MouseButton, ResetButtons
 		};
 
 		unsigned int type = static_cast<int>(types::Nothing); // Из какой сферы событие (тип)
@@ -48,24 +47,24 @@ namespace edt {
 			sf::Color color = sf::Color(255, 255, 255, 255);
 		} text;
 	};
-	
-	//class tMoveable { // Класс для элементов, которые можно "таскать" мышью
-	//public:
-	//	struct sMovement { // Используется при перемещении объекта мышью
-	//		//bool active;		// Отвечает за "прилипание" данного объекта к курсору мыши
-	//		int mX, mY;			// Смещение мыши относительно верхнего левого угла объекта
-	//	};
 
-	//	tMoveable();
-	//	virtual ~tMoveable();
+	class tMoveable { // Класс для элементов, которые можно "таскать" мышью
+	public:
+		struct sMovement { // Используется при перемещении объекта мышью
+			//bool active;		// Отвечает за "прилипание" данного объекта к курсору мыши
+			int mX, mY;			// Смещение мыши относительно верхнего левого угла объекта
+		};
 
-	//	void setMovementStates(sMovement new_movement);
-	//	sMovement getMovementStates();
+		tMoveable();
+		virtual ~tMoveable();
 
-	//protected:
-	//	sMovement movement;	// Перемещая объект, следует заполнить данную структуру
+		void setMovementStates(sMovement new_movement);
+		sMovement getMovementStates();
 
-	//};
+	protected:
+		sMovement movement;	// Перемещая объект, следует заполнить данную структуру
+
+	};
 
 	class tObject { // Базовый класс
 	protected:
@@ -78,46 +77,31 @@ namespace edt {
 			static const unsigned char dummy_2 = 32;		// Бит не задействован
 			static const unsigned char can_be_resized = 64;	// Можно ли менять размер объекта при помощи мыши
 			static const unsigned char can_be_moved	= 128;	// Можно ли перемещать объект при помощи мыши
-		} option_mask;	// Маски операций
-
-		static const struct sAnchors {
-			static const unsigned char upper_left_corner =		0b00001001;	// Якорь на верхний левый угол
-			static const unsigned char upper_side =				0b00001010; // Якорь на верхнюю сторону
-			static const unsigned char upper_right_corner =		0b00001100; // Якорь на верхний правый угол
-			static const unsigned char left_side =				0b00010001; // Якорь на левую сторону
-			static const unsigned char center =					0b00010010; // Якорь на центр
-			static const unsigned char right_side =				0b00010100; // Якорь на правую сторону
-			static const unsigned char bottom_left_corner =		0b00100001; // Якорь на нижний левый угол
-			static const unsigned char bottom_side =			0b00100010; // Якорь на нижнюю сторону
-			static const unsigned char bottom_right_corner =	0b00100100; // Якорь на нижний правый угол
-		} anchors;		// Всевозможные якори
+		} option_mask;
 		
-		unsigned char anchor;	// Биты 0..2 отвечают за привязку по X, а биты 3..5 - за привязку по Y
-
 		bool mouse_inside[2];	// Флаг. Находится ли мышь внутри кнопки?
 
-		float x, y;				// Смещение относительно начальной точки (см. anchor)
+		float x, y;				// Координаты объекта
 		tObject *owner;			// Указатель на владельца
 
 		unsigned char options;	// Битовая штука. Смотри "tObject::option_mask"
 
 	public:
-		tObject(tObject* _owner);
+		tObject();
 		virtual ~tObject();
 
-		void setAnchor(unsigned char new_anchor);
-		void setOptions(unsigned char new_options);
+		sf::Vector2f getPosition();
+		unsigned char getOptions();
+		bool checkOption(unsigned char option);
 		void changeOneOption(unsigned char one_option, bool state);
+		void setOptions(unsigned char new_options);
+
 		void message(tObject* addr, int type, int code, tObject* from);
 		void setOwner(tObject *new_owner);
 		void clearEvent(tEvent& e);
 
-		bool checkOption(unsigned char option);
-		sf::Vector2f getPosition();
-		unsigned char getOptions();
-		unsigned char getAnchor();
-
 		virtual void move(sf::Vector2f delta);
+		virtual sf::Vector2i getCursorPos();
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e);
@@ -126,9 +110,8 @@ namespace edt {
 		virtual void setSize(sf::Vector2f new_size);
 
 		virtual sf::FloatRect getLocalBounds() = 0;
-		virtual sf::FloatRect getGlobalBounds();
-		virtual sf::Vector2f getRelativeStartPosition();	// Возвращает начальную точку системы координат (ориентируясь на якорь)
 		virtual bool pointIsInsideMe(sf::Vector2i point) = 0;
+		virtual sf::FloatRect getGlobalBounds();
 	};
 
 	class tGroup : public tObject { // Класс-контейнер
@@ -136,14 +119,13 @@ namespace edt {
 		list<tObject*> elem;		// Контейнер элементов, хранящихся в данном классе
 
 	public:
-		tGroup(tObject* _owner);
+		tGroup();
 		virtual ~tGroup();
 
 		void _insert(tObject *object);		// Внесение элемента в список подэлементов
+		bool _delete(tObject *object);		// Удаление элемента из списка
 		void select(tObject *object);		// Установка флага "активен" у элемента
 		void forEach(unsigned int code, tObject* from);	// Выполнить команду для всех подэлементов
-		
-		bool _delete(tObject *object);		// Удаление элемента из списка
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
@@ -156,7 +138,7 @@ namespace edt {
 		sf::Color clear_color;				// Цвет очистки текстуры
 
 	public:
-		tRenderRect(tObject* _owner, sf::FloatRect rect = { 0, 0, 64, 64 });
+		tRenderRect(sf::FloatRect rect = { 0, 0, 64, 64 });
 		virtual ~tRenderRect();
 
 		void setTextureSize(sf::Vector2u new_size);
@@ -177,7 +159,7 @@ namespace edt {
 		sf::RectangleShape shape;
 
 	public:
-		tRectShape(tObject* _owner, sf::FloatRect rect = {0, 0, 64, 64}, sf::Color fill_color = sf::Color(255, 255, 255, 255));
+		tRectShape(sf::FloatRect rect = {0, 0, 64, 64}, sf::Color fill_color = sf::Color(255, 255, 255, 255));
 		virtual ~tRectShape();
 
 		void setColor(sf::Color new_color);
@@ -185,10 +167,9 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void setSize(sf::Vector2f new_size);
-		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual sf::FloatRect getLocalBounds();
 
+		virtual sf::FloatRect getLocalBounds();
 	};
 
 	class tDesktop : public tGroup {
@@ -209,11 +190,10 @@ namespace edt {
 		~tDesktop();
 
 		void run();								// Главный цикл
+		bool windowIsOpen();					// Возвращает статус окна
 		void saveData();						// Сохранить данные в файл
 		void loadCustomFont(std::string path_to_font);	// Установить пользовательский шрифт
 		sf::Font& getFont();					// Получить шрифт
-		
-		bool windowIsOpen();					// Возвращает статус окна
 
 		virtual void changeScreen(char new_screen_code);// Изменить экран (меню, редактор карты, редактор NPC)
 		virtual void putEvent(tEvent e);
@@ -224,11 +204,15 @@ namespace edt {
 	class tText : public tObject {
 	protected:
 		sf::Text text_object;				// SFML текст
+		std::string string;					// Текст сообщения
+		sf::Color text_color;				// Цвет теста
 		sf::Font font;						// Шрифт текста
 		bool font_loaded;					// Флаг. Загружен ли шрифт?
+		unsigned int char_size;				// Размер шрифта
+		unsigned char outline_thickness;	// Толщина линии обводки текста
 
 	public:
-		tText(tObject* _owner, sf::Vector2f position = {0, 0}, std::string string = "Some text");
+		tText(sf::Vector2f position = {0, 0}, std::string string = "Some text");
 		virtual ~tText();
 
 		void setString(std::string new_string);
@@ -236,12 +220,13 @@ namespace edt {
 		void setFont(sf::Font new_font);
 		void setCharSize(unsigned int new_char_size);
 		void setOutlineThickness(unsigned char new_thickness);
-
-		virtual void draw(sf::RenderTarget& target);
-		virtual void setPosition(sf::Vector2f new_position);
+		void updateTextObject();	// Не использовать в классе tButton
 
 		virtual sf::FloatRect getLocalBounds();
 		virtual bool pointIsInsideMe(sf::Vector2i point);
+
+		virtual void draw(sf::RenderTarget& target);
+		virtual void setPosition(sf::Vector2f new_position);
 	};
 
 	class tButton : public tText {		
@@ -260,7 +245,7 @@ namespace edt {
 	public:
 		enum class alignment_type { Left, Middle, Right };
 
-		tButton(tObject* _owner, sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button");
+		tButton(sf::FloatRect rect = { 0, 0, 128, 48 }, std::string text = "button");
 		virtual ~tButton();
 
 		void setSize(sf::Vector2f new_size);
@@ -271,12 +256,12 @@ namespace edt {
 		void setTextOffset(sf::Vector2i new_offset);
 		void setCode(int new_code);
 
+		virtual bool pointIsInsideMe(sf::Vector2i point);
+		virtual sf::FloatRect getLocalBounds();
+
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void handleEvent(tEvent& e);
-
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual sf::FloatRect getLocalBounds();
 	};
 
 	class tWindow : public tRenderRect/*, public tMoveable*/ {
@@ -285,8 +270,6 @@ namespace edt {
 		static const unsigned char caption_char_size = 24;
 
 	protected:
-		bool need_rerender;	// Нужна перерисоква?
-
 		bool font_loaded;	// Флаг. Загружен ли шрифт?
 		sf::Font font;		// Шрифт
 
@@ -298,12 +281,13 @@ namespace edt {
 		sf::Vector2f caption_offset;		// Настройка смещения заголовка, в случае, если он криво выводится (это всё из-за шрифтов)
 
 	public:
-		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::string caption = "Default caption" );	// Необходимо так же вызвать метод initWindow()
+		tWindow(sf::FloatRect rect = { 0, 0, 300, 300 }, std::string caption = "Default caption" );	// Необходимо так же вызвать метод initWindow()
 		virtual ~tWindow();
 
 		void initWindow();	// Обязательно к выполнению после вызова конструктора
 
 		void setCaption(std::string new_caption);
+		std::string getCaption();
 		void setColorHeap(sf::Color new_color);
 		void setColorSpace(sf::Color new_color);
 		void setColorCaptionActive(sf::Color new_color);
@@ -311,14 +295,12 @@ namespace edt {
 		void setFont(sf::Font new_font);
 		void setCaptionOffset(sf::Vector2f new_offset);
 
-		std::string getCaption();
-		bool pointIsInHeap(sf::Vector2i point);
+		virtual sf::FloatRect getLocalBounds();
 		const int getHeapHeight();
+		bool pointIsInHeap(sf::Vector2i point);
 
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
-		
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual sf::FloatRect getLocalBounds();
 	};
 }

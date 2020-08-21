@@ -7,38 +7,27 @@
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
 
-	json js;
-	js["Menu"]["render"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRenderRect);
-	js["Menu"]["render"]["fullscreen"] = true;
-
-	js["Menu"]["render"]["elem"]["background"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRectShape);
-	js["Menu"]["render"]["elem"]["background"]["fullscreen"] = true;
-	js["Menu"]["render"]["elem"]["background"]["color"] = { 40, 40, 40, 255 };
+	json j;
+	j["Menu"]["background"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRectShape);
+	j["Menu"]["background"]["position"]["x"] = 0;
+	j["Menu"]["background"]["position"]["y"] = 0;
+	j["Menu"]["background"]["color"]["r"] = 40;
+	j["Menu"]["background"]["color"]["g"] = 40;
+	j["Menu"]["background"]["color"]["b"] = 40;
+	j["Menu"]["background"]["color"]["s"] = 255;
+	j["Menu"]["background"]["size"]["x"] = 0;
+	j["Menu"]["background"]["size"]["y"] = 0;
 	
-	js["Menu"]["render"]["elem"]["text"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tText);
-	js["Menu"]["render"]["elem"]["text"]["char_size"] = 72;
-	js["Menu"]["render"]["elem"]["text"]["color"] = { 255, 255, 255, 255 };
-	js["Menu"]["render"]["elem"]["text"]["position"]["relative"] = true;
-	js["Menu"]["render"]["elem"]["text"]["position"]["pos"] = { 0.5, 0.5 };
-	js["Menu"]["render"]["elem"]["text"]["position"]["alignment"] = "center";
-
-	json js2;
-	js2["js"] = js;
-
-	print_json(js2, path_to_folder + "\\Content\\Config\\editor_screens.conf");
+	std::fstream file(path_to_folder + "\\Content\\Config\\editor_screens.conf", std::fstream::out);
+	file << j;
+	file.close();
 
 	/*
-	std::vector<sf::VideoMode> modes = sf::VideoMode::getFullscreenModes();
-	for (auto& it : modes) {
-		std::cout << it.width << "x" << it.height << '\n';
-	}
-	*/
-
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
-	//desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\Futurespore.otf");
 	desk->run();
 	delete desk;
+	*/
 
 	/*
 	sf::Font font;
