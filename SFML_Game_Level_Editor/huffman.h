@@ -1,4 +1,10 @@
 #pragma once
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <list>
+#include <map>
 
 namespace huf {
 

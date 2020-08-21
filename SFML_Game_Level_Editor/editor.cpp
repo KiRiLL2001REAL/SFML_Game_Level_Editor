@@ -1,5 +1,5 @@
-﻿#include "stdafx.h"
-#include "editor.h"
+﻿#include "editor.h"
+#include <iterator>
 
 namespace edt {
 
@@ -237,74 +237,73 @@ namespace edt {
 	}
 
 	void tRenderRect::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			tGroup::handleEvent(e);
-			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
-					if (e.address == this) {
-						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
-								_delete(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-								select(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-								e.from->changeOneOption(option_mask.is_active, false);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, true);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, false);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
-								e.from->setOwner(this);
-								clearEvent(e);
-								break;
-							}
-							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-								break;
-							}
+		tGroup::handleEvent(e);		
+		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {
+				if (e.address == this) {
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+							_delete(e.from);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
+							select(e.from);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+							e.from->changeOneOption(option_mask.is_active, false);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+							e.from->changeOneOption(option_mask.can_be_drawn, true);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+							e.from->changeOneOption(option_mask.can_be_drawn, false);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+							e.from->setOwner(this);
+							clearEvent(e);
+							break;
+						}
+						default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+							e.address = owner;
+							putEvent(e);
+							clearEvent(e);
+							break;
 						}
 					}
-					break;
 				}
-				case static_cast<int>(tEvent::types::Button) : {
-					if (e.address == this) {
-						switch (e.code) {
-							case static_cast<int>(tEvent::codes::CloseApplication) : {
-								e.type = static_cast<int>(tEvent::types::Broadcast);
-								e.code = static_cast<int>(tEvent::codes::CloseApplication);
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-								break;
-							}
-							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-							}
+				break;
+			}
+			case static_cast<int>(tEvent::types::Button) : {
+				if (e.address == this) {
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::CloseApplication) : {
+							e.type = static_cast<int>(tEvent::types::Broadcast);
+							e.code = static_cast<int>(tEvent::codes::CloseApplication);
+							e.address = owner;
+							putEvent(e);
+							clearEvent(e);
+							break;
+						}
+						default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+							e.address = owner;
+							putEvent(e);
+							clearEvent(e);
 						}
 					}
-					break;
 				}
+				break;
 			}
 		}
+		
 	}
 
 	void tRenderRect::setSize(sf::Vector2f new_size) {
@@ -737,53 +736,42 @@ namespace edt {
 			sf::Vector2f tex_size = (sf::Vector2f)render_texture.getSize();
 			float offset = (float)side_offset / 2;
 			sf::VertexArray arr(sf::Quads, 4);
-
-			sf::Color front_color = sf::Color(150, 150, 150, 255);	// 0--------------------------------1
-			sf::Color top_color = sf::Color(120, 120, 120, 255);	// |\                              /|
-			sf::Color side_color = sf::Color(70, 70, 70, 255);		// | 4----------------------------5 |
-			sf::Color bottom_color = sf::Color(20, 20, 20, 255);	// | |                            | |
-																	// | |                            | |
-			sf::Vector2f point[] = {								// | |                            | |
-				{0, 0},												// | 7----------------------------6 |
-				{tex_size.x, 0},									// |/                              \|
-				{tex_size.x, tex_size.y},							// 3--------------------------------2
-				{0, tex_size.y},
-				{offset, offset},
-				{tex_size.x - offset, offset},
-				{tex_size.x - offset, tex_size.y - offset},
-				{offset, tex_size.y - offset}
-			};
-			
-			for (int i = 0; i < 4; i++) {					// Лицевая сторона
+			sf::Color front_color = sf::Color(150, 150, 150, 255);
+			sf::Color top_color = sf::Color(120, 120, 120, 255);
+			sf::Color side_color = sf::Color(70, 70, 70, 255);
+			sf::Color bottom_color = sf::Color(20, 20, 20, 255);
+			for (int i = 0; i < 4; i++)						// Лицевая сторона
 				arr[i].color = front_color;
-				arr[i].position = point[4 + i];
-			}
+			arr[0].position = sf::Vector2f(offset, offset);
+			arr[1].position = sf::Vector2f(tex_size.x - offset, offset);
+			arr[2].position = sf::Vector2f(tex_size.x - offset, tex_size.y - offset);
+			arr[3].position = sf::Vector2f(offset, tex_size.y - offset);
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)						// Верхняя сторона
 				arr[i].color = top_color;
-			arr[0].position = point[0];
-			arr[1].position = point[1];
-			arr[2].position = point[5];
-			arr[3].position = point[4];
+			arr[0].position = sf::Vector2f(0, 0);
+			arr[1].position = sf::Vector2f(tex_size.x, 0);
+			arr[2].position = sf::Vector2f(tex_size.x - offset, offset);
+			arr[3].position = sf::Vector2f(offset, offset);
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)						// Боковые стороны
 				arr[i].color = side_color;
-			arr[0].position = point[0];
-			arr[1].position = point[4];
-			arr[2].position = point[7];
-			arr[3].position = point[3];
+			arr[0].position = sf::Vector2f(0, 0);
+			arr[1].position = sf::Vector2f(offset, offset);
+			arr[2].position = sf::Vector2f(offset, tex_size.y - offset);
+			arr[3].position = sf::Vector2f(0, tex_size.y);
 			render_texture.draw(arr);
-			arr[0].position = point[5];
-			arr[1].position = point[1];
-			arr[2].position = point[2];
-			arr[3].position = point[6];
+			arr[0].position = sf::Vector2f(tex_size.x - offset, offset);
+			arr[1].position = sf::Vector2f(tex_size.x, 0);
+			arr[2].position = sf::Vector2f(tex_size.x, tex_size.y);
+			arr[3].position = sf::Vector2f(tex_size.x - offset, tex_size.y - offset);
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)						// Нижжняя сторона
 				arr[i].color = bottom_color;
-			arr[0].position = point[7];
-			arr[1].position = point[6];
-			arr[2].position = point[2];
-			arr[3].position = point[3];
+			arr[0].position = sf::Vector2f(offset, tex_size.y - offset);
+			arr[1].position = sf::Vector2f(tex_size.x - offset, tex_size.y - offset);
+			arr[2].position = sf::Vector2f(tex_size.x, tex_size.y);
+			arr[3].position = sf::Vector2f(0, tex_size.y);
 			render_texture.draw(arr);
 		}
 		if (font_loaded) {				// Если подгружен шрифт, то выводим текст
@@ -886,44 +874,42 @@ namespace edt {
 	}
 
 	void tButton::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
-					switch (e.code) {
-						case static_cast<int>(tEvent::codes::ResetButtons) : {
-							if (e.from != this) {
-								mouse_inside[0] = false;
-								updateTexture();
-							}
-							break;
+		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {
+				switch (e.code) {
+					case static_cast<int>(tEvent::codes::ResetButtons) : {
+						if (e.from != this) {
+							mouse_inside[0] = false;
+							updateTexture();
 						}
+						break;
 					}
-					break;
 				}
-				case static_cast<int>(tEvent::types::Mouse) : {
-					switch (e.code) {
-						case static_cast<int>(tEvent::codes::MouseMoved) : {
-							mouse_inside[1] = mouse_inside[0];	// Предыдущее и текущее состояние флага
-							mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
-							if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
-								message(nullptr, static_cast<int>(tEvent::types::Button), static_cast<int>(tEvent::codes::ResetButtons), this);
-								updateTexture();
-								clearEvent(e);
-							}
-							break;
+				break;
+			}
+			case static_cast<int>(tEvent::types::Mouse) : {
+				switch (e.code) {
+					case static_cast<int>(tEvent::codes::MouseMoved) : {
+						mouse_inside[1] = mouse_inside[0];	// Предыдущее и текущее состояние флага
+						mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
+						if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
+							message(nullptr, static_cast<int>(tEvent::types::Button), static_cast<int>(tEvent::codes::ResetButtons), this);
+							updateTexture();
+							clearEvent(e);
 						}
-						case static_cast<int>(edt::tEvent::codes::MouseButton) : {
-							if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
-								pointIsInsideMe({ e.mouse.x, e.mouse.y }))	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
-							{
-								message(owner, static_cast<int>(edt::tEvent::types::Button), self_code, this);
-								clearEvent(e);
-							}
-							break;
-						}
+						break;
 					}
-					break;
+					case static_cast<int>(edt::tEvent::codes::MouseButton) : {
+						if (e.mouse.what_happened == sf::Event::MouseButtonReleased && e.mouse.button == sf::Mouse::Left &&
+							pointIsInsideMe({ e.mouse.x, e.mouse.y }))	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
+						{
+							message(owner, static_cast<int>(edt::tEvent::types::Button), self_code, this);
+							clearEvent(e);
+						}
+						break;
+					}
 				}
+				break;
 			}
 		}
 	}
@@ -1048,101 +1034,99 @@ namespace edt {
 	}
 
 	void tWindow::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			tGroup::handleEvent(e);
-			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
-					if (e.address == this) {
-						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
-								_delete(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-								select(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-								e.from->changeOneOption(option_mask.is_active, false);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, true);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, false);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
-								e.from->setOwner(this);
-								clearEvent(e);
-								break;
-							}
-							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-								break;
-							}
-						}
-					}
-					break;
-				}
-				case static_cast<int>(tEvent::types::Button) : {
-					if (e.address == this) {
-						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Close) : {			// Закрыть окно
-								e.type = static_cast<int>(tEvent::types::Broadcast);
-								e.code = static_cast<int>(tEvent::codes::Delete);
-								e.address = owner;
-								e.from = this;
-								putEvent(e);
-								clearEvent(e);
-								break;
-							}
-							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-							}
-						}
-					}
-					break;
-				}
-				case static_cast<int>(tEvent::types::Mouse) : {
+		tGroup::handleEvent(e);
+		switch (e.type) {
+			case static_cast<int>(tEvent::types::Broadcast) : {
+				if (e.address == this) {
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::MouseButton) : {
-							if (e.mouse.what_happened == sf::Event::MouseButtonPressed && e.mouse.button == sf::Mouse::Left && pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
-								if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
-									changeOneOption(option_mask.is_moving, true);
-								}
-								message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Activate), this);
-								clearEvent(e);
-							}
-							else if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {
-								changeOneOption(option_mask.is_moving, false);
-							}
+						case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+							_delete(e.from);
+							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::MouseMoved) : {
-							if (pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
-								message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::ResetButtons), this);
-								clearEvent(e);
-							}
-							if (checkOption(option_mask.is_moving)) {
-								move({ (float)e.mouse.dX, (float)e.mouse.dY });
-							}
+						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
+							select(e.from);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+							e.from->changeOneOption(option_mask.is_active, false);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+							e.from->changeOneOption(option_mask.can_be_drawn, true);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+							e.from->changeOneOption(option_mask.can_be_drawn, false);
+							clearEvent(e);
+							break;
+						}
+						case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+							e.from->setOwner(this);
+							clearEvent(e);
+							break;
+						}
+						default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+							e.address = owner;
+							putEvent(e);
+							clearEvent(e);
 							break;
 						}
 					}
-					break;
 				}
+				break;
+			}
+			case static_cast<int>(tEvent::types::Button) : {
+				if (e.address == this) {
+					switch (e.code) {
+						case static_cast<int>(tEvent::codes::Close) : {			// Закрыть окно
+							e.type = static_cast<int>(tEvent::types::Broadcast);
+							e.code = static_cast<int>(tEvent::codes::Delete);
+							e.address = owner;
+							e.from = this;
+							putEvent(e);
+							clearEvent(e);
+							break;
+						}
+						default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+							e.address = owner;
+							putEvent(e);
+							clearEvent(e);
+						}
+					}
+				}
+				break;
+			}
+			case static_cast<int>(tEvent::types::Mouse) : {
+				switch (e.code) {
+					case static_cast<int>(tEvent::codes::MouseButton) : {
+						if (e.mouse.what_happened == sf::Event::MouseButtonPressed && e.mouse.button == sf::Mouse::Left && pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
+							if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
+								changeOneOption(option_mask.is_moving, true);
+							}
+							message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Activate), this);
+							clearEvent(e);
+						}
+						else if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {
+							changeOneOption(option_mask.is_moving, false);
+						}
+						break;
+					}
+					case static_cast<int>(tEvent::codes::MouseMoved) : {
+						if (pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
+							message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::ResetButtons), this);
+							clearEvent(e);
+						}
+						if (checkOption(option_mask.is_moving)) {
+							move({ (float)e.mouse.dX, (float)e.mouse.dY });
+						}
+						break;
+					}
+				}
+				break;
 			}
 		}
 	}
