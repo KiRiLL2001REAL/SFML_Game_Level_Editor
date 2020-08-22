@@ -5,7 +5,7 @@
 namespace edt {
 
 	enum class objects_json_ids {
-		tRectShape, tRenderRect, tText, tWindow, tButton
+		tRectShape, tText, tWindow, tButton
 	};
 
 	class tObject;
@@ -150,13 +150,11 @@ namespace edt {
 		void setTextureSize(sf::Vector2u new_size);
 		void setClearColor(sf::Color new_color);
 
-		virtual void handleEvent(tEvent& e);
 		virtual void setSize(sf::Vector2f new_size);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void move(sf::Vector2f delta);
 
-		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
 	};
 

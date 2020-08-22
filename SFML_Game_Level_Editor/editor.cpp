@@ -278,77 +278,6 @@ namespace edt {
 		clear_color = color;
 	}
 
-	void tRenderRect::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			tGroup::handleEvent(e);
-			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
-					if (e.address == this) {
-						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
-								_delete(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-								select(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-								e.from->changeOneOption(option_mask.is_active, false);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, true);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, false);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
-								e.from->setOwner(this);
-								clearEvent(e);
-								break;
-							}
-							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-								break;
-							}
-						}
-					}
-					break;
-				}
-				case static_cast<int>(tEvent::types::Button) : {
-					if (e.address == this) {
-						switch (e.code) {
-							case static_cast<int>(tEvent::codes::CloseApplication) : {
-								e.type = static_cast<int>(tEvent::types::Broadcast);
-								e.code = static_cast<int>(tEvent::codes::CloseApplication);
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-								break;
-							}
-							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
-								putEvent(e);
-								clearEvent(e);
-							}
-						}
-					}
-					break;
-				}
-			}
-		}
-	}
-
 	void tRenderRect::setSize(sf::Vector2f new_size) {
 		render_squad[0].position = { render_squad[0].position.x, render_squad[0].position.y };
 		render_squad[1].position = { render_squad[0].position.x + new_size.x, render_squad[0].position.y };
@@ -379,10 +308,6 @@ namespace edt {
 			pos = render_squad[i].position;
 			render_squad[i].position = sf::Vector2f{ pos.x + delta.x, pos.y + delta.y };
 		}
-	}
-
-	bool tRenderRect::pointIsInsideMe(sf::Vector2i point) {
-		return false;
 	}
 
 	sf::FloatRect tRenderRect::getLocalBounds() {
