@@ -874,16 +874,6 @@ namespace edt {
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
-	sf::FloatRect tButton::getLocalBounds() {
-		return
-			sf::FloatRect(
-				render_squad[0].position.x,
-				render_squad[0].position.y,
-				render_squad[1].position.x - render_squad[0].position.x,
-				render_squad[3].position.y - render_squad[0].position.y
-			);
-	}
-
 	void tButton::draw(sf::RenderTarget& target) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			target.draw(render_squad, &render_texture.getTexture());
@@ -1074,15 +1064,6 @@ namespace edt {
 		render_texture.display();
 	}
 
-	sf::FloatRect tWindow::getLocalBounds() {
-		return sf::FloatRect(
-				render_squad[0].position.x,
-				render_squad[0].position.y,
-				render_squad[1].position.x - render_squad[0].position.x,
-				render_squad[3].position.y - render_squad[0].position.y
-			);
-	}
-
 	const int tWindow::getHeapHeight() {
 		return heap_height;
 	}
@@ -1199,6 +1180,7 @@ namespace edt {
 									// Если отпустили кнопку
 									if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {
 										changeOneOption(option_mask.is_moving, false);
+										clearEvent(e);
 									}
 								}
 							}

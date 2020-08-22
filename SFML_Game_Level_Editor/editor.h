@@ -271,7 +271,6 @@ namespace edt {
 		virtual void updateTexture();
 
 		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual sf::FloatRect getLocalBounds();
 	};
 
 	class tWindow : public tRenderRect {
@@ -313,6 +312,5 @@ namespace edt {
 		virtual void updateTexture();
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual sf::FloatRect getLocalBounds();
 	};
 }

@@ -8,19 +8,17 @@ int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
 
 	json js;
-	js["Menu"]["render"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRenderRect);
-	js["Menu"]["render"]["fullscreen"] = true;
 
-	js["Menu"]["render"]["elem"]["background"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRectShape);
-	js["Menu"]["render"]["elem"]["background"]["fullscreen"] = true;
-	js["Menu"]["render"]["elem"]["background"]["color"] = { 40, 40, 40, 255 };
+	js["Menu"]["background"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRectShape);
+	js["Menu"]["background"]["fullscreen"] = true;
+	js["Menu"]["background"]["color"] = { 40, 40, 40, 255 };
 	
-	js["Menu"]["render"]["elem"]["text"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tText);
-	js["Menu"]["render"]["elem"]["text"]["char_size"] = 72;
-	js["Menu"]["render"]["elem"]["text"]["color"] = { 255, 255, 255, 255 };
-	js["Menu"]["render"]["elem"]["text"]["position"]["relative"] = true;
-	js["Menu"]["render"]["elem"]["text"]["position"]["pos"] = { 0.5, 0.5 };
-	js["Menu"]["render"]["elem"]["text"]["position"]["alignment"] = "center";
+	js["Menu"]["text"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tText);
+	js["Menu"]["text"]["char_size"] = 72;
+	js["Menu"]["text"]["color"] = { 255, 255, 255, 255 };
+	js["Menu"]["text"]["position"]["relative"] = true;
+	js["Menu"]["text"]["position"]["pos"] = { 0.5, 0.5 };
+	js["Menu"]["text"]["position"]["alignment"] = "center";
 
 	json js2;
 	js2["js"] = js;
