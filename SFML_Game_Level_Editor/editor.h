@@ -17,11 +17,12 @@ namespace edt {
 		enum class codes {
 			Nothing, Activate, Deactivate, Show, Hide,
 			Move, Adopt, Delete, Close, CloseApplication,
-			MouseMoved, MouseButton, ResetButtons, UpdateTexture
+			MouseMoved, MouseButton, ResetButtons, UpdateTexture,
+			FontRequest, FontAnswer
 		};
 
 		unsigned int type = static_cast<int>(types::Nothing); // »з какой сферы событие (тип)
-		unsigned int code = 0; //  од событи€ (опционально)
+		unsigned int code = static_cast<int>(codes::Nothing); //  од событи€
 		tObject *from = nullptr;
 		tObject *address = nullptr;
 
@@ -47,29 +48,14 @@ namespace edt {
 			int y = 0;
 			sf::Color color = sf::Color(255, 255, 255, 255);
 		} text;
+		struct sFont {	// «апрос шрифта
+			sf::Font* font = nullptr;
+		} font;
 	};
-	
-	//class tMoveable { //  ласс дл€ элементов, которые можно "таскать" мышью
-	//public:
-	//	struct sMovement { // »спользуетс€ при перемещении объекта мышью
-	//		//bool active;		// ќтвечает за "прилипание" данного объекта к курсору мыши
-	//		int mX, mY;			// —мещение мыши относительно верхнего левого угла объекта
-	//	};
-
-	//	tMoveable();
-	//	virtual ~tMoveable();
-
-	//	void setMovementStates(sMovement new_movement);
-	//	sMovement getMovementStates();
-
-	//protected:
-	//	sMovement movement;	// ѕеремеща€ объект, следует заполнить данную структуру
-
-	//};
 
 	class tObject { // Ѕазовый класс
 	protected:
-		static const struct sOptionMask {
+		static const struct sOptionMask {	// ћаски операций
 			static const unsigned char is_moving = 1;		// ќбъект перемещаетс€ при помощи мыши
 			static const unsigned char is_resizing = 2;		// ќбъект мен€ет размер при помощи мыши
 			static const unsigned char can_be_drawn = 4;	// ћожно ли выводить этот объект на экран
@@ -78,19 +64,19 @@ namespace edt {
 			static const unsigned char dummy_2 = 32;		// Ѕит не задействован
 			static const unsigned char can_be_resized = 64;	// ћожно ли мен€ть размер объекта при помощи мыши
 			static const unsigned char can_be_moved	= 128;	// ћожно ли перемещать объект при помощи мыши
-		} option_mask;	// ћаски операций
+		} option_mask;
 
-		static const struct sAnchors {
-			static const unsigned char upper_left_corner =		0b00001001;	// якорь на верхний левый угол
-			static const unsigned char upper_side =				0b00001010; // якорь на верхнюю сторону
-			static const unsigned char upper_right_corner =		0b00001100; // якорь на верхний правый угол
-			static const unsigned char left_side =				0b00010001; // якорь на левую сторону
-			static const unsigned char center =					0b00010010; // якорь на центр
-			static const unsigned char right_side =				0b00010100; // якорь на правую сторону
-			static const unsigned char bottom_left_corner =		0b00100001; // якорь на нижний левый угол
-			static const unsigned char bottom_side =			0b00100010; // якорь на нижнюю сторону
-			static const unsigned char bottom_right_corner =	0b00100100; // якорь на нижний правый угол
-		} anchors;		// ¬севозможные €кори
+		static const struct sAnchors {		// ¬севозможные €кори
+			static const unsigned char upper_left_corner =		0b00001001;	// якорь на верхний левый угол родител€
+			static const unsigned char upper_side =				0b00001010; // якорь на верхнюю сторону родител€
+			static const unsigned char upper_right_corner =		0b00001100; // якорь на верхний правый угол	родител€
+			static const unsigned char left_side =				0b00010001; // якорь на левую сторону родител€
+			static const unsigned char center =					0b00010010; // якорь на центр родител€
+			static const unsigned char right_side =				0b00010100; // якорь на правую сторону родител€
+			static const unsigned char bottom_left_corner =		0b00100001; // якорь на нижний левый угол родител€
+			static const unsigned char bottom_side =			0b00100010; // якорь на нижнюю сторону родител€
+			static const unsigned char bottom_right_corner =	0b00100100; // якорь на нижний правый угол родител€
+		} anchors;
 		
 		unsigned char anchor;	// Ѕиты 0..2 отвечают за прив€зку по X, а биты 3..5 - за прив€зку по Y
 
@@ -109,6 +95,7 @@ namespace edt {
 		void setOptions(unsigned char new_options);
 		void changeOneOption(unsigned char one_option, bool state);
 		void message(tObject* addr, int type, int code, tObject* from);
+		void message(tEvent e);
 		void setOwner(tObject *new_owner);
 		void clearEvent(tEvent& e);
 
@@ -248,7 +235,10 @@ namespace edt {
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 	};
 
-	class tButton : public tRenderRect {		
+	class tButton : public tRenderRect {
+	private:
+		void initButton();
+
 	protected:
 		const unsigned char side_offset;
 
@@ -269,7 +259,6 @@ namespace edt {
 		void setAlignment(char new_alignment);
 		void setTextOffset(sf::Vector2i new_offset);
 		void setCode(int new_code);
-		void initButton();	// ќб€зательно к выполнению после вызова конструктора!
 		void setFont(sf::Font new_font);
 		void setString(std::string new_string);
 		void setTextColor(sf::Color new_color);
@@ -283,11 +272,13 @@ namespace edt {
 		virtual sf::FloatRect getLocalBounds();
 	};
 
-	class tWindow : public tRenderRect/*, public tMoveable*/ {
+	class tWindow : public tRenderRect {
 	private:
 		static const int heap_height = 32;
 		static const unsigned char caption_char_size = 24;
 
+		void initWindow();
+	
 	protected:
 		bool need_rerender;	// Ќужна перерисоква?
 
@@ -302,10 +293,8 @@ namespace edt {
 		sf::Vector2f caption_offset;		// Ќастройка смещени€ заголовка, в случае, если он криво выводитс€ (это всЄ из-за шрифтов)
 
 	public:
-		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::string caption = "Default caption" );	// Ќеобходимо так же вызвать метод initWindow()
+		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::string caption = "Default caption");
 		virtual ~tWindow();
-
-		void initWindow();	// ќб€зательно к выполнению после вызова конструктора
 
 		void setCaption(std::string new_caption);
 		void setColorHeap(sf::Color new_color);

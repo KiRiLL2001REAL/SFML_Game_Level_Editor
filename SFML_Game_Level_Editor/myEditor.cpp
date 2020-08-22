@@ -36,7 +36,6 @@ void myDesktop::changeScreen(char new_screen_code) {
 			unsigned char count_buttons = 5;
 
 			edt::tButton* button = new edt::tButton(this, { 0, 0, 600, 80 });
-			button->initButton();
 			button->setString("Редактировать карту");
 			button->setCode(static_cast<int>(screen_codes::MapEditor));
 			button->setFont(getFont());
@@ -48,7 +47,6 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 600, 80 });
-			button->initButton();
 			button->setString("Редакторовать NPC");
 			button->setCode(static_cast<int>(screen_codes::NPCEditor));
 			button->setFont(getFont());
@@ -60,7 +58,6 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 600, 80 });
-			button->initButton();
 			button->setString("Редактор спрайтов");
 			button->setCode(static_cast<int>(screen_codes::SPREditor));
 			button->setFont(getFont());
@@ -72,7 +69,6 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 500, 80 });
-			button->initButton();
 			button->setString("О программе");
 			button->setCode(code_about_paragraph);
 			button->setFont(getFont());
@@ -84,7 +80,6 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 500, 80 });
-			button->initButton();
 			button->setString("Выход");
 			button->setCode(static_cast<int>(edt::tEvent::codes::CloseApplication));
 			button->setFont(getFont());
@@ -116,7 +111,6 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 						
 						edt::tWindow *w = new edt::tWindow(this, rect, "О программе");
 						w->setFont(getFont());
-						w->initWindow();
 						w->setCaptionOffset({4, 0});
 
 						sf::Vector2f content_position = { 10, (float)w->getHeapHeight() };

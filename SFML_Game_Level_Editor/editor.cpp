@@ -70,7 +70,12 @@ namespace edt {
 		e.from = from;
 		e.type = type; // Из какой сферы событие
 		e.code = code; // Код события
-		if (addr != nullptr) addr->handleEvent(e);
+		if (addr) addr->handleEvent(e);
+		else putEvent(e);
+	}
+
+	void tObject::message(tEvent e) {
+		if (e.address) e.address->handleEvent(e);
 		else putEvent(e);
 	}
 
@@ -603,6 +608,19 @@ namespace edt {
 						}
 					}
 				}
+				switch (e.code) {	// Обработка событий от "дальних" объектов
+					case static_cast<int>(tEvent::codes::FontRequest) : {
+						e.type = static_cast<int>(tEvent::types::Broadcast);
+						e.code = static_cast<int>(tEvent::codes::FontAnswer);
+						if (!custom_font_loaded) e.font.font = &font_default;
+						else e.font.font = &custom_font;
+						e.address = e.from;
+						e.from = this;
+						message(e);
+						message(e.address, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+						break;
+					}
+				}
 				break;
 			}
 			case static_cast<int>(tEvent::types::Button) : {	// От кнопки
@@ -682,12 +700,10 @@ namespace edt {
 	}
 
 	void tText::setString(std::string new_string) {
-		//string = new_string;
 		text_object.setString(new_string);
 	}
 
 	void tText::setTextColor(sf::Color new_color) {
-		//text_color = new_color;
 		text_object.setFillColor(new_color);
 	}
 
@@ -698,12 +714,10 @@ namespace edt {
 	}
 
 	void tText::setCharSize(unsigned int new_char_size) {
-		//char_size = new_char_size;
 		text_object.setCharacterSize(new_char_size);
 	}
 
 	void tText::setOutlineThickness(unsigned char new_thickness) {
-		//outline_thickness = new_thickness;
 		text_object.setOutlineThickness(new_thickness);
 	}
 
@@ -746,13 +760,14 @@ namespace edt {
 		text_offset(sf::Vector2u(0, 0)),
 		self_code(static_cast<int>(tEvent::codes::Nothing))
 	{
+		initButton();
 	}
 
 	tButton::~tButton() {
 	}
 
 	void tButton::updateTexture() {
-		render_texture.clear(sf::Color(0, 0, 0, 255));
+		render_texture.clear(clear_color);
 		if (custom_skin_loaded) {	// Если загружен пользовательский скин кнопки, то выводим его
 			sf::Sprite spr;
 			spr.setTexture(custom_skin);
@@ -816,7 +831,6 @@ namespace edt {
 		if (text_object->getFontState()) {				// Если подгружен шрифт, то выводим текст
 			sf::Text text_to_display = text_object->getTextObject();
 			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
-			//text_to_display.setOutlineThickness(outline_thickness);
 			switch (alignment) {			// Настройка выравнивания
 				case static_cast<int>(tButton::alignment_type::Right) : {
 					text_to_display.setOrigin({ (float)text_to_display.getLocalBounds().width, (float)text_to_display.getLocalBounds().height });
@@ -842,6 +856,9 @@ namespace edt {
 			text_to_display.move({ -1, -1 });
 			render_texture.draw(text_to_display);
 		}
+		else {
+			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
+		}
 		render_texture.display();
 	}
 
@@ -860,9 +877,9 @@ namespace edt {
 	void tButton::setAlignment(char new_alignment) {
 		switch (new_alignment) {
 			case static_cast<int>(tButton::alignment_type::Middle) :
-				case static_cast<int>(tButton::alignment_type::Right) : {
-				alignment = new_alignment;
-				break;
+			case static_cast<int>(tButton::alignment_type::Right) : {
+			alignment = new_alignment;
+			break;
 			}
 			case static_cast<int>(tButton::alignment_type::Left) : {
 			default:
@@ -936,6 +953,20 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			switch (e.type) {
 				case static_cast<int>(tEvent::types::Broadcast) : {
+					if (e.address == this) {
+						switch (e.code) {
+							case static_cast<int>(tEvent::codes::FontAnswer) : {
+								setFont(*e.font.font);
+								clearEvent(e);
+								break;
+							}
+							case static_cast<int>(tEvent::codes::UpdateTexture) : {	// Обновить текстуру
+								updateTexture();
+								clearEvent(e);
+								break;
+							}
+						}
+					}
 					switch (e.code) {
 						case static_cast<int>(tEvent::codes::ResetButtons) : {
 							if (e.from != this) {
@@ -995,6 +1026,8 @@ namespace edt {
 		setPosition({rect.left, rect.top});
 		setSize({rect.width, rect.height});
 		setTextureSize({(unsigned int)rect.width, (unsigned int)rect.height});
+
+		initWindow();
 	}
 
 	tWindow::~tWindow() {
@@ -1002,6 +1035,7 @@ namespace edt {
 
 	void tWindow::initWindow() {
 		sf::FloatRect rect = getLocalBounds();
+		
 		tRectShape *r = new tRectShape(this, { 0, 0, rect.width, heap_height }, color_heap);	// Шапка
 		_insert(r);
 
@@ -1009,11 +1043,15 @@ namespace edt {
 		_insert(r);
 
 		tButton* b = new tButton(this, {0, 0, heap_height - 4 , heap_height - 4 });
-		b->initButton();
 		b->setAnchor(tObject::anchors.upper_right_corner);
 		b->setPosition({ -heap_height + 2, 2});
 		b->setCode(static_cast<int>(edt::tEvent::codes::Close));
-		b->setFont(font);
+		if (!font_loaded) {
+			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
+		}
+		else {
+			b->setFont(font);
+		}
 		b->setString("x");
 		b->setTextColor({255, 255, 255, 255});
 		b->setCharSize(20);
@@ -1083,10 +1121,12 @@ namespace edt {
 	void tWindow::draw(sf::RenderTarget& target) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			if (need_rerender) {
-				render_texture.clear();
+
+				render_texture.clear(clear_color);
 				tGroup::draw(render_texture);
 
 				if (font_loaded) {
+					need_rerender = false;	//	<---------
 					sf::Text text;
 					text.setString(caption);
 					text.setCharacterSize(caption_char_size);
@@ -1096,9 +1136,11 @@ namespace edt {
 					text.setOutlineThickness(1);
 					render_texture.draw(text);
 				}
+				else {
+					need_rerender = true;	//	<---------
+					message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
+				}
 				render_texture.display();
-
-				need_rerender = false;
 			}
 			target.draw(render_squad, &render_texture.getTexture());
 		}
@@ -1143,6 +1185,13 @@ namespace edt {
 							}
 							case static_cast<int>(tEvent::codes::UpdateTexture) : {	// Обновить текстуру
 								need_rerender = true;
+								clearEvent(e);
+								break;
+							}
+							case static_cast<int>(tEvent::codes::FontAnswer) : {	// Обновить шрифт
+								font_loaded = true;
+								setFont(*e.font.font);
+								clearEvent(e);
 								break;
 							}
 							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
@@ -1207,22 +1256,5 @@ namespace edt {
 			}
 		}
 	}
-
-	//tMoveable::tMoveable() {
-	//	//movement.active = false;
-	//	movement.mX = 0;
-	//	movement.mY = 0;
-	//}
-
-	//tMoveable::~tMoveable() {
-	//}
-
-	//void tMoveable::setMovementStates(sMovement new_movement) {
-	//	movement = new_movement;
-	//}
-
-	//tMoveable::sMovement tMoveable::getMovementStates() {
-	//	return movement;
-	//}
 
 }
