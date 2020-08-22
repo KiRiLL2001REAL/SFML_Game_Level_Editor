@@ -140,7 +140,6 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 							t->setCharSize(font_size);
 							w->_insert(t);
 						}
-
 						_insert(w);
 						clearEvent(e);
 						break;

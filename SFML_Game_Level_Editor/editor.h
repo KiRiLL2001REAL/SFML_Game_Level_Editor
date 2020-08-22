@@ -111,6 +111,7 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void setSize(sf::Vector2f new_size);
+		virtual void updateTexture() = 0;
 
 		virtual sf::FloatRect getLocalBounds() = 0;
 		virtual sf::FloatRect getGlobalBounds();
@@ -172,6 +173,7 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void setSize(sf::Vector2f new_size);
+		virtual void updateTexture();
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
@@ -206,6 +208,7 @@ namespace edt {
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e);
+		virtual void updateTexture();
 	};
 
 	class tText : public tObject {
@@ -230,6 +233,7 @@ namespace edt {
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
+		virtual void updateTexture();
 
 		virtual sf::FloatRect getLocalBounds();
 		virtual bool pointIsInsideMe(sf::Vector2i point);
@@ -254,7 +258,6 @@ namespace edt {
 		tButton(tObject* _owner, sf::FloatRect rect = { 0, 0, 128, 48 });
 		virtual ~tButton();
 
-		void updateTexture();
 		void loadCustomSkin(std::string path_to_skin);
 		void setAlignment(char new_alignment);
 		void setTextOffset(sf::Vector2i new_offset);
@@ -267,6 +270,7 @@ namespace edt {
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
+		virtual void updateTexture();
 
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
@@ -280,8 +284,6 @@ namespace edt {
 		void initWindow();
 	
 	protected:
-		bool need_rerender;	// Нужна перерисоква?
-
 		bool font_loaded;	// Флаг. Загружен ли шрифт?
 		sf::Font font;		// Шрифт
 
@@ -310,6 +312,7 @@ namespace edt {
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
+		virtual void updateTexture();
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
