@@ -144,6 +144,16 @@ namespace edt {
 		return offset;
 	}
 
+	nlohmann::json tObject::saveParamsInJson() {
+		nlohmann::json js;
+
+		js["position"] = { x, y };
+		js["anchor"] = (int)anchor;
+		js["options"] = (int)options;
+
+		return js;
+	}
+
 	tGroup::tGroup(tObject* _owner) : 
 		tObject(_owner),
 		elem({})
@@ -247,6 +257,19 @@ namespace edt {
 		}
 	}
 
+	nlohmann::json tGroup::saveParamsInJson() {
+		nlohmann::json js = tObject::saveParamsInJson();
+
+		unsigned int id = 0;
+		for (list<tObject*>::iterator it = elem.begin(); it != elem.end(); it++) {
+			std::string str = std::to_string(id);
+			js["elem"][str] = (*it)->saveParamsInJson();
+			id++;
+		}
+
+		return js;
+	}
+
 	tRenderRect::tRenderRect(tObject* _owner, sf::FloatRect rect) :
 		tGroup(_owner),
 		render_squad(sf::VertexArray(sf::Quads, 4))
@@ -317,6 +340,19 @@ namespace edt {
 			render_squad[1].position.x - render_squad[0].position.x,
 			render_squad[3].position.y - render_squad[0].position.y
 		);
+	}
+
+	nlohmann::json tRenderRect::saveParamsInJson() {
+		nlohmann::json js = tGroup::saveParamsInJson();
+
+		sf::Vector2f size = render_squad[2].position - render_squad[0].position;
+		sf::Vector2u tex_size = render_texture.getSize();
+
+		js["size"] = { size.x, size.y };
+		js["texture_size"] = { tex_size.x, tex_size.y };
+		js["clear_color"] = { clear_color.r, clear_color.g, clear_color.b, clear_color.a };
+
+		return js;
 	}
 
 	tDesktop::tDesktop(std::string path_to_folder) :
@@ -574,6 +610,23 @@ namespace edt {
 		return;
 	}
 
+	nlohmann::json tDesktop::saveParamsInJson() {
+		nlohmann::json js;
+		
+		sf::Vector2u size = window.getSize();
+
+		js = tGroup::saveParamsInJson();
+
+		js["what_is_it"] = objects_json_ids.tDesktop;
+		js["what_is_it_string"] = "tDesktop";
+
+		js["window"]["caption"] = "SFML_Game environment editor";
+		js["window"]["size"] = { size.x, size.y };
+		js["window"]["style"] = "Closed";
+
+		return js;
+	}
+
 	tRectShape::tRectShape(tObject* _owner, sf::FloatRect rect, sf::Color fill_color) :
 		tObject(_owner)
 	{
@@ -619,6 +672,20 @@ namespace edt {
 			shape.getSize().x * shape.getScale().x,
 			shape.getSize().y * shape.getScale().y
 		);
+	}
+
+	nlohmann::json tRectShape::saveParamsInJson() {
+		nlohmann::json js = tObject::saveParamsInJson();
+
+		sf::Vector2f size = shape.getSize();
+		sf::Color color = shape.getFillColor();
+
+		js["what_is_it"] = objects_json_ids.tRectShape;
+		js["what_is_it_string"] = "tRectShape";
+		js["size"] = { size.x, size.y };
+		js["color"] = { color.r, color.g, color.b, color.a };
+
+		return js;
 	}
 
 	tText::tText(tObject* _owner, sf::Vector2f position, std::string string) :
@@ -676,6 +743,24 @@ namespace edt {
 
 	bool tText::pointIsInsideMe(sf::Vector2i point) {
 		return false;
+	}
+
+	nlohmann::json tText::saveParamsInJson() {
+		nlohmann::json js = tObject::saveParamsInJson();
+
+		sf::Color color = text_object.getFillColor();
+		std::string text = (std::string)text_object.getString();
+		unsigned int char_size = text_object.getCharacterSize();
+		unsigned int thickness = text_object.getOutlineThickness();
+
+		js["what_is_it"] = objects_json_ids.tText;
+		js["what_is_it_string"] = "tText";
+		js["color"] = { color.r, color.g, color.b, color.a };
+		js["char_size"] = char_size;
+		js["outline_thickness"] = thickness;
+		js["text"] = text;
+
+		return js;
 	}
 
 	void tText::draw(sf::RenderTarget& target) {
@@ -872,6 +957,18 @@ namespace edt {
 	bool tButton::pointIsInsideMe(sf::Vector2i point) {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
+	}
+
+	nlohmann::json tButton::saveParamsInJson() {
+		nlohmann::json js = tRenderRect::saveParamsInJson();
+
+		js["what_is_it"] = objects_json_ids.tButton;
+		js["what_is_it_string"] = "tButton";
+		js["code"] = self_code;
+		js["alignment"] = (int)alignment;
+		js["text_offset"] = { text_offset.x, text_offset.y };
+
+		return js;
 	}
 
 	void tButton::draw(sf::RenderTarget& target) {
@@ -1076,6 +1173,22 @@ namespace edt {
 	bool tWindow::pointIsInsideMe(sf::Vector2i point) {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
+	}
+
+	nlohmann::json tWindow::saveParamsInJson() {
+		nlohmann::json js = tRenderRect::saveParamsInJson();
+
+		js["what_is_it"] = objects_json_ids.tWindow;
+		js["what_is_it_string"] = "tWindow";
+
+		js["caption"] = caption;
+		js["caption_offset"] = { caption_offset.x, caption_offset.y };
+		js["color_heap"] = { color_heap.r, color_heap.g, color_heap.b, color_heap.a };
+		js["color_space"] = { color_space.r, color_space.g, color_space.b, color_space.a };
+		js["color_caption_active"] = { color_caption_active.r, color_caption_active.g, color_caption_active.b, color_caption_active.a };
+		js["color_caption_inactive"] = { color_caption_inactive.r, color_caption_inactive.g, color_caption_inactive.b, color_caption_inactive.a };
+
+		return js;
 	}
 
 	void tWindow::draw(sf::RenderTarget& target) {
