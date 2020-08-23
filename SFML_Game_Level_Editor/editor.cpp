@@ -751,7 +751,7 @@ namespace edt {
 		sf::Color color = text_object.getFillColor();
 		std::wstring text = (std::wstring)text_object.getString();
 		unsigned int char_size = text_object.getCharacterSize();
-		unsigned int thickness = text_object.getOutlineThickness();
+		unsigned int thickness = (unsigned int)text_object.getOutlineThickness();
 
 		js["what_is_it"] = objects_json_ids.tText;
 		js["what_is_it_string"] = "tText";
