@@ -4,9 +4,13 @@
 
 namespace edt {
 
-	enum class objects_json_ids {
-		tRectShape, tText, tWindow, tButton
-	};
+	static const struct sObjectsJsonIds {
+		static const unsigned char tDesktop = 0;
+		static const unsigned char tWindow = 1;
+		static const unsigned char tButton = 2;
+		static const unsigned char tText = 3;
+		static const unsigned char tRectShape = 4;
+	} objects_json_ids;
 
 	class tObject;
 
@@ -117,6 +121,7 @@ namespace edt {
 		virtual sf::FloatRect getGlobalBounds();
 		virtual sf::Vector2f getRelativeStartPosition();	// Возвращает начальную точку системы координат (ориентируясь на якорь)
 		virtual bool pointIsInsideMe(sf::Vector2i point) = 0;
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tGroup : public tObject { // Класс-контейнер
@@ -135,6 +140,8 @@ namespace edt {
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
+
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tRenderRect : public tGroup {
@@ -156,6 +163,7 @@ namespace edt {
 		virtual void move(sf::Vector2f delta);
 
 		virtual sf::FloatRect getLocalBounds();
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tRectShape : public tObject {
@@ -175,7 +183,7 @@ namespace edt {
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
-
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tDesktop : public tGroup {
@@ -207,6 +215,8 @@ namespace edt {
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
+
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tText : public tObject {
@@ -235,6 +245,7 @@ namespace edt {
 
 		virtual sf::FloatRect getLocalBounds();
 		virtual bool pointIsInsideMe(sf::Vector2i point);
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tButton : public tRenderRect {
@@ -271,6 +282,7 @@ namespace edt {
 		virtual void updateTexture();
 
 		virtual bool pointIsInsideMe(sf::Vector2i point);
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tWindow : public tRenderRect {
@@ -312,5 +324,6 @@ namespace edt {
 		virtual void updateTexture();
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
+		virtual nlohmann::json saveParamsInJson();
 	};
 }

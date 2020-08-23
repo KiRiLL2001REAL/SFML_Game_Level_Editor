@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "myEditor.h"
 
+myDesktop::~myDesktop() {
+}
+
 void myDesktop::changeScreen(char new_screen_code) {
 	edt::tDesktop::changeScreen(new_screen_code);
 

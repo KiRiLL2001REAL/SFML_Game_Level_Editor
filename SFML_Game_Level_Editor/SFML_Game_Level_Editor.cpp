@@ -2,28 +2,17 @@
 
 #include "myEditor.h"
 
-#define json nlohmann::json
-
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
-
-	json js;
-
-	js["Menu"]["background"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tRectShape);
-	js["Menu"]["background"]["fullscreen"] = true;
-	js["Menu"]["background"]["color"] = { 40, 40, 40, 255 };
 	
-	js["Menu"]["text"]["what_is_it"] = static_cast<int>(edt::objects_json_ids::tText);
-	js["Menu"]["text"]["char_size"] = 72;
-	js["Menu"]["text"]["color"] = { 255, 255, 255, 255 };
-	js["Menu"]["text"]["position"]["relative"] = true;
-	js["Menu"]["text"]["position"]["pos"] = { 0.5, 0.5 };
-	js["Menu"]["text"]["position"]["alignment"] = "center";
+	/*
+	nlohmann::json js;
 
-	json js2;
-	js2["js"] = js;
+	std::wstring str = L"привет";
+	js["1"] = str;
 
-	print_json(js2, path_to_folder + "\\Content\\Config\\editor_screens.conf");
+	print_json(js, path_to_folder + "\\Content\\Config\\editor_screens.conf");
+	*/
 
 	/*
 	std::vector<sf::VideoMode> modes = sf::VideoMode::getFullscreenModes();
@@ -36,8 +25,10 @@ int main(int argc, char* argv[]) {
 	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
 	//desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\Futurespore.otf");
 	desk->run();
+	nlohmann::json js = desk->saveParamsInJson();
+	print_json(js, path_to_folder + "\\Content\\Config\\menu.conf");
 	delete desk;
-
+	
 	/*
 	sf::Font font;
 	sf::Text text;
