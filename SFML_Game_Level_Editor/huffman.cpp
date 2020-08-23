@@ -295,7 +295,7 @@ namespace huf {
 						else {
 							p = p->right;
 						}
-						if (!p->left && !p->right) {
+						if ((!p->left) && (!p->right)) {
 							ofile.write((char*)&p->c, sizeof(p->c));
 							p = huffman_root;
 						}

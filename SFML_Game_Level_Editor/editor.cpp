@@ -688,7 +688,7 @@ namespace edt {
 		return js;
 	}
 
-	tText::tText(tObject* _owner, sf::Vector2f position, std::string string) :
+	tText::tText(tObject* _owner, sf::Vector2f position, std::wstring string) :
 		tObject(_owner),
 		font_loaded(false)
 	{
@@ -703,7 +703,7 @@ namespace edt {
 	tText::~tText() {
 	}
 
-	void tText::setString(std::string new_string) {
+	void tText::setString(std::wstring new_string) {
 		text_object.setString(new_string);
 	}
 
@@ -749,7 +749,7 @@ namespace edt {
 		nlohmann::json js = tObject::saveParamsInJson();
 
 		sf::Color color = text_object.getFillColor();
-		std::string text = (std::string)text_object.getString();
+		std::wstring text = (std::wstring)text_object.getString();
 		unsigned int char_size = text_object.getCharacterSize();
 		unsigned int thickness = text_object.getOutlineThickness();
 
@@ -934,7 +934,7 @@ namespace edt {
 		text->setFont(new_font);
 	}
 
-	void tButton::setString(std::string new_string) {
+	void tButton::setString(std::wstring new_string) {
 		tText* text = (tText*)elem.front();
 		text->setString(new_string);
 	}
@@ -1037,7 +1037,7 @@ namespace edt {
 	}
 
 
-	tWindow::tWindow(tObject* _owner, sf::FloatRect rect, std::string _caption) :
+	tWindow::tWindow(tObject* _owner, sf::FloatRect rect, std::wstring _caption) :
 		tRenderRect(_owner),
 		font_loaded(false),
 		caption(_caption),
@@ -1079,7 +1079,7 @@ namespace edt {
 		else {
 			b->setFont(font);
 		}
-		b->setString("x");
+		b->setString(L"x");
 		b->setTextColor({255, 255, 255, 255});
 		b->setCharSize(20);
 		b->setOutlineThickness(1);
@@ -1089,11 +1089,11 @@ namespace edt {
 		_insert(b);
 	}
 
-	void tWindow::setCaption(std::string new_caption) {
+	void tWindow::setCaption(std::wstring new_caption) {
 		caption = new_caption;
 	}
 
-	std::string tWindow::getCaption() {
+	std::wstring tWindow::getCaption() {
 		return caption;
 	}
 

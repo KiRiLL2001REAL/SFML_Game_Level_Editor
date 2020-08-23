@@ -46,7 +46,7 @@ namespace edt {
 			bool shift = false;
 		} key;
 		struct sText { // Вывод текста
-			std::string string = "";
+			std::wstring string = L"";
 			char char_size = 12;
 			int x = 0;
 			int y = 0;
@@ -226,10 +226,10 @@ namespace edt {
 		bool font_loaded;					// Флаг. Загружен ли шрифт?
 
 	public:
-		tText(tObject* _owner, sf::Vector2f position = {0, 0}, std::string string = "Some text");
+		tText(tObject* _owner, sf::Vector2f position = {0, 0}, std::wstring string = L"Some text");
 		virtual ~tText();
 
-		void setString(std::string new_string);
+		void setString(std::wstring new_string);
 		void setTextColor(sf::Color new_color);
 		void setFont(sf::Font new_font);
 		void setCharSize(unsigned int new_char_size);
@@ -272,7 +272,7 @@ namespace edt {
 		void setTextOffset(sf::Vector2i new_offset);
 		void setCode(int new_code);
 		void setFont(sf::Font new_font);
-		void setString(std::string new_string);
+		void setString(std::wstring new_string);
 		void setTextColor(sf::Color new_color);
 		void setCharSize(unsigned int new_char_size);
 		void setOutlineThickness(unsigned char new_thickness);
@@ -296,7 +296,7 @@ namespace edt {
 		bool font_loaded;	// Флаг. Загружен ли шрифт?
 		sf::Font font;		// Шрифт
 
-		std::string caption;				// Заголовок окна
+		std::wstring caption;				// Заголовок окна
 		sf::Color color_heap;				// Цвет шапки
 		sf::Color color_space;				// Цвет основной части
 		sf::Color color_caption_active;		// Цвет заголовка активного окна
@@ -304,10 +304,10 @@ namespace edt {
 		sf::Vector2f caption_offset;		// Настройка смещения заголовка, в случае, если он криво выводится (это всё из-за шрифтов)
 
 	public:
-		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::string caption = "Default caption");
+		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
 		virtual ~tWindow();
 
-		void setCaption(std::string new_caption);
+		void setCaption(std::wstring new_caption);
 		void setColorHeap(sf::Color new_color);
 		void setColorSpace(sf::Color new_color);
 		void setColorCaptionActive(sf::Color new_color);
@@ -315,7 +315,7 @@ namespace edt {
 		void setFont(sf::Font new_font);
 		void setCaptionOffset(sf::Vector2f new_offset);
 
-		std::string getCaption();
+		std::wstring getCaption();
 		bool pointIsInHeap(sf::Vector2i point);
 		const int getHeapHeight();
 

@@ -22,13 +22,13 @@ int main(int argc, char* argv[]) {
 	*/
 
 	myDesktop* desk = new myDesktop(path_to_folder);
-	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
-	//desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\Futurespore.otf");
+	//desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
+	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\PT Sans.ttf");
 	desk->run();
-	nlohmann::json js = desk->saveParamsInJson();
-	print_json(js, path_to_folder + "\\Content\\Config\\menu.conf");
+	//nlohmann::json js = desk->saveParamsInJson();
+	//print_json(js, path_to_folder + "\\Content\\Config\\menu.conf");
 	delete desk;
-	
+
 	/*
 	sf::Font font;
 	sf::Text text;

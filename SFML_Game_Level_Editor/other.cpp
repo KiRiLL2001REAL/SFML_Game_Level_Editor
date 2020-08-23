@@ -107,3 +107,13 @@ void print_json(nlohmann::json& js, std::string path_to_file) {
 	}
 	file.close();
 }
+
+std::wstring parseIntVectorToWstring(std::vector<int>& vec) {
+	std::wstring str = L"";
+	wchar_t wchar;
+	for (unsigned long long i = 0; i < vec.size() / 2; i++) {
+		wchar = (vec[i] & 0xFF) << 8 | (vec[i + 1] & 0xFF);
+		str += wchar;
+	}
+	return str;
+}

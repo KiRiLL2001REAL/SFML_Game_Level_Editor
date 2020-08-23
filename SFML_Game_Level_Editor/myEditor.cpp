@@ -28,7 +28,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			background->setColor(sf::Color(40, 40, 40, 255));
 			_insert(background);
 
-			edt::tText* text = new edt::tText(this, { 0, 0 }, "SFML_Game редактор игрового окружения");
+			edt::tText* text = new edt::tText(this, { 0, 0 }, L"SFML_Game редактор игрового окружения");
 			text->setFont(getFont());
 			text->setCharSize(72);
 			text->setTextColor({ 255, 255, 255, 255 });
@@ -39,7 +39,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			unsigned char count_buttons = 5;
 
 			edt::tButton* button = new edt::tButton(this, { 0, 0, 600, 80 });
-			button->setString("Редактировать карту");
+			button->setString(L"Редактировать карту");
 			button->setCode(static_cast<int>(screen_codes::MapEditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -50,7 +50,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 600, 80 });
-			button->setString("Редакторовать NPC");
+			button->setString(L"Редакторовать NPC");
 			button->setCode(static_cast<int>(screen_codes::NPCEditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -61,7 +61,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 600, 80 });
-			button->setString("Редактор спрайтов");
+			button->setString(L"Редактор спрайтов");
 			button->setCode(static_cast<int>(screen_codes::SPREditor));
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -72,7 +72,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 500, 80 });
-			button->setString("О программе");
+			button->setString(L"О программе");
 			button->setCode(code_about_paragraph);
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -83,7 +83,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 
 			button = new edt::tButton(this, { 0, 0, 500, 80 });
-			button->setString("Выход");
+			button->setString(L"Выход");
 			button->setCode(static_cast<int>(edt::tEvent::codes::CloseApplication));
 			button->setFont(getFont());
 			button->setCharSize(60);
@@ -107,23 +107,23 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 					case code_about_paragraph : {
 						sf::FloatRect rect;
 						unsigned int font_size = 32;
-						rect.width = 640;
-						rect.height = 340;
+						rect.width = 620;
+						rect.height = 410;
 						rect.left = (window.getSize().x - rect.width) / 2;
 						rect.top = (window.getSize().y - rect.height) / 2;
 						
-						edt::tWindow *w = new edt::tWindow(this, rect, "О программе");
+						edt::tWindow *w = new edt::tWindow(this, rect, L"О программе");
 						w->setFont(getFont());
 						w->setCaptionOffset({4, 0});
 
 						sf::Vector2f content_position = { 10, (float)w->getHeapHeight() };
 
-						std::ifstream file(path_to_folder + "\\Content\\Texts\\about.txt");
+						std::fstream file(path_to_folder + "\\Content\\Texts\\about.txt", std::fstream::in | std::fstream::binary);
 						edt::tText* t;	// Текст для вывода в окно
 
 						if (!file.is_open()) {
 							font_size -= 2;
-							std::string text = "Файл ''..\\Content\\Texts\\about.txt'' не найден.\n\nСтранно всё это...\nНа всякий случай вызовите экзорцистов.";
+							std::wstring text = L"Файл ''..\\Content\\Texts\\about.txt'' не найден.\n\nСтранно всё это...\nНа всякий случай вызовите экзорцистов.";
 							t = new edt::tText(w, { content_position.x, content_position.y }, text);
 							t->setFont(getFont());
 							t->setCharSize(font_size);
@@ -131,18 +131,35 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 							content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
 						}
 						else {
-							std::string str = "";
-							while (!file.eof()) {
-								std::string tmp_str;
-								std::getline(file, tmp_str);
-								str += tmp_str + "\n";
+							std::wstring str = L"";
+							file.seekg(0, std::fstream::end);
+							
+							unsigned long long file_size = file.tellg();	// Размер файла
+							file_size -= 2;
+
+							file.clear(); file.seekg(0);
+							file.seekg(2);									// Пропускаем BOM (FE FF)
+
+							unsigned int high, low;
+							unsigned char c;
+							wchar_t wchar;
+							for (unsigned long long i = 0; i < file_size / 2; i++) {
+								file.read((char*)&c, sizeof(c));
+								high = c & 0xFF;
+								file.read((char*)&c, sizeof(c));
+								low = c & 0xFF;
+
+								wchar = high << 8 | low;
+								str += wchar;
 							}
-							str.pop_back();
+							
 							t = new edt::tText(w, { content_position.x, content_position.y }, str);
 							t->setFont(getFont());
 							t->setCharSize(font_size);
 							w->_insert(t);
 						}
+
+						file.close();
 						_insert(w);
 						clearEvent(e);
 						break;
