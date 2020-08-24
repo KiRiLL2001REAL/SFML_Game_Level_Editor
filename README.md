@@ -14,3 +14,4 @@ TODO List:
     - :white_large_square:Пункт настроек    
     - :white_check_mark:Вызов окна "О программе"    
     - :white_check_mark:Алгоритм сжатия Хаффмана    
+    - :white_check_mark:Построение подэлементов по JSON файлу    
