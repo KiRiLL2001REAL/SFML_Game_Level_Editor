@@ -3,5 +3,5 @@
 *.exe
 *.pch
 /.vs/
-/SFML_Game_Level_Editor/Debug
-/SFML_Game_Level_Editor/Release
+/SFML_Game_Level_Editor/Debug/
+/SFML_Game_Level_Editor/Release/
