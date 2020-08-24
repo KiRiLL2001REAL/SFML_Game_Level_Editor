@@ -1,18 +1,8 @@
 ﻿#include "stdafx.h"
-
 #include "myEditor.h"
 
 int main(int argc, char* argv[]) {
 	std::string path_to_folder = cutOffLast(argv[0], 2);
-	
-	/*
-	nlohmann::json js;
-
-	std::wstring str = L"привет";
-	js["1"] = str;
-
-	print_json(js, path_to_folder + "\\Content\\Config\\editor_screens.conf");
-	*/
 
 	/*
 	std::vector<sf::VideoMode> modes = sf::VideoMode::getFullscreenModes();
@@ -22,8 +12,6 @@ int main(int argc, char* argv[]) {
 	*/
 
 	myDesktop* desk = new myDesktop(path_to_folder);
-	//desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\CyrilicOld.ttf");
-	desk->loadCustomFont(path_to_folder + "\\Content\\Fonts\\PT Sans.ttf");
 	desk->run();
 	//nlohmann::json js = desk->saveParamsInJson();
 	//print_json(js, path_to_folder + "\\Content\\Config\\menu.conf");

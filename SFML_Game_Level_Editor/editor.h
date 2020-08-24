@@ -82,7 +82,7 @@ namespace edt {
 			static const unsigned char bottom_right_corner =	0b00100100; // Якорь на нижний правый угол родителя
 		} anchors;
 		
-		unsigned char anchor;	// Биты 0..2 отвечают за привязку по X, а биты 3..5 - за привязку по Y
+		unsigned char anchor;	// Биты 0..2 отвечают за привязку по X, а биты 3..5 - за привязку по Y (см tObject::anchors)
 
 		bool mouse_inside[2];	// Флаг. Находится ли мышь внутри кнопки?
 
@@ -93,6 +93,7 @@ namespace edt {
 
 	public:
 		tObject(tObject* _owner);
+		tObject(tObject* _owner, nlohmann::json& js);
 		virtual ~tObject();
 
 		void setAnchor(unsigned char new_anchor);
@@ -130,6 +131,7 @@ namespace edt {
 
 	public:
 		tGroup(tObject* _owner);
+		tGroup(tObject* _owner, nlohmann::json& js);
 		virtual ~tGroup();
 
 		void _insert(tObject *object);		// Внесение элемента в список подэлементов
@@ -140,6 +142,7 @@ namespace edt {
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
+		void makeObjectsFromJson(nlohmann::json& js);
 
 		virtual nlohmann::json saveParamsInJson();
 	};
@@ -152,6 +155,7 @@ namespace edt {
 
 	public:
 		tRenderRect(tObject* _owner, sf::FloatRect rect = { 0, 0, 64, 64 });
+		tRenderRect(tObject* _owner, nlohmann::json& js);
 		virtual ~tRenderRect();
 
 		void setTextureSize(sf::Vector2u new_size);
@@ -172,6 +176,7 @@ namespace edt {
 
 	public:
 		tRectShape(tObject* _owner, sf::FloatRect rect = {0, 0, 64, 64}, sf::Color fill_color = sf::Color(255, 255, 255, 255));
+		tRectShape(tObject* _owner, nlohmann::json& js);
 		virtual ~tRectShape();
 
 		void setColor(sf::Color new_color);
@@ -187,17 +192,18 @@ namespace edt {
 	};
 
 	class tDesktop : public tGroup {
-	protected:		
-		std::string path_to_folder;	// Путь до рабочей папки
-		sf::RenderWindow window;	// Главное окно
-		sf::Font font_default;		// Шрифт по умолчанию
-		sf::Font custom_font;		// Пользовательский шрифт
-		bool custom_font_loaded;	// Флаг. Загружен ли пользовательский шрифт?
-		list<tEvent> events;		// Список событий к обработке
-
-		sf::Vector2i old_mouse_position;
-
-		char screen_code;			// Код текущего экрана
+	protected:
+		std::string path_to_folder;			// Путь до рабочей папки
+		sf::RenderWindow window;			// Главное окно
+		sf::Font font_default;				// Шрифт по умолчанию
+		sf::Font custom_font;				// Пользовательский шрифт
+		bool custom_font_loaded;			// Флаг. Загружен ли пользовательский шрифт?
+		list<tEvent> events;				// Список событий к обработке
+		sf::RectangleShape background;		// Фоновый прямоугольник
+		nlohmann::json json_configuration;	// Конфиг-файл программы, содержащий изначальное состояние экранов редактора
+		sf::Vector2i old_mouse_position;	// Предыдущее положение мыши (требуется для работы tEvent::mouse.dX(.dY))
+		char screen_code;					// Код текущего экрана
+		sf::Vector2u window_size;			// Размер окна
 		
 	public:
 		tDesktop(std::string path_to_folder);
@@ -206,16 +212,19 @@ namespace edt {
 		void run();								// Главный цикл
 		void saveData();						// Сохранить данные в файл
 		void loadCustomFont(std::string path_to_font);	// Установить пользовательский шрифт
+
 		sf::Font& getFont();					// Получить шрифт
-		
 		bool windowIsOpen();					// Возвращает статус окна
 
-		virtual void changeScreen(char new_screen_code);// Изменить экран (меню, редактор карты, редактор NPC)
+		virtual void changeScreen(char new_screen_code);// Изменить экран (меню, редактор карты, редактор NPC и т.д.)
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
+		virtual void draw(sf::RenderTarget& target);
 
+		virtual sf::FloatRect getLocalBounds();
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual nlohmann::json saveParamsInJson();
 	};
 
@@ -227,6 +236,7 @@ namespace edt {
 
 	public:
 		tText(tObject* _owner, sf::Vector2f position = {0, 0}, std::wstring string = L"Some text");
+		tText(tObject* _owner, nlohmann::json& js);
 		virtual ~tText();
 
 		void setString(std::wstring new_string);
@@ -236,11 +246,12 @@ namespace edt {
 		void setOutlineThickness(unsigned char new_thickness);
 
 		bool getFontState();	// Загружен или нет
-		sf::Text getTextObject();
+		sf::Text& getTextObject();
 		sf::Color getFillColor();
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
+		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
 
 		virtual sf::FloatRect getLocalBounds();
@@ -262,13 +273,14 @@ namespace edt {
 		sf::Vector2i text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		
 	public:
-		enum class alignment_type { Left, Middle, Right };
+		enum class text_alignment_type { Left, Middle, Right };
 
 		tButton(tObject* _owner, sf::FloatRect rect = { 0, 0, 128, 48 });
+		tButton(tObject* _owner, nlohmann::json& js);
 		virtual ~tButton();
 
 		void loadCustomSkin(std::string path_to_skin);
-		void setAlignment(char new_alignment);
+		void setTextAlignment(char new_alignment);
 		void setTextOffset(sf::Vector2i new_offset);
 		void setCode(int new_code);
 		void setFont(sf::Font new_font);
@@ -305,6 +317,7 @@ namespace edt {
 
 	public:
 		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
+		tWindow(tObject* _owner, nlohmann::json& js);
 		virtual ~tWindow();
 
 		void setCaption(std::wstring new_caption);

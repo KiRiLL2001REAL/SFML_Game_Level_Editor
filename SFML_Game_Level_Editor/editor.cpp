@@ -12,6 +12,18 @@ namespace edt {
 	{
 		mouse_inside[0] = false;
 		mouse_inside[1] = false;
+	}
+
+	tObject::tObject(tObject* _owner, nlohmann::json& js) :
+		tObject(_owner)
+	{
+		anchor = js["anchor"].get<unsigned char>();
+
+		options = js["options"].get<unsigned char>();
+		
+		std::vector<float> vf = js["position"].get<std::vector<float>>();
+		x = vf[0];
+		y = vf[1];
 	};
 
 	tObject::~tObject() {
@@ -121,8 +133,12 @@ namespace edt {
 
 	sf::Vector2f tObject::getRelativeStartPosition() {
 		unsigned char i = 0;
-		sf::FloatRect owner_rect = owner->getLocalBounds();
+		sf::FloatRect owner_rect;
 		sf::Vector2f offset = { 0, 0 };
+
+		//if (owner) 
+		owner_rect = owner->getLocalBounds();
+		//else return {0, 0};
 
 		unsigned char anchor = this->anchor;
 		for (i = 0; i < 3; i++) {
@@ -148,8 +164,8 @@ namespace edt {
 		nlohmann::json js;
 
 		js["position"] = { x, y };
-		js["anchor"] = (int)anchor;
-		js["options"] = (int)options;
+		js["anchor"] = anchor;
+		js["options"] = options;
 
 		return js;
 	}
@@ -158,6 +174,13 @@ namespace edt {
 		tObject(_owner),
 		elem({})
 	{
+	}
+
+	tGroup::tGroup(tObject* _owner, nlohmann::json& js) :
+		tObject(_owner, js),
+		elem({})
+	{
+		makeObjectsFromJson(js);
 	}
 
 	tGroup::~tGroup() {
@@ -257,6 +280,34 @@ namespace edt {
 		}
 	}
 
+	void tGroup::makeObjectsFromJson(nlohmann::json& js) {
+		for (nlohmann::json::iterator it = js["elem"].begin(); it != js["elem"].end(); it++) {
+			unsigned char what_is_it = (*it)["what_is_it"].get<unsigned char>();
+			switch (what_is_it) {
+			case (objects_json_ids.tText): {
+				tText* el = new tText(this, *it);
+				_insert(el);
+				break;
+			}
+			case (objects_json_ids.tButton): {
+				tButton* el = new tButton(this, *it);
+				_insert(el);
+				break;
+			}
+			case (objects_json_ids.tRectShape): {
+				tRectShape* el = new tRectShape(this, *it);
+				_insert(el);
+				break;
+			}
+			case (objects_json_ids.tWindow): {
+				tWindow* el = new tWindow(this, *it);
+				_insert(el);
+				break;
+			}
+			}
+		}
+	}
+
 	nlohmann::json tGroup::saveParamsInJson() {
 		nlohmann::json js = tObject::saveParamsInJson();
 
@@ -272,18 +323,30 @@ namespace edt {
 
 	tRenderRect::tRenderRect(tObject* _owner, sf::FloatRect rect) :
 		tGroup(_owner),
+		render_squad(sf::VertexArray(sf::Quads, 4)),
+		clear_color({ 0, 0, 0, 255 })
+	{
+		tObject::setPosition({ rect.left, rect.top });
+		render_texture.create((unsigned int)rect.width, (unsigned int)rect.height);
+
+		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
+		setSize({ rect.width, rect.height });
+	}
+
+	tRenderRect::tRenderRect(tObject* _owner, nlohmann::json& js) :
+		tGroup(_owner, js),
 		render_squad(sf::VertexArray(sf::Quads, 4))
 	{
-		clear_color = sf::Color(0, 0, 0, 255);
-		render_texture.create((unsigned int)rect.width, (unsigned int)rect.height);
-		render_squad[0].position = { rect.left, rect.top };
-		render_squad[1].position = { rect.left + rect.width, rect.top };
-		render_squad[2].position = { rect.left + rect.width, rect.top + rect.height };
-		render_squad[3].position = { rect.left, rect.top + rect.height };
-		render_squad[0].texCoords = { 0, 0 };
-		render_squad[1].texCoords = { rect.width - 1, 0 };
-		render_squad[2].texCoords = { rect.width - 1, rect.height - 1 };
-		render_squad[3].texCoords = { 0, rect.height - 1 };
+
+		std::vector<unsigned char> vuc = js["clear_color"].get<std::vector<unsigned char>>();
+		clear_color = {vuc[0], vuc[1], vuc[2], vuc[3]};
+
+		std::vector<float> vf = js["size"].get<std::vector<float>>();
+		setSize({ vf[0], vf[1] });
+
+		std::vector<unsigned int> vui = js["texture_size"].get<std::vector<unsigned int>>();
+		render_texture.create(vui[0], vui[1]);
+		setTextureSize({ vui[0], vui[1] });
 	}
 
 	tRenderRect::~tRenderRect() {
@@ -302,10 +365,10 @@ namespace edt {
 	}
 
 	void tRenderRect::setSize(sf::Vector2f new_size) {
-		render_squad[0].position = { render_squad[0].position.x, render_squad[0].position.y };
-		render_squad[1].position = { render_squad[0].position.x + new_size.x, render_squad[0].position.y };
-		render_squad[2].position = { render_squad[0].position.x + new_size.x, render_squad[0].position.y + new_size.y };
-		render_squad[3].position = { render_squad[0].position.x, render_squad[0].position.y + new_size.y };
+		render_squad[0].position = { x, y };
+		render_squad[1].position = { x + new_size.x, y };
+		render_squad[2].position = { x + new_size.x, y + new_size.y };
+		render_squad[3].position = { x, y + new_size.y };
 	}
 
 	void tRenderRect::setPosition(sf::Vector2f new_position) {
@@ -357,50 +420,65 @@ namespace edt {
 
 	tDesktop::tDesktop(std::string path_to_folder) :
 		tGroup(nullptr),
-		custom_font_loaded(false), 
-		screen_code(0) 
+		custom_font_loaded(false),
+		json_configuration(),
+		screen_code(0),
+		window_size({1280, 720})
 	{
+		background.setPosition({ 0, 0 });
+		background.setFillColor({40, 40, 40, 255});
+
 		old_mouse_position = sf::Mouse::getPosition();
 
 		this->path_to_folder = path_to_folder;
-		std::string config_file_name = "\\config.conf";
+		std::string config_file_name = "\\Content\\Config\\menu.conf";
 
 		std::ifstream file(path_to_folder + config_file_name);
-		if (!file.is_open()) {
-			std::cout << "Can't open file '" << path_to_folder << config_file_name << "\n";
-		}
-		else {
-			nlohmann::json config;
-			file >> config;
-			file.close();
-
-			std::map<std::string, unsigned char> styles;
-			styles["Close"] = sf::Style::Close;
-			styles["Default"] = sf::Style::Default;
-			styles["Fullscreen"] = sf::Style::Fullscreen;
-			styles["None"] = sf::Style::None;
-			styles["Resize"] = sf::Style::Resize;
-			styles["Titlebar"] = sf::Style::Titlebar;
-			
-			std::string str = config["window"]["style"].get<std::string>();
-			unsigned char style = sf::Style::Close;
-			if (styles.find(str) != styles.end()) {	// Если есть такой стиль
-				style = styles[str];
+		try {
+			if (!file.is_open()) {
+				throw(-1);
 			}
+			else {
+				file >> json_configuration;
+				file.close();
 
-			window.create(
-				sf::VideoMode(
-					config.at("window").at("size").at("width").get<unsigned int>(),
-					config.at("window").at("size").at("height").get<unsigned int>()
-				),
-				config.at("window").at("caption").get<std::string>(),
-				style
-			);
-			font_default.loadFromFile(path_to_folder + config.at("window").at("font_default").get<std::string>());
+				std::map<std::string, unsigned char> styles;
+				styles["Close"] = sf::Style::Close;
+				styles["Default"] = sf::Style::Default;
+				styles["Fullscreen"] = sf::Style::Fullscreen;
+				styles["None"] = sf::Style::None;
+				styles["Resize"] = sf::Style::Resize;
+				styles["Titlebar"] = sf::Style::Titlebar;
 
-			window.setKeyRepeatEnabled(false);
+				std::string style_str = json_configuration["window"]["style"].get<std::string>();
+				unsigned char style = sf::Style::Close;
+				if (styles.find(style_str) != styles.end()) {	// Если такой стиль есть, то запоминаем его номер
+					style = styles[style_str];
+				}
+
+				std::vector<unsigned int> w_size = json_configuration["window"]["size"].get<std::vector<unsigned int>>();;
+
+				background.setSize({ (float)w_size[0], (float)w_size[1] });
+				window_size = { w_size[0], w_size[1] };
+
+				window.create(
+					sf::VideoMode(w_size[0], w_size[1]),
+					json_configuration["window"]["caption"].get<std::string>(),
+					style
+				);
+				font_default.loadFromFile(path_to_folder + json_configuration["window"]["font_default"].get<std::string>());
+
+				window.setKeyRepeatEnabled(false);
+			}
 		}
-
+		catch (int error) {
+			switch (error) {
+			case -1: {
+				std::cout << "Can't open file '" << path_to_folder << config_file_name << "'\n";
+				break;
+			}
+			}
+		}
 	}
 
 	tDesktop::~tDesktop() {
@@ -610,6 +688,25 @@ namespace edt {
 		return;
 	}
 
+	void tDesktop::draw(sf::RenderTarget& target) {
+		target.draw(background);
+		tGroup::draw(target);
+	}
+
+	sf::FloatRect tDesktop::getLocalBounds() {
+		return {
+			0,
+			0,
+			(float)window_size.x,
+			(float)window_size.y
+		};
+	}
+
+	bool tDesktop::pointIsInsideMe(sf::Vector2i point) {
+		sf::Vector2i size = (sf::Vector2i)window.getSize();
+		return (point.x >= 0 && point.x <= size.x && point.y >= 0 && point.y <= size.y);
+	}
+
 	nlohmann::json tDesktop::saveParamsInJson() {
 		nlohmann::json js;
 		
@@ -622,7 +719,8 @@ namespace edt {
 
 		js["window"]["caption"] = "SFML_Game environment editor";
 		js["window"]["size"] = { size.x, size.y };
-		js["window"]["style"] = "Closed";
+		js["window"]["style"] = "Titlebar";
+		js["window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
 
 		return js;
 	}
@@ -633,6 +731,18 @@ namespace edt {
 		shape.setPosition({rect.left, rect.top});
 		shape.setSize({rect.width, rect.height});
 		shape.setFillColor(fill_color);
+	}
+
+	tRectShape::tRectShape(tObject* _owner, nlohmann::json& js) :
+		tObject(_owner, js)
+	{		
+		std::vector<float> vf = js["size"].get<std::vector<float>>();
+		shape.setSize({ vf[0], vf[1] });
+
+		std::vector<unsigned char> vuc = js["color"].get<std::vector<unsigned char>>();
+		shape.setFillColor({ vuc[0], vuc[1], vuc[2], vuc[3] });
+
+		shape.setPosition({ x, y });
 	}
 	
 	tRectShape::~tRectShape() {
@@ -700,6 +810,23 @@ namespace edt {
 		text_object.setPosition(position);
 	}
 
+	tText::tText(tObject* _owner, nlohmann::json& js) :
+		tObject(_owner, js),
+		font_loaded(false)
+	{
+		std::vector<int> vi = js["text"].get<std::vector<int>>();
+		text_object.setString(convertIntVectorToWstring(vi));
+		
+		std::vector<unsigned char> vuc = js["color"].get<std::vector<unsigned char>>();
+		text_object.setFillColor({ vuc[0], vuc[1], vuc[2], vuc[3] });
+
+		text_object.setCharacterSize(js["char_size"].get<unsigned int>());
+
+		text_object.setOutlineThickness((float)js["outline_thickness"].get<unsigned int>());
+
+		text_object.setPosition({ x, y });
+	}
+
 	tText::~tText() {
 	}
 
@@ -729,7 +856,7 @@ namespace edt {
 		return font_loaded;
 	}
 
-	sf::Text tText::getTextObject() {
+	sf::Text& tText::getTextObject() {
 		return text_object;
 	}
 
@@ -764,14 +891,37 @@ namespace edt {
 	}
 
 	void tText::draw(sf::RenderTarget& target) {
-		if (font_loaded && checkOption(option_mask.can_be_drawn)) {
-			target.draw(text_object);
+		if (checkOption(option_mask.can_be_drawn)) {
+			if (font_loaded) {
+				target.draw(text_object);
+				return;
+			}
+			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
 		}
 	}
 
 	void tText::setPosition(sf::Vector2f new_position) {
 		tObject::setPosition(new_position);
 		text_object.setPosition(new_position);
+	}
+
+	void tText::handleEvent(tEvent& e) {
+		if (checkOption(option_mask.can_be_drawn)) {
+			switch (e.type) {
+				case static_cast<int>(tEvent::types::Broadcast) : {
+					if (e.address == this) {
+						switch (e.code) {
+							case static_cast<int>(tEvent::codes::FontAnswer) : {
+								font_loaded = true;
+								text_object.setFont(*e.font.font);
+								break;
+							}
+						}
+					}
+					break;
+				}
+			}
+		}
 	}
 
 	void tText::updateTexture() {
@@ -781,12 +931,25 @@ namespace edt {
 	tButton::tButton(tObject* _owner, sf::FloatRect rect) :
 		tRenderRect(_owner, rect),
 		custom_skin_loaded(false),
-		alignment(static_cast<int>(alignment_type::Left)),
+		alignment(static_cast<int>(text_alignment_type::Left)),
 		side_offset(10),
 		text_offset(sf::Vector2u(0, 0)),
 		self_code(static_cast<int>(tEvent::codes::Nothing))
 	{
 		initButton();
+	}
+
+	tButton::tButton(tObject* _owner, nlohmann::json& js) :
+		tRenderRect(_owner, js),
+		custom_skin_loaded(false),
+		side_offset(10)
+	{
+		std::vector<int> vi = js["text_offset"].get<std::vector<int>>();
+		text_offset = { vi[0], vi[1] };
+
+		self_code = js["code"].get<int>();
+
+		alignment = js["alignment"].get<char>();
 	}
 
 	tButton::~tButton() {
@@ -858,17 +1021,17 @@ namespace edt {
 			sf::Text text_to_display = text_object->getTextObject();
 			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
 			switch (alignment) {			// Настройка выравнивания
-				case static_cast<int>(tButton::alignment_type::Right) : {
+				case static_cast<int>(tButton::text_alignment_type::Right) : {
 					text_to_display.setOrigin({ (float)text_to_display.getLocalBounds().width, (float)text_to_display.getLocalBounds().height });
 					text_to_display.setPosition({ (float)render_texture.getSize().x - side_offset - text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y });
 					break;
 				}
-				case static_cast<int>(tButton::alignment_type::Middle) : {
+				case static_cast<int>(tButton::text_alignment_type::Middle) : {
 					text_to_display.setOrigin({ text_to_display.getLocalBounds().width / 2, (float)text_to_display.getLocalBounds().height });
 					text_to_display.setPosition({ (float)render_texture.getSize().x / 2 + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y });
 					break;
 				}
-				case static_cast<int>(tButton::alignment_type::Left) :
+				case static_cast<int>(tButton::text_alignment_type::Left) :
 				default: {
 					text_to_display.setOrigin({ 0, (float)text_to_display.getLocalBounds().height });
 					text_to_display.setPosition({ (float)side_offset + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.x });
@@ -900,16 +1063,16 @@ namespace edt {
 		}
 	}
 
-	void tButton::setAlignment(char new_alignment) {
+	void tButton::setTextAlignment(char new_alignment) {
 		switch (new_alignment) {
-			case static_cast<int>(tButton::alignment_type::Middle) :
-			case static_cast<int>(tButton::alignment_type::Right) : {
+			case static_cast<int>(tButton::text_alignment_type::Middle) :
+			case static_cast<int>(tButton::text_alignment_type::Right) : {
 			alignment = new_alignment;
 			break;
 			}
-			case static_cast<int>(tButton::alignment_type::Left) : {
+			case static_cast<int>(tButton::text_alignment_type::Left) : {
 			default:
-				alignment = static_cast<int>(tButton::alignment_type::Left);
+				alignment = static_cast<int>(tButton::text_alignment_type::Left);
 				break;
 			}
 		}
@@ -965,7 +1128,7 @@ namespace edt {
 		js["what_is_it"] = objects_json_ids.tButton;
 		js["what_is_it_string"] = "tButton";
 		js["code"] = self_code;
-		js["alignment"] = (int)alignment;
+		js["alignment"] = alignment;
 		js["text_offset"] = { text_offset.x, text_offset.y };
 
 		return js;
@@ -1057,6 +1220,38 @@ namespace edt {
 		initWindow();
 	}
 
+	tWindow::tWindow(tObject* _owner, nlohmann::json& js) :
+		tRenderRect(_owner, js),
+		font_loaded(false)
+	{
+		std::vector<int> vi = js["caption"].get<std::vector<int>>();
+		caption = convertIntVectorToWstring(vi);
+
+		std::vector<float> vf = js["caption_offset"].get<std::vector<float>>();
+		caption_offset = { vf[0], vf[1] };
+
+		std::vector<unsigned char> vuc = js["color_heap"].get<std::vector<unsigned char>>();
+		color_heap = { vuc[0], vuc[1], vuc[2], vuc[3] };
+		vuc.clear();
+
+		vuc = js["color_space"].get<std::vector<unsigned char>>();
+		color_space = { vuc[0], vuc[1], vuc[2], vuc[3] };
+		vuc.clear();
+
+		vuc = js["color_caption_active"].get<std::vector<unsigned char>>();
+		color_caption_active = { vuc[0], vuc[1], vuc[2], vuc[3] };
+		vuc.clear();
+
+		vuc = js["color_caption_inactive"].get<std::vector<unsigned char>>();
+		color_caption_inactive = { vuc[0], vuc[1], vuc[2], vuc[3] };
+		vuc.clear();
+
+		changeOneOption(option_mask.can_be_moved, true);
+		changeOneOption(option_mask.can_be_resized, true);
+
+		initWindow();
+	}
+
 	tWindow::~tWindow() {
 	}
 
@@ -1080,11 +1275,11 @@ namespace edt {
 			b->setFont(font);
 		}
 		b->setString(L"x");
-		b->setTextColor({255, 255, 255, 255});
+		b->setTextColor({ 255, 255, 255, 255 });
 		b->setCharSize(20);
 		b->setOutlineThickness(1);
-		b->setAlignment(static_cast<int>(tButton::alignment_type::Middle));
-		b->setTextOffset({0, -2});
+		b->setTextAlignment(static_cast<int>(tButton::text_alignment_type::Middle));
+		b->setTextOffset({ 0, -3 });
 		b->updateTexture();
 		_insert(b);
 	}

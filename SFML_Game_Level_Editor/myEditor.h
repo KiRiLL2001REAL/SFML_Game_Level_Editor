@@ -14,7 +14,4 @@ public:
 
 	virtual void changeScreen(char new_screen_code);
 	virtual void handleEvent(edt::tEvent& e);
-
-	virtual sf::FloatRect getLocalBounds();
-	virtual bool pointIsInsideMe(sf::Vector2i point);
 };

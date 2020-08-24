@@ -6,4 +6,4 @@ void make_json_user_friendly(std::string path_to_file);		// Перерабатывает json 
 
 void print_json(nlohmann::json &js, std::string path_to_file);		// Выводит json-структуру в файл в читабельном виде
 
-std::wstring parseIntVectorToWstring(std::vector<int>& vec);	// Преобразует std::vector<int> в std::wstring
+std::wstring convertIntVectorToWstring(std::vector<int>& vec);	// Преобразует std::vector<int> в std::wstring
