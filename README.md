@@ -16,4 +16,4 @@ TODO List:
     - :white_check_mark:Алгоритм сжатия Хаффмана    
     - :white_check_mark:Построение подэлементов по JSON файлу    
 ____
-![Alt-текст](https://yadi.sk/i/DwzeONQUFdevQg "Меню редактора")
+![Alt-текст](https://c.radikal.ru/c06/2008/95/8433da64ffe2t.jpg "Меню редактора")
