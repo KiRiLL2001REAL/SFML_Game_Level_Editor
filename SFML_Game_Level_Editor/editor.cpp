@@ -67,9 +67,8 @@ namespace edt {
 	}
 
 	void tObject::setPosition(sf::Vector2f new_position) {
-		sf::Vector2f offset = getRelativeStartPosition();
-		x = offset.x + new_position.x;
-		y = offset.y + new_position.y;
+		x = new_position.x;
+		y = new_position.y;
 	}
 
 	void tObject::setOwner(tObject *new_owner) {
@@ -136,9 +135,7 @@ namespace edt {
 		sf::FloatRect owner_rect;
 		sf::Vector2f offset = { 0, 0 };
 
-		//if (owner) 
 		owner_rect = owner->getLocalBounds();
-		//else return {0, 0};
 
 		unsigned char anchor = this->anchor;
 		for (i = 0; i < 3; i++) {
@@ -180,7 +177,7 @@ namespace edt {
 		tObject(_owner, js),
 		elem({})
 	{
-		makeObjectsFromJson(js);
+		makeObjectsFromJson(_owner, js);
 	}
 
 	tGroup::~tGroup() {
@@ -280,27 +277,27 @@ namespace edt {
 		}
 	}
 
-	void tGroup::makeObjectsFromJson(nlohmann::json& js) {
+	void tGroup::makeObjectsFromJson(tObject* _owner, nlohmann::json& js) {
 		for (nlohmann::json::iterator it = js["elem"].begin(); it != js["elem"].end(); it++) {
 			unsigned char what_is_it = (*it)["what_is_it"].get<unsigned char>();
 			switch (what_is_it) {
 			case (objects_json_ids.tText): {
-				tText* el = new tText(this, *it);
+				tText* el = new tText(_owner, *it);
 				_insert(el);
 				break;
 			}
 			case (objects_json_ids.tButton): {
-				tButton* el = new tButton(this, *it);
+				tButton* el = new tButton(_owner, *it);
 				_insert(el);
 				break;
 			}
 			case (objects_json_ids.tRectShape): {
-				tRectShape* el = new tRectShape(this, *it);
+				tRectShape* el = new tRectShape(_owner, *it);
 				_insert(el);
 				break;
 			}
 			case (objects_json_ids.tWindow): {
-				tWindow* el = new tWindow(this, *it);
+				tWindow* el = new tWindow(_owner, *it);
 				_insert(el);
 				break;
 			}
@@ -347,6 +344,8 @@ namespace edt {
 		std::vector<unsigned int> vui = js["texture_size"].get<std::vector<unsigned int>>();
 		render_texture.create(vui[0], vui[1]);
 		setTextureSize({ vui[0], vui[1] });
+
+		setPosition({ x, y });
 	}
 
 	tRenderRect::~tRenderRect() {
@@ -373,10 +372,16 @@ namespace edt {
 
 	void tRenderRect::setPosition(sf::Vector2f new_position) {
 		tObject::setPosition(new_position);
+		sf::Vector2f offset = getRelativeStartPosition();
+
 		render_squad[1].position = { x + render_squad[1].position.x - render_squad[0].position.x, y + render_squad[1].position.y - render_squad[0].position.y };
 		render_squad[2].position = { x + render_squad[2].position.x - render_squad[0].position.x, y + render_squad[2].position.y - render_squad[0].position.y };
 		render_squad[3].position = { x + render_squad[3].position.x - render_squad[0].position.x, y + render_squad[3].position.y - render_squad[0].position.y };
 		render_squad[0].position = { x, y };
+
+		for (unsigned int i = 0; i < 4; i++) {
+			render_squad[i].position += offset;
+		}
 	}
 
 	void tRenderRect::draw(sf::RenderTarget& target) {
@@ -431,7 +436,7 @@ namespace edt {
 		old_mouse_position = sf::Mouse::getPosition();
 
 		this->path_to_folder = path_to_folder;
-		std::string config_file_name = "\\Content\\Config\\menu.conf";
+		std::string config_file_name = "\\Content\\Config\\screen_config.conf";
 
 		std::ifstream file(path_to_folder + config_file_name);
 		try {
@@ -501,6 +506,16 @@ namespace edt {
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		};
+		/*
+		sf::Vector2u size = window.getSize();
+		nlohmann::json js;
+		js["menu"] = saveParamsInJson();
+		js["window"]["caption"] = "SFML_Game environment editor";
+		js["window"]["size"] = { size.x, size.y };
+		js["window"]["style"] = "Titlebar";
+		js["window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
+		print_json(js, path_to_folder + "\\Content\\Config\\screen_config.conf");
+		*/
 	}
 
 	bool tDesktop::windowIsOpen() {
@@ -709,18 +724,11 @@ namespace edt {
 
 	nlohmann::json tDesktop::saveParamsInJson() {
 		nlohmann::json js;
-		
-		sf::Vector2u size = window.getSize();
 
 		js = tGroup::saveParamsInJson();
 
 		js["what_is_it"] = objects_json_ids.tDesktop;
 		js["what_is_it_string"] = "tDesktop";
-
-		js["window"]["caption"] = "SFML_Game environment editor";
-		js["window"]["size"] = { size.x, size.y };
-		js["window"]["style"] = "Titlebar";
-		js["window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
 
 		return js;
 	}
@@ -824,7 +832,7 @@ namespace edt {
 
 		text_object.setOutlineThickness((float)js["outline_thickness"].get<unsigned int>());
 
-		text_object.setPosition({ x, y });
+		setPosition({ x, y });
 	}
 
 	tText::~tText() {
@@ -902,7 +910,8 @@ namespace edt {
 
 	void tText::setPosition(sf::Vector2f new_position) {
 		tObject::setPosition(new_position);
-		text_object.setPosition(new_position);
+		sf::Vector2f offset = getRelativeStartPosition();
+		text_object.setPosition(new_position + offset);
 	}
 
 	void tText::handleEvent(tEvent& e) {
@@ -1245,11 +1254,6 @@ namespace edt {
 		vuc = js["color_caption_inactive"].get<std::vector<unsigned char>>();
 		color_caption_inactive = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
-
-		changeOneOption(option_mask.can_be_moved, true);
-		changeOneOption(option_mask.can_be_resized, true);
-
-		initWindow();
 	}
 
 	tWindow::~tWindow() {

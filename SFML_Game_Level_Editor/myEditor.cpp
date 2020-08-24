@@ -91,7 +91,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			_insert(button);
 			*/
 
-			makeObjectsFromJson(json_configuration);
+			makeObjectsFromJson(this, json_configuration["menu"]);
 
 			break;
 		}

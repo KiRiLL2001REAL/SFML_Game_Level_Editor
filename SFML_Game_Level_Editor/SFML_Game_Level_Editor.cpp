@@ -13,15 +13,13 @@ int main(int argc, char* argv[]) {
 
 	myDesktop* desk = new myDesktop(path_to_folder);
 	desk->run();
-	//nlohmann::json js = desk->saveParamsInJson();
-	//print_json(js, path_to_folder + "\\Content\\Config\\menu.conf");
 	delete desk;
 
 	/*
 	sf::Font font;
 	sf::Text text;
 	sf::VertexArray render_squad(sf::Quads, 4);
-	sf::RenderWindow window(sf::VideoMode(1920, 1080), "window", sf::Style::Close);
+	sf::RenderWindow window(sf::VideoMode(1920, 1080), "window", sf::Style::Titlebar);
 	sf::RenderTexture canvas;
 	sf::RectangleShape background;
 	sf::RectangleShape instrumental_panel_background;
@@ -69,10 +67,6 @@ int main(int argc, char* argv[]) {
 		{
 			if (event.type == sf::Event::Closed) {
 				window.close();
-			}
-
-			if (event.type == sf::Event::Resized) {
-				window.setSize(setSizeIn16_9Ratio(sf::Vector2u(window.getSize().x, window.getSize().y)));
 			}
 
 		}

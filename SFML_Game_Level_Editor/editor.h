@@ -142,7 +142,7 @@ namespace edt {
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
-		void makeObjectsFromJson(nlohmann::json& js);
+		void makeObjectsFromJson(tObject* _owner, nlohmann::json& js);
 
 		virtual nlohmann::json saveParamsInJson();
 	};
