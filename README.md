@@ -17,4 +17,4 @@ TODO List:
     - :white_check_mark:Построение подэлементов по JSON файлу    
 ____
 ![Alt-текст](https://c.radikal.ru/c06/2008/95/8433da64ffe2t.jpg "Меню редактора")
-![Alt-текст](http://radikal.ru/fp/2utfsf8f999kd "Меню редактора")
+![URL=http://radikal.ru/fp/2utfsf8f999kd][IMG]https://c.radikal.ru/c06/2008/95/8433da64ffe2t.jpg[/IMG][/URL]
