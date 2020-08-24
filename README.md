@@ -15,3 +15,5 @@ TODO List:
     - :white_check_mark:Вызов окна "О программе"    
     - :white_check_mark:Алгоритм сжатия Хаффмана    
     - :white_check_mark:Построение подэлементов по JSON файлу    
+____
+![Alt-текст](https://yadi.sk/i/DwzeONQUFdevQg "Меню редактора")
