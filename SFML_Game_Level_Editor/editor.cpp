@@ -436,7 +436,7 @@ namespace edt {
 		old_mouse_position = sf::Mouse::getPosition();
 
 		this->path_to_folder = path_to_folder;
-		std::string config_file_name = "\\Content\\Config\\screen_config.conf";
+		std::string config_file_name = "\\Content\\Config\\editor_preset.conf";
 
 		std::ifstream file(path_to_folder + config_file_name);
 		try {
@@ -455,23 +455,23 @@ namespace edt {
 				styles["Resize"] = sf::Style::Resize;
 				styles["Titlebar"] = sf::Style::Titlebar;
 
-				std::string style_str = json_configuration["window"]["style"].get<std::string>();
+				std::string style_str = json_configuration["sfml_window"]["style"].get<std::string>();
 				unsigned char style = sf::Style::Close;
 				if (styles.find(style_str) != styles.end()) {	// Если такой стиль есть, то запоминаем его номер
 					style = styles[style_str];
 				}
 
-				std::vector<unsigned int> w_size = json_configuration["window"]["size"].get<std::vector<unsigned int>>();;
+				std::vector<unsigned int> w_size = json_configuration["sfml_window"]["size"].get<std::vector<unsigned int>>();;
 
 				background.setSize({ (float)w_size[0], (float)w_size[1] });
 				window_size = { w_size[0], w_size[1] };
 
 				window.create(
 					sf::VideoMode(w_size[0], w_size[1]),
-					json_configuration["window"]["caption"].get<std::string>(),
+					json_configuration["sfml_window"]["caption"].get<std::string>(),
 					style
 				);
-				font_default.loadFromFile(path_to_folder + json_configuration["window"]["font_default"].get<std::string>());
+				font_default.loadFromFile(path_to_folder + json_configuration["sfml_window"]["font_default"].get<std::string>());
 
 				window.setKeyRepeatEnabled(false);
 			}
@@ -510,10 +510,10 @@ namespace edt {
 		sf::Vector2u size = window.getSize();
 		nlohmann::json js;
 		js["menu"] = saveParamsInJson();
-		js["window"]["caption"] = "SFML_Game environment editor";
-		js["window"]["size"] = { size.x, size.y };
-		js["window"]["style"] = "Titlebar";
-		js["window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
+		js["sfml_window"]["caption"] = "SFML_Game environment editor";
+		js["sfml_window"]["size"] = { size.x, size.y };
+		js["sfml_window"]["style"] = "Titlebar";
+		js["sfml_window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
 		print_json(js, path_to_folder + "\\Content\\Config\\screen_config.conf");
 		*/
 	}

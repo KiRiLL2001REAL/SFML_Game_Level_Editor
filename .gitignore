@@ -1,7 +1,6 @@
-*.tlog
-*.log
 *.exe
-*.pch
+*.pdb
 /.vs/
+/SFML_Game_Level_Editor/SFML_Game_Level_Editor.vcxproj
 /SFML_Game_Level_Editor/Debug/
 /SFML_Game_Level_Editor/Release/
