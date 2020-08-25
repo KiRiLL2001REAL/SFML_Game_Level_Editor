@@ -339,4 +339,35 @@ namespace edt {
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual nlohmann::json saveParamsInJson();
 	};
+
+	/*
+	class tScrollbar : public tRenderRect {
+	public:
+		static const struct sOrientation {	// Определитель ориентации ползунка
+			static const unsigned char vertical = 0;	// Вертикальная ориентация
+			static const unsigned char horizontal = 1;	// Горизонтальная ориентация
+		} orientation_types;
+
+	protected:
+		int minimum;				// Минимальное значение смещения
+		int maximum;				// Максимальное значение смещения
+		unsigned char orientation;	// Ориентация ползунка
+		sf::Color color_space;		// Цвет закраски области скролл-бара
+		sf::Color color_slider;		// Цвет ползунка
+
+	public:
+		tScrollbar(tObject* _owner, int start_offset = 0, int max_offset = 20, sf::FloatRect rect = { 0, 0, 20, 100 }, unsigned char _orientation = orientation_types.vertical);
+		tScrollbar(tObject* _owner, nlohmann::json& js);
+		virtual ~tScrollbar();
+
+		void setOrientation(unsigned char new_orientation);
+		void setMinimum(int new_min);
+		void setMaximum(int new_max);
+
+		virtual void setSize(sf::Vector2f new_size);
+		virtual void handleEvent(tEvent& e);
+
+		virtual nlohmann::json saveParamsInJson();
+	};
+	*/
 }

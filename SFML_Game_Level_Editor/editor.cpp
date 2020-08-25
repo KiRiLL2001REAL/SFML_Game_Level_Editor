@@ -1522,5 +1522,16 @@ namespace edt {
 			}
 		}
 	}
-
+	/*
+	tScrollbar::tScrollbar(tObject* _owner, int start_offset, int max_offset, sf::FloatRect rect, unsigned char _orientation) :
+		tRenderRect(_owner, rect),
+		minimum(start_offset),
+		maximum(max_offset),
+		orientation(_orientation),
+		color_space({ 60, 60, 60, 255 }),
+		color_slider({ 120, 120, 120, 255 })
+	{
+		initScrollbar();
+	}
+	*/
 }
