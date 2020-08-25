@@ -8,19 +8,23 @@ void myDesktop::changeScreen(char new_screen_code) {
 	edt::tDesktop::changeScreen(new_screen_code);
 
 	switch (screen_code) {
-		case static_cast<int>(screen_codes::MapEditor) : {
-
+		case button_codes.MapEditor : {
+			//makeObjectsFromJson(this, json_configuration["mapEdit"]);
 			break;
 		}
-		case static_cast<int>(screen_codes::NPCEditor) : {
-
+		case button_codes.NpcEditor : {
+			//makeObjectsFromJson(this, json_configuration["npcEdit"]);
 			break;
 		}
-		case static_cast<int>(screen_codes::SPREditor) : {
-
+		case button_codes.SprEditor: {
+			//makeObjectsFromJson(this, json_configuration["sprEdit"]);
 			break;
 		}
-		case static_cast<int>(screen_codes::Menu) :
+		case button_codes.Settings: {
+			//makeObjectsFromJson(this, json_configuration["settings"]);
+			break;
+		}
+		case button_codes.Menu :
 		default: {
 			/*
 			edt::tText* text = new edt::tText(this, { 0, 0 }, L"SFML_Game редактор игрового окружения");
@@ -32,7 +36,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 
 			edt::tButton* button = new edt::tButton(this, { 0, 0, 600, 80 });
 			button->setString(L"Редактировать карту");
-			button->setCode(static_cast<int>(screen_codes::MapEditor));
+			button->setCode(button_codes.MapEditor);
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
@@ -44,7 +48,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 
 			button = new edt::tButton(this, { 0, 0, 600, 80 });
 			button->setString(L"Редакторовать NPC");
-			button->setCode(static_cast<int>(screen_codes::NPCEditor));
+			button->setCode(button_codes.NpcEditor);
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
@@ -56,7 +60,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 
 			button = new edt::tButton(this, { 0, 0, 600, 80 });
 			button->setString(L"Редактор спрайтов");
-			button->setCode(static_cast<int>(screen_codes::SPREditor));
+			button->setCode(button_codes.SprEditor);
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
@@ -68,7 +72,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 
 			button = new edt::tButton(this, { 0, 0, 500, 80 });
 			button->setString(L"О программе");
-			button->setCode(code_about_paragraph);
+			button->setCode(button_codes.about_program);
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 255, 255 });
@@ -104,7 +108,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 		switch (e.type) {
 			case static_cast<int>(edt::tEvent::types::Button) : {
 				switch (e.code) {
-					case code_about_paragraph : {
+					case button_codes.about_program : {
 						sf::FloatRect rect;
 						unsigned int font_size = 32;
 						rect.width = 620;

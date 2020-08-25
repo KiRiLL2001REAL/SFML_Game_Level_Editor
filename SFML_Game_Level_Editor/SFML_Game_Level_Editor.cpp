@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 	}
 	*/
 
-	myDesktop* desk = new myDesktop(path_to_folder);
+	myDesktop* desk = new myDesktop(path_to_folder, button_codes.Menu);
 	desk->run();
 	delete desk;
 

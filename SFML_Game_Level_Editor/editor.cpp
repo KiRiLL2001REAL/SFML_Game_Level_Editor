@@ -423,11 +423,11 @@ namespace edt {
 		return js;
 	}
 
-	tDesktop::tDesktop(std::string path_to_folder) :
+	tDesktop::tDesktop(std::string path_to_folder, unsigned char _screen_code) :
 		tGroup(nullptr),
 		custom_font_loaded(false),
 		json_configuration(),
-		screen_code(0),
+		screen_code(_screen_code),
 		window_size({1280, 720})
 	{
 		background.setPosition({ 0, 0 });
@@ -436,7 +436,7 @@ namespace edt {
 		old_mouse_position = sf::Mouse::getPosition();
 
 		this->path_to_folder = path_to_folder;
-		std::string config_file_name = "\\Content\\Config\\editor_preset.conf";
+		std::string config_file_name = "\\Content\\Config\\forms.conf";
 
 		std::ifstream file(path_to_folder + config_file_name);
 		try {
@@ -491,7 +491,7 @@ namespace edt {
 
 	void tDesktop::run() {
 		tEvent e;
-		changeScreen(0);
+		changeScreen(screen_code);
 		
 		while (window.isOpen()) {
 			getEvent(e);
@@ -512,9 +512,14 @@ namespace edt {
 		js["menu"] = saveParamsInJson();
 		js["sfml_window"]["caption"] = "SFML_Game environment editor";
 		js["sfml_window"]["size"] = { size.x, size.y };
-		js["sfml_window"]["style"] = "Titlebar";
+		js["sfml_window"]["style"] = "Default";
 		js["sfml_window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
-		print_json(js, path_to_folder + "\\Content\\Config\\screen_config.conf");
+		print_json(js, path_to_folder + "\\Content\\Config\\forms.conf");
+		*/
+		/*
+		std::fstream file(path_to_folder + "\\Content\\Config\\forms.conf", std::fstream::out);
+		file << js;
+		file.close();
 		*/
 	}
 

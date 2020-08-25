@@ -206,8 +206,8 @@ namespace edt {
 		sf::Vector2u window_size;			// Размер окна
 		
 	public:
-		tDesktop(std::string path_to_folder);
-		~tDesktop();
+		tDesktop(std::string path_to_folder, unsigned char _screen_code);
+		virtual ~tDesktop();
 
 		void run();								// Главный цикл
 		void saveData();						// Сохранить данные в файл
