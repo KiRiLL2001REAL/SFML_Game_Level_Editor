@@ -24,7 +24,18 @@ namespace edt {
 		std::vector<float> vf = js["position"].get<std::vector<float>>();
 		x = vf[0];
 		y = vf[1];
-	};
+	}
+
+	tObject::tObject(const tObject& o) :
+		anchor(o.anchor),
+		x(o.x),
+		y(o.y),
+		owner(o.owner),
+		options(o.options)
+	{
+		mouse_inside[0] = false;
+		mouse_inside[1] = false;
+	}
 
 	tObject::~tObject() {
 	}
@@ -178,6 +189,12 @@ namespace edt {
 		elem({})
 	{
 		makeObjectsFromJson(_owner, js);
+	}
+
+	tGroup::tGroup(const tGroup& g) :
+		tObject(g),
+		elem(g.elem)
+	{
 	}
 
 	tGroup::~tGroup() {
@@ -340,6 +357,10 @@ namespace edt {
 
 		std::vector<float> vf = js["size"].get<std::vector<float>>();
 		setSize({ vf[0], vf[1] });
+		vf.clear();
+
+		vf = js["camera_offset"].get<std::vector<float>>();
+		setCameraOffset({ vf[0], vf[1] });
 
 		std::vector<unsigned int> vui = js["texture_size"].get<std::vector<unsigned int>>();
 		render_texture.create(vui[0], vui[1]);
@@ -348,7 +369,25 @@ namespace edt {
 		setPosition({ x, y });
 	}
 
+	tRenderRect::tRenderRect(const tRenderRect& r) :
+		tGroup(r),
+		render_squad(r.render_squad),
+		clear_color(r.clear_color)
+	{
+		sf::Sprite spr;
+		spr.setTexture(r.render_texture.getTexture());
+		render_texture.draw(spr);
+		render_texture.display();
+	}
+
 	tRenderRect::~tRenderRect() {
+	}
+
+	void tRenderRect::setCameraOffset(sf::Vector2f new_offset) {
+		render_squad[1].texCoords += new_offset - render_squad[0].texCoords;
+		render_squad[2].texCoords += new_offset - render_squad[0].texCoords;
+		render_squad[3].texCoords += new_offset - render_squad[0].texCoords;
+		render_squad[0].texCoords = new_offset;
 	}
 
 	void tRenderRect::setTextureSize(sf::Vector2u new_size) {
@@ -419,6 +458,7 @@ namespace edt {
 		js["size"] = { size.x, size.y };
 		js["texture_size"] = { tex_size.x, tex_size.y };
 		js["clear_color"] = { clear_color.r, clear_color.g, clear_color.b, clear_color.a };
+		js["camera_offset"] = { render_squad[0].texCoords.x, render_squad[0].texCoords.y };
 
 		return js;
 	}
@@ -504,7 +544,7 @@ namespace edt {
 			draw(window);
 			window.display();
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			sf::sleep(sf::milliseconds(5));
 		};
 		/*
 		sf::Vector2u size = window.getSize();
@@ -757,6 +797,12 @@ namespace edt {
 
 		shape.setPosition({ x, y });
 	}
+
+	tRectShape::tRectShape(const tRectShape& s) :
+		tObject(s),
+		shape(s.shape)
+	{
+	}
 	
 	tRectShape::~tRectShape() {
 	}
@@ -838,6 +884,14 @@ namespace edt {
 		text_object.setOutlineThickness((float)js["outline_thickness"].get<unsigned int>());
 
 		setPosition({ x, y });
+	}
+
+	tText::tText(const tText& t) :
+		tObject(t),
+		text_object(t.text_object),
+		font(t.font),
+		font_loaded(t.font_loaded)
+	{
 	}
 
 	tText::~tText() {
@@ -948,7 +1002,8 @@ namespace edt {
 		alignment(static_cast<int>(text_alignment_type::Left)),
 		side_offset(10),
 		text_offset(sf::Vector2u(0, 0)),
-		self_code(static_cast<int>(tEvent::codes::Nothing))
+		self_code(static_cast<int>(tEvent::codes::Nothing)),
+		text(tText(this))
 	{
 		initButton();
 	}
@@ -956,7 +1011,8 @@ namespace edt {
 	tButton::tButton(tObject* _owner, nlohmann::json& js) :
 		tRenderRect(_owner, js),
 		custom_skin_loaded(false),
-		side_offset(10)
+		side_offset(10),
+		text(tText(this))
 	{
 		std::vector<int> vi = js["text_offset"].get<std::vector<int>>();
 		text_offset = { vi[0], vi[1] };
@@ -964,6 +1020,19 @@ namespace edt {
 		self_code = js["code"].get<int>();
 
 		alignment = js["alignment"].get<char>();
+
+		text = tText(this, js["text"]);
+	}
+
+	tButton::tButton(const tButton& b) :
+		tRenderRect(b),
+		side_offset(b.side_offset),
+		self_code(b.self_code),
+		custom_skin_loaded(b.custom_skin_loaded),
+		custom_skin(b.custom_skin),
+		text_offset(b.text_offset),
+		text(b.text)
+	{
 	}
 
 	tButton::~tButton() {
@@ -1030,9 +1099,8 @@ namespace edt {
 			arr[3].position = point[3];
 			render_texture.draw(arr);
 		}
-		tText* text_object = (tText*)elem.front();
-		if (text_object->getFontState()) {				// Если подгружен шрифт, то выводим текст
-			sf::Text text_to_display = text_object->getTextObject();
+		if (text.getFontState()) {				// Если подгружен шрифт, то выводим текст
+			sf::Text text_to_display = text.getTextObject();
 			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
 			switch (alignment) {			// Настройка выравнивания
 				case static_cast<int>(tButton::text_alignment_type::Right) : {
@@ -1055,7 +1123,7 @@ namespace edt {
 			text_to_display.setFillColor(sf::Color::Black);	// Немного контраста
 			text_to_display.move({ 1, 1 });
 			render_texture.draw(text_to_display);
-			text_to_display.setFillColor(text_object->getFillColor());		// А это уже сам вывод текста
+			text_to_display.setFillColor(text.getFillColor());		// А это уже сам вывод текста
 			text_to_display.move({ -1, -1 });
 			render_texture.draw(text_to_display);
 		}
@@ -1103,32 +1171,27 @@ namespace edt {
 	}
 
 	void tButton::initButton() {
-		elem.push_back(new tText(this));
+		text = tText(this);
 	}
 
 	void tButton::setFont(sf::Font new_font) {
-		tText* text = (tText*)elem.front();
-		text->setFont(new_font);
+		text.setFont(new_font);
 	}
 
 	void tButton::setString(std::wstring new_string) {
-		tText* text = (tText*)elem.front();
-		text->setString(new_string);
+		text.setString(new_string);
 	}
 
 	void tButton::setTextColor(sf::Color new_color) {
-		tText* text = (tText*)elem.front();
-		text->setTextColor(new_color);
+		text.setTextColor(new_color);
 	}
 
 	void tButton::setCharSize(unsigned int new_char_size) {
-		tText* text = (tText*)elem.front();
-		text->setCharSize(new_char_size);
+		text.setCharSize(new_char_size);
 	}
 
 	void tButton::setOutlineThickness(unsigned char new_thickness) {
-		tText* text = (tText*)elem.front();
-		text->setOutlineThickness(new_thickness);
+		text.setOutlineThickness(new_thickness);
 	}
 
 	bool tButton::pointIsInsideMe(sf::Vector2i point) {
@@ -1144,6 +1207,7 @@ namespace edt {
 		js["code"] = self_code;
 		js["alignment"] = alignment;
 		js["text_offset"] = { text_offset.x, text_offset.y };
+		js["text"] = text.saveParamsInJson();
 
 		return js;
 	}
@@ -1156,6 +1220,7 @@ namespace edt {
 
 	void tButton::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
+			text.handleEvent(e);
 			switch (e.type) {
 				case static_cast<int>(tEvent::types::Broadcast) : {
 					if (e.address == this) {	// Для конкретно этой кнопки
@@ -1219,10 +1284,13 @@ namespace edt {
 		font_loaded(false),
 		caption(_caption),
 		color_heap(sf::Color(100, 100, 100, 255)),
-		color_space(sf::Color(80, 80, 80, 255)),
+		color_area(sf::Color(80, 80, 80, 255)),
 		color_caption_active(sf::Color(255, 255, 255, 255)),
 		color_caption_inactive(sf::Color(150, 150, 150, 255)),
-		caption_offset({2, 2})
+		caption_offset({2, 2}),
+		button_close(tButton(this, { 0, 0, heap_height - 4 , heap_height - 4 })),
+		heap_shape(tRectShape(this, { 0, 0, rect.width, heap_height }, color_heap)),
+		area_shape(tRectShape(this, { 0, heap_height, rect.width, rect.height - heap_height }, color_area))
 	{
 		changeOneOption(option_mask.can_be_moved, true);
 		changeOneOption(option_mask.can_be_resized, true);
@@ -1236,7 +1304,10 @@ namespace edt {
 
 	tWindow::tWindow(tObject* _owner, nlohmann::json& js) :
 		tRenderRect(_owner, js),
-		font_loaded(false)
+		font_loaded(false),
+		button_close(tButton(this, js["button_close"])),
+		heap_shape(tRectShape(this, js["heap_shape"])),
+		area_shape(tRectShape(this, js["area_shape"]))
 	{
 		std::vector<int> vi = js["caption"].get<std::vector<int>>();
 		caption = convertIntVectorToWstring(vi);
@@ -1248,8 +1319,8 @@ namespace edt {
 		color_heap = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
 
-		vuc = js["color_space"].get<std::vector<unsigned char>>();
-		color_space = { vuc[0], vuc[1], vuc[2], vuc[3] };
+		vuc = js["color_area"].get<std::vector<unsigned char>>();
+		color_area = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
 
 		vuc = js["color_caption_active"].get<std::vector<unsigned char>>();
@@ -1261,36 +1332,46 @@ namespace edt {
 		vuc.clear();
 	}
 
+	tWindow::tWindow(const tWindow& w) :
+		tRenderRect(w),
+		font_loaded(w.font_loaded),
+		font(w.font),
+		caption(w.caption),
+		color_heap(w.color_heap),
+		color_area(w.color_area),
+		color_caption_active(w.color_caption_active),
+		color_caption_inactive(w.color_caption_inactive),
+		caption_offset(w.caption_offset),
+		button_close(w.button_close),
+		heap_shape(w.heap_shape),
+		area_shape(w.area_shape)
+	{
+	}
+
 	tWindow::~tWindow() {
 	}
 
 	void tWindow::initWindow() {
 		sf::FloatRect rect = getLocalBounds();
-		
-		tRectShape *r = new tRectShape(this, { 0, 0, rect.width, heap_height }, color_heap);	// Шапка
-		_insert(r);
 
-		r = new tRectShape(this, { 0, heap_height, rect.width, rect.height - heap_height }, color_space);	// Рабочее пространство
-		_insert(r);
-
-		tButton* b = new tButton(this, {0, 0, heap_height - 4 , heap_height - 4 });
-		b->setAnchor(tObject::anchors.upper_right_corner);
-		b->setPosition({ -heap_height + 2, 2});
-		b->setCode(static_cast<int>(edt::tEvent::codes::Close));
+		button_close.setAnchor(tObject::anchors.upper_right_corner);
+		button_close.setPosition({ -heap_height + 2, 2});
+		button_close.setCode(static_cast<int>(edt::tEvent::codes::Close));
 		if (!font_loaded) {
 			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
 		}
 		else {
-			b->setFont(font);
+			button_close.setFont(font);
 		}
-		b->setString(L"x");
-		b->setTextColor({ 255, 255, 255, 255 });
-		b->setCharSize(20);
-		b->setOutlineThickness(1);
-		b->setTextAlignment(static_cast<int>(tButton::text_alignment_type::Middle));
-		b->setTextOffset({ 0, -3 });
-		b->updateTexture();
-		_insert(b);
+		button_close.setString(L"x");
+		button_close.setTextColor({ 255, 255, 255, 255 });
+		button_close.setCharSize(20);
+		button_close.setOutlineThickness(1);
+		button_close.setTextAlignment(static_cast<int>(tButton::text_alignment_type::Middle));
+		button_close.setTextOffset({ 0, -3 });
+		button_close.updateTexture();
+
+		updateTexture();
 	}
 
 	void tWindow::setCaption(std::wstring new_caption) {
@@ -1301,19 +1382,19 @@ namespace edt {
 		return caption;
 	}
 
-	void tWindow::setColorHeap(sf::Color new_color) {
+	void tWindow::setHeapColor(sf::Color new_color) {
 		color_heap = new_color;
 	}
 
-	void tWindow::setColorSpace(sf::Color new_color) {
-		color_space = new_color;
+	void tWindow::setAreaColor(sf::Color new_color) {
+		color_area = new_color;
 	}
 
-	void tWindow::setColorCaptionActive(sf::Color new_color) {
+	void tWindow::setActiveCaptionColor(sf::Color new_color) {
 		color_caption_active = new_color;
 	}
 
-	void tWindow::setColorCaptionInactive(sf::Color new_color) {
+	void tWindow::setInactiveCaptionColor(sf::Color new_color) {
 		color_caption_inactive = new_color;
 	}
 
@@ -1328,7 +1409,10 @@ namespace edt {
 
 	void tWindow::updateTexture() {
 		render_texture.clear(clear_color);
+		area_shape.draw(render_texture);
 		tGroup::draw(render_texture);
+		heap_shape.draw(render_texture);
+		button_close.draw(render_texture);
 
 		if (font_loaded) {
 			sf::Text text;
@@ -1365,6 +1449,13 @@ namespace edt {
 		render_texture.display();
 	}
 
+	void tWindow::setCameraOffset(sf::Vector2f new_offset) {
+		tRenderRect::setCameraOffset(new_offset);
+		button_close.setPosition(sf::Vector2f(heap_height - 4, heap_height - 4) + new_offset);
+		heap_shape.setPosition(new_offset);
+		area_shape.setPosition(sf::Vector2f(0, heap_height) + new_offset);
+	}
+
 	const int tWindow::getHeapHeight() {
 		return heap_height;
 	}
@@ -1388,9 +1479,13 @@ namespace edt {
 		js["caption"] = caption;
 		js["caption_offset"] = { caption_offset.x, caption_offset.y };
 		js["color_heap"] = { color_heap.r, color_heap.g, color_heap.b, color_heap.a };
-		js["color_space"] = { color_space.r, color_space.g, color_space.b, color_space.a };
+		js["color_area"] = { color_area.r, color_area.g, color_area.b, color_area.a };
 		js["color_caption_active"] = { color_caption_active.r, color_caption_active.g, color_caption_active.b, color_caption_active.a };
 		js["color_caption_inactive"] = { color_caption_inactive.r, color_caption_inactive.g, color_caption_inactive.b, color_caption_inactive.a };
+
+		js["button_close"] = button_close.saveParamsInJson();
+		js["heap_shape"] = heap_shape.saveParamsInJson();
+		js["area_shape"] = area_shape.saveParamsInJson();
 
 		return js;
 	}
@@ -1403,6 +1498,7 @@ namespace edt {
 
 	void tWindow::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
+			button_close.handleEvent(e);
 			tGroup::handleEvent(e);
 			switch (e.type) {
 				case static_cast<int>(tEvent::types::Broadcast) : {

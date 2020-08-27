@@ -94,6 +94,7 @@ namespace edt {
 	public:
 		tObject(tObject* _owner);
 		tObject(tObject* _owner, nlohmann::json& js);
+		tObject(const tObject &o);
 		virtual ~tObject();
 
 		void setAnchor(unsigned char new_anchor);
@@ -132,6 +133,7 @@ namespace edt {
 	public:
 		tGroup(tObject* _owner);
 		tGroup(tObject* _owner, nlohmann::json& js);
+		tGroup(const tGroup& g);
 		virtual ~tGroup();
 
 		void _insert(tObject *object);		// Внесение элемента в список подэлементов
@@ -152,10 +154,11 @@ namespace edt {
 		sf::VertexArray render_squad;		// Фигура, в которой выполняется отрисовка
 		sf::RenderTexture render_texture;	// Текстура, в которой отрисовываются объекты
 		sf::Color clear_color;				// Цвет очистки текстуры
-
+		
 	public:
 		tRenderRect(tObject* _owner, sf::FloatRect rect = { 0, 0, 64, 64 });
 		tRenderRect(tObject* _owner, nlohmann::json& js);
+		tRenderRect(const tRenderRect& r);
 		virtual ~tRenderRect();
 
 		void setTextureSize(sf::Vector2u new_size);
@@ -165,6 +168,7 @@ namespace edt {
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void move(sf::Vector2f delta);
+		virtual void setCameraOffset(sf::Vector2f new_offset);
 
 		virtual sf::FloatRect getLocalBounds();
 		virtual nlohmann::json saveParamsInJson();
@@ -177,6 +181,7 @@ namespace edt {
 	public:
 		tRectShape(tObject* _owner, sf::FloatRect rect = {0, 0, 64, 64}, sf::Color fill_color = sf::Color(255, 255, 255, 255));
 		tRectShape(tObject* _owner, nlohmann::json& js);
+		tRectShape(const tRectShape& s);
 		virtual ~tRectShape();
 
 		void setColor(sf::Color new_color);
@@ -237,6 +242,7 @@ namespace edt {
 	public:
 		tText(tObject* _owner, sf::Vector2f position = {0, 0}, std::wstring string = L"Some text");
 		tText(tObject* _owner, nlohmann::json& js);
+		tText(const tText& t);
 		virtual ~tText();
 
 		void setString(std::wstring new_string);
@@ -272,11 +278,14 @@ namespace edt {
 		sf::Texture custom_skin;			// Пользовательский скин кпопки
 		sf::Vector2i text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		
+		tText text;							// Текст внутри кнопки
+
 	public:
 		enum class text_alignment_type { Left, Middle, Right };
 
 		tButton(tObject* _owner, sf::FloatRect rect = { 0, 0, 128, 48 });
 		tButton(tObject* _owner, nlohmann::json& js);
+		tButton(const tButton& b);
 		virtual ~tButton();
 
 		void loadCustomSkin(std::string path_to_skin);
@@ -310,21 +319,26 @@ namespace edt {
 
 		std::wstring caption;				// Заголовок окна
 		sf::Color color_heap;				// Цвет шапки
-		sf::Color color_space;				// Цвет основной части
+		sf::Color color_area;				// Цвет основной части
 		sf::Color color_caption_active;		// Цвет заголовка активного окна
 		sf::Color color_caption_inactive;	// Цвет заголовка неактивного окна
 		sf::Vector2f caption_offset;		// Настройка смещения заголовка, в случае, если он криво выводится (это всё из-за шрифтов)
 
+		tButton button_close;				// Кнопка закрытия
+		tRectShape heap_shape;				// Фигура шапки
+		tRectShape area_shape;				// Фигура рабочей области
+
 	public:
 		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
 		tWindow(tObject* _owner, nlohmann::json& js);
+		tWindow(const tWindow& w);
 		virtual ~tWindow();
 
 		void setCaption(std::wstring new_caption);
-		void setColorHeap(sf::Color new_color);
-		void setColorSpace(sf::Color new_color);
-		void setColorCaptionActive(sf::Color new_color);
-		void setColorCaptionInactive(sf::Color new_color);
+		void setHeapColor(sf::Color new_color);
+		void setAreaColor(sf::Color new_color);
+		void setActiveCaptionColor(sf::Color new_color);
+		void setInactiveCaptionColor(sf::Color new_color);
 		void setFont(sf::Font new_font);
 		void setCaptionOffset(sf::Vector2f new_offset);
 
@@ -335,6 +349,7 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
+		virtual void setCameraOffset(sf::Vector2f new_offset);
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual nlohmann::json saveParamsInJson();
