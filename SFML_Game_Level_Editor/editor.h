@@ -29,7 +29,7 @@ namespace edt {
 		unsigned int code = static_cast<int>(codes::Nothing); // Код события
 		tObject *from = nullptr;
 		tObject *address = nullptr;
-
+		
 		struct sMouse { // Событие от мыши
 			char button = 0;
 			char what_happened = 0;
@@ -154,7 +154,8 @@ namespace edt {
 		sf::VertexArray render_squad;		// Фигура, в которой выполняется отрисовка
 		sf::RenderTexture render_texture;	// Текстура, в которой отрисовываются объекты
 		sf::Color clear_color;				// Цвет очистки текстуры
-		
+		bool need_rerender;					// Нужна ли перерисовка
+
 	public:
 		tRenderRect(tObject* _owner, sf::FloatRect rect = { 0, 0, 64, 64 });
 		tRenderRect(tObject* _owner, nlohmann::json& js);
@@ -189,6 +190,7 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void setSize(sf::Vector2f new_size);
+		virtual void move(sf::Vector2f delta);
 		virtual void updateTexture();
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
@@ -217,6 +219,7 @@ namespace edt {
 		void run();								// Главный цикл
 		void saveData();						// Сохранить данные в файл
 		void loadCustomFont(std::string path_to_font);	// Установить пользовательский шрифт
+		void completeEvents();					// Выполнить события
 
 		sf::Font& getFont();					// Получить шрифт
 		bool windowIsOpen();					// Возвращает статус окна
@@ -258,6 +261,7 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void handleEvent(tEvent& e);
+		virtual void move(sf::Vector2f delta);
 		virtual void updateTexture();
 
 		virtual sf::FloatRect getLocalBounds();
@@ -266,9 +270,6 @@ namespace edt {
 	};
 
 	class tButton : public tRenderRect {
-	private:
-		void initButton();
-
 	protected:
 		const unsigned char side_offset;
 
@@ -278,7 +279,7 @@ namespace edt {
 		sf::Texture custom_skin;			// Пользовательский скин кпопки
 		sf::Vector2i text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		
-		tText text;							// Текст внутри кнопки
+		tText* text;							// Текст внутри кнопки
 
 	public:
 		enum class text_alignment_type { Left, Middle, Right };
@@ -324,9 +325,9 @@ namespace edt {
 		sf::Color color_caption_inactive;	// Цвет заголовка неактивного окна
 		sf::Vector2f caption_offset;		// Настройка смещения заголовка, в случае, если он криво выводится (это всё из-за шрифтов)
 
-		tButton button_close;				// Кнопка закрытия
-		tRectShape heap_shape;				// Фигура шапки
-		tRectShape area_shape;				// Фигура рабочей области
+		tButton* button_close;				// Кнопка закрытия
+		tRectShape* heap_shape;				// Фигура шапки
+		tRectShape* area_shape;				// Фигура рабочей области
 
 	public:
 		tWindow(tObject* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
