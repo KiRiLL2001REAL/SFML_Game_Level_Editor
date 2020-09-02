@@ -3,18 +3,83 @@
 
 namespace edt {
 
-	tObject::tObject(tObject* _owner) :
+	tABC::tABC(tABC* _owner) :
+		owner(_owner)
+	{
+	}
+
+	tABC::tABC(const tABC& a) :
+		owner(a.owner)
+	{
+	}
+
+	tABC::~tABC()
+	{
+	}
+
+	void tABC::setOwner(tABC* new_owner) {
+		owner = new_owner;
+	}
+
+	void tABC::clearEvent(tEvent& e) {
+		e.type = static_cast<int>(tEvent::types::Nothing);
+	}
+
+	void tABC::message(tABC* addr, int type, int code, tABC* from) {
+		tEvent e;
+		e.address = addr;
+		e.from = from;
+		e.type = type; // Из какой сферы событие
+		e.code = code; // Код события
+		if (addr) addr->handleEvent(e);
+		else putEvent(e);
+	}
+
+	void tABC::message(tEvent e) {
+		if (e.address) e.address->handleEvent(e);
+		else putEvent(e);
+	}
+
+	void tABC::putEvent(tEvent e) {
+		if (this->owner != nullptr)
+			this->owner->putEvent(e);
+	}
+
+	void tABC::getEvent(tEvent& e) {
+		return;
+	}
+
+	nlohmann::json tABC::saveParamsInJson() {
+		return nlohmann::json();
+	}
+
+	sf::FloatRect tABC::getGlobalBounds() {
+		if (owner != nullptr) {
+			sf::FloatRect owner_rect = owner->getGlobalBounds();
+			sf::FloatRect local_rect = getLocalBounds();
+
+			return {
+				owner_rect.left + local_rect.left,
+				owner_rect.top + local_rect.top,
+				local_rect.width,
+				local_rect.height
+			};
+		}
+		return sf::FloatRect(0, 0, 0, 0);
+	}
+
+	tObject::tObject(tABC* _owner) :
+		tABC(_owner),
 		anchor(0b00001001),
 		x(0),
 		y(0),
-		owner(_owner),
 		options(option_mask.can_be_drawn)
 	{
 		mouse_inside[0] = false;
 		mouse_inside[1] = false;
 	}
 
-	tObject::tObject(tObject* _owner, nlohmann::json& js) :
+	tObject::tObject(tABC* _owner, nlohmann::json& js) :
 		tObject(_owner)
 	{
 		anchor = js["anchor"].get<unsigned char>();
@@ -27,10 +92,10 @@ namespace edt {
 	}
 
 	tObject::tObject(const tObject& o) :
+		tABC(o),
 		anchor(o.anchor),
 		x(o.x),
 		y(o.y),
-		owner(o.owner),
 		options(o.options)
 	{
 		mouse_inside[0] = false;
@@ -82,63 +147,12 @@ namespace edt {
 		y = new_position.y;
 	}
 
-	void tObject::setOwner(tObject *new_owner) {
-		owner = new_owner;
-	}
-
-	void tObject::message(tObject *addr, int type, int code, tObject *from) {
-		tEvent e;
-		e.address = addr;
-		e.from = from;
-		e.type = type; // Из какой сферы событие
-		e.code = code; // Код события
-		if (addr) addr->handleEvent(e);
-		else putEvent(e);
-	}
-
-	void tObject::message(tEvent e) {
-		if (e.address) e.address->handleEvent(e);
-		else putEvent(e);
-	}
-
-	void tObject::clearEvent(tEvent& e) {
-		e.type = static_cast<int>(tEvent::types::Nothing);
-	}
-
-	void tObject::putEvent(tEvent e) {
-		if (this->owner != nullptr)
-			this->owner->putEvent(e);
-	}
-
-	void tObject::getEvent(tEvent& e) {
-		return;
-	}
-
-	void tObject::handleEvent(tEvent& e) {
-		return;
-	}
-
 	void tObject::draw(sf::RenderTarget& target) {
 		return;
 	}
 
 	void tObject::setSize(sf::Vector2f new_size) {
 		return;
-	}
-
-	sf::FloatRect tObject::getGlobalBounds() {
-		if (owner != nullptr) {
-			sf::FloatRect owner_rect = owner->getGlobalBounds();
-			sf::FloatRect local_rect = getLocalBounds();
-
-			return {
-				owner_rect.left + local_rect.left,
-				owner_rect.top + local_rect.top,
-				local_rect.width,
-				local_rect.height
-			};
-		}
-		return sf::FloatRect( 0, 0, 0, 0 );
 	}
 
 	sf::Vector2f tObject::getRelativeStartPosition() {
@@ -178,21 +192,21 @@ namespace edt {
 		return js;
 	}
 
-	tGroup::tGroup(tObject* _owner) : 
-		tObject(_owner),
+	tGroup::tGroup(tABC* _owner) :
+		tABC(_owner),
 		elem({})
 	{
 	}
 
-	tGroup::tGroup(tObject* _owner, nlohmann::json& js) :
-		tObject(_owner, js),
+	tGroup::tGroup(tABC* _owner, nlohmann::json& js) :
+		tABC(_owner),
 		elem({})
 	{
 		makeObjectsFromJson(_owner, js);
 	}
 
 	tGroup::tGroup(const tGroup& g) :
-		tObject(g),
+		tABC(g),
 		elem(g.elem)
 	{
 	}
@@ -206,19 +220,19 @@ namespace edt {
 		}
 	}
 
-	void tGroup::_insert(tObject *object) {
+	void tGroup::_insert(tABC *object) {
 		if (elem.size() != 0) {
-			elem.back()->changeOneOption(option_mask.is_active, false);
+			((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, false);
 			message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 		}
 		elem.push_back(object);
-		elem.back()->changeOneOption(option_mask.is_active, true);
+		((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, true);
 		message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 	}
 
-	bool tGroup::_delete(tObject *object) {
+	bool tGroup::_delete(tABC *object) {
 		bool success = false;
-		list<tObject*>::iterator it;
+		list<tABC*>::iterator it;
 
 		for (it = elem.begin(); it != elem.end(); it++) {	// Поиск удаляемого элемента
 			if (*it == object) {
@@ -229,7 +243,7 @@ namespace edt {
 				}
 				delete* it;		// Удаляем его	1) из памяти
 				elem.erase(it);	//				2) из контейнера
-				elem.back()->changeOneOption(option_mask.is_active, true);
+				((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, true);
 				message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 				break;	// Вываливаемся из перебора, чтобы не поймать аксес виолэйшн
 			}
@@ -237,14 +251,14 @@ namespace edt {
 		return success;
 	}
 
-	void tGroup::select(tObject *object) {
-		list<tObject*>::iterator it;
+	void tGroup::select(tABC *object) {
+		list<tABC*>::iterator it;
 		for (it = elem.begin(); it != elem.end(); it++) {	// Пока не нашли, перебираем список
 			if (*it == object) {
-				tObject* obj = *it;		// Запоминаем объект
-				obj->changeOneOption(option_mask.is_active, true);
+				tABC* obj = *it;		// Запоминаем объект
+				((tObject*)obj)->changeOneOption(tObject::option_mask.is_active, true);
 				elem.erase(it);			// Удаляем из списка
-				elem.back()->changeOneOption(option_mask.is_active, false);
+				((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, false);
 				message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 				elem.push_back(obj);	// Кидаем в конец списка
 				break;
@@ -252,12 +266,11 @@ namespace edt {
 		}
 	}
 
-	void tGroup::forEach(unsigned int code, tObject* from = nullptr) {
-		list<tObject*>::reverse_iterator it;
+	void tGroup::forEach(unsigned int code, tABC* from = nullptr) {
 		if (!from) {	// Если не сказано от кого событие, то отправителем становится сам почтальон
 			from = this;
 		}
-		for (it = elem.rbegin(); it != elem.rend(); it++) {
+		for (list<tABC*>::reverse_iterator it = elem.rbegin(); it != elem.rend(); it++) {
 			switch (code) {
 				case static_cast<int>(tEvent::codes::Deactivate) : {
 					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Deactivate), from);
@@ -281,20 +294,18 @@ namespace edt {
 	}
 
 	void tGroup::draw(sf::RenderTarget& target) {
-		list<tObject*>::iterator it;
-		for (it = elem.begin(); it != elem.end(); it++) {
+		for (list<tABC*>::iterator it = elem.begin(); it != elem.end(); it++) {
 			(*it)->draw(target);
 		}
 	}
 
 	void tGroup::handleEvent(tEvent& e) {
-		list<tObject*>::reverse_iterator it;
-		for (it = elem.rbegin(); it != elem.rend(); it++) {
+		for (list<tABC*>::reverse_iterator it = elem.rbegin(); it != elem.rend(); it++) {
 			(*it)->handleEvent(e);
 		}
 	}
 
-	void tGroup::makeObjectsFromJson(tObject* _owner, nlohmann::json& js) {
+	void tGroup::makeObjectsFromJson(tABC* _owner, nlohmann::json& js) {
 		for (nlohmann::json::iterator it = js["elem"].begin(); it != js["elem"].end(); it++) {
 			unsigned char what_is_it = (*it)["what_is_it"].get<unsigned char>();
 			switch (what_is_it) {
@@ -323,10 +334,9 @@ namespace edt {
 	}
 
 	nlohmann::json tGroup::saveParamsInJson() {
-		nlohmann::json js = tObject::saveParamsInJson();
-
+		nlohmann::json js;
 		unsigned int id = 0;
-		for (list<tObject*>::iterator it = elem.begin(); it != elem.end(); it++) {
+		for (list<tABC*>::iterator it = elem.begin(); it != elem.end(); it++) {
 			std::string str = std::to_string(id);
 			js["elem"][str] = (*it)->saveParamsInJson();
 			id++;
@@ -335,8 +345,8 @@ namespace edt {
 		return js;
 	}
 
-	tRenderRect::tRenderRect(tObject* _owner, sf::FloatRect rect) :
-		tGroup(_owner),
+	tRenderRect::tRenderRect(tABC* _owner, sf::FloatRect rect) :
+		tObject(_owner),
 		render_squad(sf::VertexArray(sf::Quads, 4)),
 		clear_color({ 0, 0, 0, 255 }),
 		need_rerender(true)
@@ -348,8 +358,8 @@ namespace edt {
 		setSize({ rect.width, rect.height });
 	}
 
-	tRenderRect::tRenderRect(tObject* _owner, nlohmann::json& js) :
-		tGroup(_owner, js),
+	tRenderRect::tRenderRect(tABC* _owner, nlohmann::json& js) :
+		tObject(_owner, js),
 		render_squad(sf::VertexArray(sf::Quads, 4)),
 		need_rerender(true)
 	{
@@ -372,7 +382,7 @@ namespace edt {
 	}
 
 	tRenderRect::tRenderRect(const tRenderRect& r) :
-		tGroup(r),
+		tObject(r),
 		render_squad(r.render_squad),
 		clear_color(r.clear_color),
 		need_rerender(r.need_rerender)
@@ -431,7 +441,6 @@ namespace edt {
 			if (need_rerender) {
 				need_rerender = false;
 				render_texture.clear(clear_color);	// Очиститься
-				tGroup::draw(render_texture);		// Нарисовать на себе все подэлементы
 				render_texture.display();			// Обновить "лицевую" текстуру
 			}
 			target.draw(render_squad, &render_texture.getTexture());	// Отобразиться
@@ -457,7 +466,7 @@ namespace edt {
 	}
 
 	nlohmann::json tRenderRect::saveParamsInJson() {
-		nlohmann::json js = tGroup::saveParamsInJson();
+		nlohmann::json js = tObject::saveParamsInJson();
 
 		sf::Vector2f size = render_squad[2].position - render_squad[0].position;
 		sf::Vector2u tex_size = render_texture.getSize();
@@ -548,7 +557,7 @@ namespace edt {
 
 			sf::sleep(sf::milliseconds(5));
 		};
-		/*
+		///*
 		sf::Vector2u size = window.getSize();
 		nlohmann::json js;
 		js["menu"] = saveParamsInJson();
@@ -701,17 +710,17 @@ namespace edt {
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->changeOneOption(option_mask.is_active, false);
+							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->changeOneOption(option_mask.can_be_drawn, true);
+							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->changeOneOption(option_mask.can_be_drawn, false);
+							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
@@ -793,7 +802,7 @@ namespace edt {
 		return js;
 	}
 
-	tRectShape::tRectShape(tObject* _owner, sf::FloatRect rect, sf::Color fill_color) :
+	tRectShape::tRectShape(tABC* _owner, sf::FloatRect rect, sf::Color fill_color) :
 		tObject(_owner)
 	{
 		setPosition({rect.left, rect.top});
@@ -801,7 +810,7 @@ namespace edt {
 		setColor(fill_color);
 	}
 
-	tRectShape::tRectShape(tObject* _owner, nlohmann::json& js) :
+	tRectShape::tRectShape(tABC* _owner, nlohmann::json& js) :
 		tObject(_owner, js)
 	{		
 		std::vector<float> vf = js["size"].get<std::vector<float>>();
@@ -850,6 +859,10 @@ namespace edt {
 		return;
 	}
 
+	void tRectShape::handleEvent(tEvent& e) {
+		return;
+	}
+
 	bool tRectShape::pointIsInsideMe(sf::Vector2i point) {
 		return false;
 	}
@@ -877,7 +890,7 @@ namespace edt {
 		return js;
 	}
 
-	tText::tText(tObject* _owner, sf::Vector2f position, std::wstring string) :
+	tText::tText(tABC* _owner, sf::Vector2f position, std::wstring string) :
 		tObject(_owner),
 		font_loaded(false)
 	{
@@ -889,7 +902,7 @@ namespace edt {
 		setPosition(position);
 	}
 
-	tText::tText(tObject* _owner, nlohmann::json& js) :
+	tText::tText(tABC* _owner, nlohmann::json& js) :
 		tObject(_owner, js),
 		font_loaded(false)
 	{
@@ -1022,7 +1035,7 @@ namespace edt {
 		return;
 	}
 
-	tButton::tButton(tObject* _owner, sf::FloatRect rect) :
+	tButton::tButton(tABC* _owner, sf::FloatRect rect) :
 		tRenderRect(_owner, rect),
 		custom_skin_loaded(false),
 		alignment(static_cast<int>(text_alignment_type::Left)),
@@ -1034,7 +1047,7 @@ namespace edt {
 		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 	}
 
-	tButton::tButton(tObject* _owner, nlohmann::json& js) :
+	tButton::tButton(tABC* _owner, nlohmann::json& js) :
 		tRenderRect(_owner, js),
 		custom_skin_loaded(false),
 		side_offset(10),
@@ -1306,7 +1319,7 @@ namespace edt {
 	}
 
 
-	tWindow::tWindow(tObject* _owner, sf::FloatRect rect, std::wstring _caption) :
+	tWindow::tWindow(tABC* _owner, sf::FloatRect rect, std::wstring _caption) :
 		tRenderRect(_owner),
 		font_loaded(false),
 		caption(_caption),
@@ -1329,7 +1342,7 @@ namespace edt {
 		initWindow();
 	}
 
-	tWindow::tWindow(tObject* _owner, nlohmann::json& js) :
+	tWindow::tWindow(tABC* _owner, nlohmann::json& js) :
 		tRenderRect(_owner, js),
 		font_loaded(false),
 		button_close(new tButton(this, js["button_close"])),
@@ -1430,7 +1443,6 @@ namespace edt {
 		render_texture.clear(clear_color);
 
 		area_shape->draw(render_texture);
-		tGroup::draw(render_texture);
 		heap_shape->draw(render_texture);
 		button_close->draw(render_texture);
 
@@ -1523,33 +1535,22 @@ namespace edt {
 			button_close->handleEvent(e);
 			heap_shape->handleEvent(e);
 			area_shape->handleEvent(e);
-			tGroup::handleEvent(e);
 			switch (e.type) {
 				case static_cast<int>(tEvent::types::Broadcast) : {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
-								_delete(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-								select(e.from);
-								clearEvent(e);
-								break;
-							}
 							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-								e.from->changeOneOption(option_mask.is_active, false);
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
 								break;
 							}
 							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, true);
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								clearEvent(e);
 								break;
 							}
 							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, false);
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								clearEvent(e);
 								break;
 							}
@@ -1644,16 +1645,5 @@ namespace edt {
 			}
 		}
 	}
-	/*
-	tScrollbar::tScrollbar(tObject* _owner, int start_offset, int max_offset, sf::FloatRect rect, unsigned char _orientation) :
-		tRenderRect(_owner, rect),
-		minimum(start_offset),
-		maximum(max_offset),
-		orientation(_orientation),
-		color_space({ 60, 60, 60, 255 }),
-		color_slider({ 120, 120, 120, 255 })
-	{
-		initScrollbar();
-	}
-	*/
+
 }

@@ -26,7 +26,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 		}
 		case button_codes.Menu :
 		default: {
-			/*
+			///*
 			edt::tText* text = new edt::tText(this, { 0, 0 }, L"SFML_Game редактор игрового окружения");
 			text->setFont(getFont());
 			text->setCharSize(66);
@@ -93,9 +93,9 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -250, -40 + 320 });
 			_insert(button);
-			*/
+			//*/
 
-			makeObjectsFromJson(this, json_configuration["menu"]);
+			//makeObjectsFromJson(this, json_configuration["menu"]);
 
 			break;
 		}
@@ -131,7 +131,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 							t = new edt::tText(w, { content_position.x, content_position.y }, text);
 							t->setFont(getFont());
 							t->setCharSize(font_size);
-							w->_insert(t);
+							//w->_insert(t);
 							content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
 						}
 						else {
@@ -160,7 +160,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 							t = new edt::tText(w, { content_position.x, content_position.y }, str);
 							t->setFont(getFont());
 							t->setCharSize(font_size);
-							w->_insert(t);
+							//w->_insert(t);
 						}
 
 						file.close();
