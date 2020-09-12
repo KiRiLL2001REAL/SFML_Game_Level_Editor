@@ -406,6 +406,7 @@ namespace edt {
 		render_squad[1].texCoords = { (float)new_size.x - 1, 0.f };
 		render_squad[2].texCoords = { (float)new_size.x - 1, (float)new_size.y - 1 };
 		render_squad[3].texCoords = { 0.f, (float)new_size.y - 1 };
+		need_rerender = true;
 	}
 
 	void tRenderRect::setClearColor(sf::Color color) {
@@ -1751,6 +1752,11 @@ namespace edt {
 
 	void tDisplay::setOwner(tAbstractBasicClass* new_owner) {
 		owner = new_owner;
+	}
+
+	void tDisplay::setTextureSize(sf::Vector2u new_size) {
+		render_texture.create(new_size.x, new_size.y);
+		need_rerender = true;
 	}
 
 	tAbstractBasicClass* tDisplay::getOwner() {

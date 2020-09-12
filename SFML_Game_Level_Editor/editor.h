@@ -187,13 +187,13 @@ namespace edt {
 		tRenderRect(const tRenderRect& r);
 		virtual ~tRenderRect();
 
-		void setTextureSize(sf::Vector2u new_size);
 		void setClearColor(sf::Color new_color);
 
 		virtual void setSize(sf::Vector2f new_size);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void move(sf::Vector2f delta);
+		virtual void setTextureSize(sf::Vector2u new_size);
 
 		virtual sf::FloatRect getLocalBounds();
 		virtual nlohmann::json saveParamsInJson();
@@ -398,6 +398,7 @@ namespace edt {
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
 		virtual void setOwner(tAbstractBasicClass* new_owner);
+		virtual void setTextureSize(sf::Vector2u new_size);
 
 		virtual tAbstractBasicClass* getOwner();
 		virtual bool pointIsInsideMe(sf::Vector2i point);
