@@ -3,18 +3,87 @@
 
 namespace edt {
 
-	tObject::tObject(tObject* _owner) :
+	tAbstractBasicClass::tAbstractBasicClass(tAbstractBasicClass* _owner) :
+		owner(_owner)
+	{
+	}
+
+	tAbstractBasicClass::tAbstractBasicClass(const tAbstractBasicClass& a) :
+		owner(a.owner)
+	{
+	}
+
+	tAbstractBasicClass::~tAbstractBasicClass()
+	{
+	}
+
+	void tAbstractBasicClass::setOwner(tAbstractBasicClass* new_owner) {
+		owner = new_owner;
+	}
+
+	void tAbstractBasicClass::clearEvent(tEvent& e) {
+		e.type = static_cast<int>(tEvent::types::Nothing);
+	}
+
+	void tAbstractBasicClass::message(tAbstractBasicClass* addr, int type, int code, tAbstractBasicClass* from) {
+		tEvent e;
+		e.address = addr;
+		e.from = from;
+		e.type = type; // Из какой сферы событие
+		e.code = code; // Код события
+		if (addr) addr->handleEvent(e);
+		else putEvent(e);
+	}
+
+	void tAbstractBasicClass::message(tEvent e) {
+		if (e.address) e.address->handleEvent(e);
+		else putEvent(e);
+	}
+
+	tAbstractBasicClass* tAbstractBasicClass::getOwner() {
+		return owner;
+	}
+
+	void tAbstractBasicClass::putEvent(tEvent e) {
+		if (owner != nullptr)
+			owner->putEvent(e);
+	}
+
+	void tAbstractBasicClass::getEvent(tEvent& e) {
+		return;
+	}
+
+	nlohmann::json tAbstractBasicClass::saveParamsInJson() {
+		return nlohmann::json();
+	}
+
+	sf::FloatRect tAbstractBasicClass::getGlobalBounds() {
+		if (owner != nullptr) {
+			sf::FloatRect owner_rect = getOwner()->getGlobalBounds();
+			sf::FloatRect local_rect = getLocalBounds();
+
+			return {
+				owner_rect.left + local_rect.left,
+				owner_rect.top + local_rect.top,
+				local_rect.width,
+				local_rect.height
+			};
+		}
+		return sf::FloatRect(0, 0, 0, 0);
+	}
+
+	tObject::tObject(tAbstractBasicClass* _owner) :
+		tAbstractBasicClass(_owner),
 		anchor(0b00001001),
 		x(0),
 		y(0),
-		owner(_owner),
 		options(option_mask.can_be_drawn)
 	{
 		mouse_inside[0] = false;
 		mouse_inside[1] = false;
 	}
 
-	tObject::tObject(tObject* _owner, nlohmann::json& js) :
+	tObject::tObject(tAbstractBasicClass* _owner, nlohmann::json& js) :
 		tObject(_owner)
 	{
 		anchor = js["anchor"].get<unsigned char>();
@@ -27,10 +96,10 @@ namespace edt {
 	}
 
 	tObject::tObject(const tObject& o) :
+		tAbstractBasicClass(o),
 		anchor(o.anchor),
 		x(o.x),
 		y(o.y),
-		owner(o.owner),
 		options(o.options)
 	{
 		mouse_inside[0] = false;
@@ -82,42 +151,6 @@ namespace edt {
 		y = new_position.y;
 	}
 
-	void tObject::setOwner(tObject *new_owner) {
-		owner = new_owner;
-	}
-
-	void tObject::message(tObject *addr, int type, int code, tObject *from) {
-		tEvent e;
-		e.address = addr;
-		e.from = from;
-		e.type = type; // Из какой сферы событие
-		e.code = code; // Код события
-		if (addr) addr->handleEvent(e);
-		else putEvent(e);
-	}
-
-	void tObject::message(tEvent e) {
-		if (e.address) e.address->handleEvent(e);
-		else putEvent(e);
-	}
-
-	void tObject::clearEvent(tEvent& e) {
-		e.type = static_cast<int>(tEvent::types::Nothing);
-	}
-
-	void tObject::putEvent(tEvent e) {
-		if (this->owner != nullptr)
-			this->owner->putEvent(e);
-	}
-
-	void tObject::getEvent(tEvent& e) {
-		return;
-	}
-
-	void tObject::handleEvent(tEvent& e) {
-		return;
-	}
-
 	void tObject::draw(sf::RenderTarget& target) {
 		return;
 	}
@@ -126,27 +159,12 @@ namespace edt {
 		return;
 	}
 
-	sf::FloatRect tObject::getGlobalBounds() {
-		if (owner != nullptr) {
-			sf::FloatRect owner_rect = owner->getGlobalBounds();
-			sf::FloatRect local_rect = getLocalBounds();
-
-			return {
-				owner_rect.left + local_rect.left,
-				owner_rect.top + local_rect.top,
-				local_rect.width,
-				local_rect.height
-			};
-		}
-		return sf::FloatRect( 0, 0, 0, 0 );
-	}
-
 	sf::Vector2f tObject::getRelativeStartPosition() {
 		unsigned char i = 0;
 		sf::FloatRect owner_rect;
 		sf::Vector2f offset = { 0, 0 };
 
-		owner_rect = owner->getLocalBounds();
+		owner_rect = getOwner()->getLocalBounds();
 
 		unsigned char anchor = this->anchor;
 		for (i = 0; i < 3; i++) {
@@ -178,21 +196,21 @@ namespace edt {
 		return js;
 	}
 
-	tGroup::tGroup(tObject* _owner) : 
-		tObject(_owner),
+	tGroup::tGroup(tAbstractBasicClass* _owner) :
+		tAbstractBasicClass(_owner),
 		elem({})
 	{
 	}
 
-	tGroup::tGroup(tObject* _owner, nlohmann::json& js) :
-		tObject(_owner, js),
+	tGroup::tGroup(tAbstractBasicClass* _owner, nlohmann::json& js) :
+		tAbstractBasicClass(_owner),
 		elem({})
 	{
 		makeObjectsFromJson(_owner, js);
 	}
 
 	tGroup::tGroup(const tGroup& g) :
-		tObject(g),
+		tAbstractBasicClass(g),
 		elem(g.elem)
 	{
 	}
@@ -206,19 +224,19 @@ namespace edt {
 		}
 	}
 
-	void tGroup::_insert(tObject *object) {
+	void tGroup::_insert(tAbstractBasicClass *object) {
 		if (elem.size() != 0) {
-			elem.back()->changeOneOption(option_mask.is_active, false);
+			((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, false);
 			message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 		}
 		elem.push_back(object);
-		elem.back()->changeOneOption(option_mask.is_active, true);
+		((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, true);
 		message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 	}
 
-	bool tGroup::_delete(tObject *object) {
+	bool tGroup::_delete(tAbstractBasicClass *object) {
 		bool success = false;
-		list<tObject*>::iterator it;
+		list<tAbstractBasicClass*>::iterator it;
 
 		for (it = elem.begin(); it != elem.end(); it++) {	// Поиск удаляемого элемента
 			if (*it == object) {
@@ -229,7 +247,7 @@ namespace edt {
 				}
 				delete* it;		// Удаляем его	1) из памяти
 				elem.erase(it);	//				2) из контейнера
-				elem.back()->changeOneOption(option_mask.is_active, true);
+				((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, true);
 				message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 				break;	// Вываливаемся из перебора, чтобы не поймать аксес виолэйшн
 			}
@@ -237,14 +255,14 @@ namespace edt {
 		return success;
 	}
 
-	void tGroup::select(tObject *object) {
-		list<tObject*>::iterator it;
+	void tGroup::select(tAbstractBasicClass *object) {
+		list<tAbstractBasicClass*>::iterator it;
 		for (it = elem.begin(); it != elem.end(); it++) {	// Пока не нашли, перебираем список
 			if (*it == object) {
-				tObject* obj = *it;		// Запоминаем объект
-				obj->changeOneOption(option_mask.is_active, true);
+				tAbstractBasicClass* obj = *it;		// Запоминаем объект
+				((tObject*)obj)->changeOneOption(tObject::option_mask.is_active, true);
 				elem.erase(it);			// Удаляем из списка
-				elem.back()->changeOneOption(option_mask.is_active, false);
+				((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, false);
 				message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 				elem.push_back(obj);	// Кидаем в конец списка
 				break;
@@ -252,12 +270,11 @@ namespace edt {
 		}
 	}
 
-	void tGroup::forEach(unsigned int code, tObject* from = nullptr) {
-		list<tObject*>::reverse_iterator it;
+	void tGroup::forEach(unsigned int code, tAbstractBasicClass* from = nullptr) {
 		if (!from) {	// Если не сказано от кого событие, то отправителем становится сам почтальон
 			from = this;
 		}
-		for (it = elem.rbegin(); it != elem.rend(); it++) {
+		for (list<tAbstractBasicClass*>::reverse_iterator it = elem.rbegin(); it != elem.rend(); it++) {
 			switch (code) {
 				case static_cast<int>(tEvent::codes::Deactivate) : {
 					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Deactivate), from);
@@ -281,41 +298,44 @@ namespace edt {
 	}
 
 	void tGroup::draw(sf::RenderTarget& target) {
-		list<tObject*>::iterator it;
-		for (it = elem.begin(); it != elem.end(); it++) {
+		for (list<tAbstractBasicClass*>::iterator it = elem.begin(); it != elem.end(); it++) {
 			(*it)->draw(target);
 		}
 	}
 
 	void tGroup::handleEvent(tEvent& e) {
-		list<tObject*>::reverse_iterator it;
-		for (it = elem.rbegin(); it != elem.rend(); it++) {
+		for (list<tAbstractBasicClass*>::reverse_iterator it = elem.rbegin(); it != elem.rend(); it++) {
 			(*it)->handleEvent(e);
 		}
 	}
 
-	void tGroup::makeObjectsFromJson(tObject* _owner, nlohmann::json& js) {
+	void tGroup::makeObjectsFromJson(tAbstractBasicClass* _owner, nlohmann::json& js) {
 		for (nlohmann::json::iterator it = js["elem"].begin(); it != js["elem"].end(); it++) {
-			unsigned char what_is_it = (*it)["what_is_it"].get<unsigned char>();
+			unsigned int what_is_it = (*it)["what_is_it"].get<unsigned char>();
 			switch (what_is_it) {
-			case (objects_json_ids.tText): {
+			case objects_json_ids.tText: {
 				tText* el = new tText(_owner, *it);
 				_insert(el);
 				break;
 			}
-			case (objects_json_ids.tButton): {
+			case objects_json_ids.tButton: {
 				tButton* el = new tButton(_owner, *it);
 				_insert(el);
 				break;
 			}
-			case (objects_json_ids.tRectShape): {
+			case objects_json_ids.tRectShape: {
 				tRectShape* el = new tRectShape(_owner, *it);
 				_insert(el);
 				break;
 			}
-			case (objects_json_ids.tWindow): {
+			case objects_json_ids.tWindow: {
 				tWindow* el = new tWindow(_owner, *it);
 				_insert(el);
+				break;
+			}
+			case objects_json_ids.tDisplay: {
+				tDisplay* el = new tDisplay(_owner, *it);
+				_insert((tRenderRect*)el);
 				break;
 			}
 			}
@@ -323,10 +343,9 @@ namespace edt {
 	}
 
 	nlohmann::json tGroup::saveParamsInJson() {
-		nlohmann::json js = tObject::saveParamsInJson();
-
+		nlohmann::json js;
 		unsigned int id = 0;
-		for (list<tObject*>::iterator it = elem.begin(); it != elem.end(); it++) {
+		for (list<tAbstractBasicClass*>::iterator it = elem.begin(); it != elem.end(); it++) {
 			std::string str = std::to_string(id);
 			js["elem"][str] = (*it)->saveParamsInJson();
 			id++;
@@ -335,8 +354,8 @@ namespace edt {
 		return js;
 	}
 
-	tRenderRect::tRenderRect(tObject* _owner, sf::FloatRect rect) :
-		tGroup(_owner),
+	tRenderRect::tRenderRect(tAbstractBasicClass* _owner, sf::FloatRect rect) :
+		tObject(_owner),
 		render_squad(sf::VertexArray(sf::Quads, 4)),
 		clear_color({ 0, 0, 0, 255 }),
 		need_rerender(true)
@@ -348,21 +367,16 @@ namespace edt {
 		setSize({ rect.width, rect.height });
 	}
 
-	tRenderRect::tRenderRect(tObject* _owner, nlohmann::json& js) :
-		tGroup(_owner, js),
+	tRenderRect::tRenderRect(tAbstractBasicClass* _owner, nlohmann::json& js) :
+		tObject(_owner, js),
 		render_squad(sf::VertexArray(sf::Quads, 4)),
 		need_rerender(true)
 	{
-
 		std::vector<unsigned char> vuc = js["clear_color"].get<std::vector<unsigned char>>();
 		clear_color = {vuc[0], vuc[1], vuc[2], vuc[3]};
 
 		std::vector<float> vf = js["size"].get<std::vector<float>>();
 		setSize({ vf[0], vf[1] });
-		vf.clear();
-
-		vf = js["camera_offset"].get<std::vector<float>>();
-		setCameraOffset({ vf[0], vf[1] });
 
 		std::vector<unsigned int> vui = js["texture_size"].get<std::vector<unsigned int>>();
 		render_texture.create(vui[0], vui[1]);
@@ -372,7 +386,7 @@ namespace edt {
 	}
 
 	tRenderRect::tRenderRect(const tRenderRect& r) :
-		tGroup(r),
+		tObject(r),
 		render_squad(r.render_squad),
 		clear_color(r.clear_color),
 		need_rerender(r.need_rerender)
@@ -384,13 +398,6 @@ namespace edt {
 	}
 
 	tRenderRect::~tRenderRect() {
-	}
-
-	void tRenderRect::setCameraOffset(sf::Vector2f new_offset) {
-		render_squad[1].texCoords += new_offset - render_squad[0].texCoords;
-		render_squad[2].texCoords += new_offset - render_squad[0].texCoords;
-		render_squad[3].texCoords += new_offset - render_squad[0].texCoords;
-		render_squad[0].texCoords = new_offset;
 	}
 
 	void tRenderRect::setTextureSize(sf::Vector2u new_size) {
@@ -431,7 +438,6 @@ namespace edt {
 			if (need_rerender) {
 				need_rerender = false;
 				render_texture.clear(clear_color);	// Очиститься
-				tGroup::draw(render_texture);		// Нарисовать на себе все подэлементы
 				render_texture.display();			// Обновить "лицевую" текстуру
 			}
 			target.draw(render_squad, &render_texture.getTexture());	// Отобразиться
@@ -457,7 +463,7 @@ namespace edt {
 	}
 
 	nlohmann::json tRenderRect::saveParamsInJson() {
-		nlohmann::json js = tGroup::saveParamsInJson();
+		nlohmann::json js = tObject::saveParamsInJson();
 
 		sf::Vector2f size = render_squad[2].position - render_squad[0].position;
 		sf::Vector2u tex_size = render_texture.getSize();
@@ -465,7 +471,6 @@ namespace edt {
 		js["size"] = { size.x, size.y };
 		js["texture_size"] = { tex_size.x, tex_size.y };
 		js["clear_color"] = { clear_color.r, clear_color.g, clear_color.b, clear_color.a };
-		js["camera_offset"] = { render_squad[0].texCoords.x, render_squad[0].texCoords.y };
 
 		return js;
 	}
@@ -548,21 +553,17 @@ namespace edt {
 
 			sf::sleep(sf::milliseconds(5));
 		};
-		/*
-		sf::Vector2u size = window.getSize();
+		/*sf::Vector2u size = window.getSize();
 		nlohmann::json js;
 		js["menu"] = saveParamsInJson();
 		js["sfml_window"]["caption"] = "SFML_Game environment editor";
 		js["sfml_window"]["size"] = { size.x, size.y };
 		js["sfml_window"]["style"] = "Default";
 		js["sfml_window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
-		print_json(js, path_to_folder + "\\Content\\Config\\forms.conf");
-		//*/
-		/*
-		std::fstream file(path_to_folder + "\\Content\\Config\\forms.conf", std::fstream::out);
+		print_json(js, path_to_folder + "\\Content\\Config\\forms.conf");*/
+		/*std::fstream file(path_to_folder + "\\Content\\Config\\forms.conf", std::fstream::out);
 		file << js;
-		file.close();
-		*/
+		file.close();*/
 	}
 
 	bool tDesktop::windowIsOpen() {
@@ -701,17 +702,17 @@ namespace edt {
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-							e.from->changeOneOption(option_mask.is_active, false);
+							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-							e.from->changeOneOption(option_mask.can_be_drawn, true);
+							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
 						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-							e.from->changeOneOption(option_mask.can_be_drawn, false);
+							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
@@ -793,7 +794,7 @@ namespace edt {
 		return js;
 	}
 
-	tRectShape::tRectShape(tObject* _owner, sf::FloatRect rect, sf::Color fill_color) :
+	tRectShape::tRectShape(tAbstractBasicClass* _owner, sf::FloatRect rect, sf::Color fill_color) :
 		tObject(_owner)
 	{
 		setPosition({rect.left, rect.top});
@@ -801,7 +802,7 @@ namespace edt {
 		setColor(fill_color);
 	}
 
-	tRectShape::tRectShape(tObject* _owner, nlohmann::json& js) :
+	tRectShape::tRectShape(tAbstractBasicClass* _owner, nlohmann::json& js) :
 		tObject(_owner, js)
 	{		
 		std::vector<float> vf = js["size"].get<std::vector<float>>();
@@ -850,6 +851,10 @@ namespace edt {
 		return;
 	}
 
+	void tRectShape::handleEvent(tEvent& e) {
+		return;
+	}
+
 	bool tRectShape::pointIsInsideMe(sf::Vector2i point) {
 		return false;
 	}
@@ -877,7 +882,7 @@ namespace edt {
 		return js;
 	}
 
-	tText::tText(tObject* _owner, sf::Vector2f position, std::wstring string) :
+	tText::tText(tAbstractBasicClass* _owner, sf::Vector2f position, std::wstring string) :
 		tObject(_owner),
 		font_loaded(false)
 	{
@@ -889,7 +894,7 @@ namespace edt {
 		setPosition(position);
 	}
 
-	tText::tText(tObject* _owner, nlohmann::json& js) :
+	tText::tText(tAbstractBasicClass* _owner, nlohmann::json& js) :
 		tObject(_owner, js),
 		font_loaded(false)
 	{
@@ -983,7 +988,14 @@ namespace edt {
 				target.draw(text_object);
 				return;
 			}
+			// если код в предыдущем блоке выполнился, то код ниже не выполняется
 			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
+			tEvent e;
+			e.address = getOwner();
+			e.from = this;
+			e.type = static_cast<int>(tEvent::types::Broadcast);
+			e.code = static_cast<int>(tEvent::codes::UpdateTexture);
+			putEvent(e);
 		}
 	}
 
@@ -1001,7 +1013,7 @@ namespace edt {
 							case static_cast<int>(tEvent::codes::FontAnswer) : {
 								font_loaded = true;
 								text_object.setFont(*e.font.font);
-								message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+								message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 								clearEvent(e);
 								break;
 							}
@@ -1022,7 +1034,7 @@ namespace edt {
 		return;
 	}
 
-	tButton::tButton(tObject* _owner, sf::FloatRect rect) :
+	tButton::tButton(tAbstractBasicClass* _owner, sf::FloatRect rect) :
 		tRenderRect(_owner, rect),
 		custom_skin_loaded(false),
 		alignment(static_cast<int>(text_alignment_type::Left)),
@@ -1034,7 +1046,7 @@ namespace edt {
 		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 	}
 
-	tButton::tButton(tObject* _owner, nlohmann::json& js) :
+	tButton::tButton(tAbstractBasicClass* _owner, nlohmann::json& js) :
 		tRenderRect(_owner, js),
 		custom_skin_loaded(false),
 		side_offset(10),
@@ -1158,7 +1170,7 @@ namespace edt {
 		}
 		render_texture.display();
 
-		message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 	}
 
 	void tButton::loadCustomSkin(std::string path_to_skin) {
@@ -1262,7 +1274,7 @@ namespace edt {
 					}
 					switch (e.code) {			// Для всех остальных
 						case static_cast<int>(tEvent::codes::ResetButtons) : {
-							if (e.from != this && e.from != owner) {
+							if (e.from != this && e.from != getOwner()) {
 								mouse_inside[0] = false;
 								mouse_inside[1] = false;
 								need_rerender = true;
@@ -1279,7 +1291,7 @@ namespace edt {
 							mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 							if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
 								message(nullptr, static_cast<int>(tEvent::types::Button), static_cast<int>(tEvent::codes::ResetButtons), this);
-								message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+								message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 								need_rerender = true;
 								clearEvent(e);
 							}
@@ -1290,7 +1302,7 @@ namespace edt {
 								if (e.mouse.button == sf::Mouse::Left) {
 									if (e.mouse.what_happened == sf::Event::MouseButtonReleased)	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
 									{
-										message(owner, static_cast<int>(edt::tEvent::types::Button), self_code, this);
+										message(getOwner(), static_cast<int>(edt::tEvent::types::Button), self_code, this);
 									}
 									clearEvent(e);
 								}
@@ -1306,7 +1318,7 @@ namespace edt {
 	}
 
 
-	tWindow::tWindow(tObject* _owner, sf::FloatRect rect, std::wstring _caption) :
+	tWindow::tWindow(tAbstractBasicClass* _owner, sf::FloatRect rect, std::wstring _caption) :
 		tRenderRect(_owner),
 		font_loaded(false),
 		caption(_caption),
@@ -1317,7 +1329,7 @@ namespace edt {
 		caption_offset({2, 2}),
 		button_close(new tButton(this, { 0, 0, heap_height - 4 , heap_height - 4 })),
 		heap_shape(new tRectShape(this, { 0, 0, rect.width, heap_height }, color_heap)),
-		area_shape(new tRectShape(this, { 0, heap_height, rect.width, rect.height - heap_height }, color_area))
+		display(new tDisplay(this, { 0, heap_height, rect.width, rect.height - heap_height }))
 	{
 		changeOneOption(option_mask.can_be_moved, true);
 		changeOneOption(option_mask.can_be_resized, true);
@@ -1329,12 +1341,12 @@ namespace edt {
 		initWindow();
 	}
 
-	tWindow::tWindow(tObject* _owner, nlohmann::json& js) :
+	tWindow::tWindow(tAbstractBasicClass* _owner, nlohmann::json& js) :
 		tRenderRect(_owner, js),
 		font_loaded(false),
 		button_close(new tButton(this, js["button_close"])),
 		heap_shape(new tRectShape(this, js["heap_shape"])),
-		area_shape(new tRectShape(this, js["area_shape"]))
+		display(new tDisplay(this, js["display"]))
 	{
 		std::vector<int> vi = js["caption"].get<std::vector<int>>();
 		caption = convertIntVectorToWstring(vi);
@@ -1368,12 +1380,12 @@ namespace edt {
 		caption_offset(w.caption_offset),
 		button_close(w.button_close),
 		heap_shape(w.heap_shape),
-		area_shape(w.area_shape)
+		display(w.display)
 	{
 	}
 
 	tWindow::~tWindow() {
-		delete button_close, heap_shape, area_shape;
+		delete button_close, heap_shape, display;
 	}
 
 	void tWindow::initWindow() {
@@ -1390,11 +1402,17 @@ namespace edt {
 		button_close->setTextOffset({ 0, -3 });
 		message(button_close, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 
+		display->setClearColor(color_area);
+
 		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 	}
 
 	void tWindow::setCaption(std::wstring new_caption) {
 		caption = new_caption;
+	}
+
+	tDisplay* tWindow::getDisplayPointer() {
+		return display;
 	}
 
 	std::wstring tWindow::getCaption() {
@@ -1429,8 +1447,7 @@ namespace edt {
 	void tWindow::updateTexture() {
 		render_texture.clear(clear_color);
 
-		area_shape->draw(render_texture);
-		tGroup::draw(render_texture);
+		display->draw(render_texture);
 		heap_shape->draw(render_texture);
 		button_close->draw(render_texture);
 
@@ -1464,14 +1481,11 @@ namespace edt {
 
 		render_texture.display();
 
-		message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 	}
 
 	void tWindow::setCameraOffset(sf::Vector2f new_offset) {
-		tRenderRect::setCameraOffset(new_offset);
-		button_close->setPosition(sf::Vector2f(heap_height - 4, heap_height - 4) + new_offset);
-		heap_shape->setPosition(new_offset);
-		area_shape->setPosition(sf::Vector2f(0, heap_height) + new_offset);
+		display->setCameraOffset(new_offset);
 	}
 
 	const int tWindow::getHeapHeight() {
@@ -1503,7 +1517,7 @@ namespace edt {
 
 		js["button_close"] = button_close->saveParamsInJson();
 		js["heap_shape"] = heap_shape->saveParamsInJson();
-		js["area_shape"] = area_shape->saveParamsInJson();
+		js["display"] = display->saveParamsInJson();
 
 		return js;
 	}
@@ -1522,39 +1536,23 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			button_close->handleEvent(e);
 			heap_shape->handleEvent(e);
-			area_shape->handleEvent(e);
-			tGroup::handleEvent(e);
+			display->handleEvent(e);
 			switch (e.type) {
 				case static_cast<int>(tEvent::types::Broadcast) : {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
-								_delete(e.from);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
-								select(e.from);
-								clearEvent(e);
-								break;
-							}
 							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
-								e.from->changeOneOption(option_mask.is_active, false);
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
 								break;
 							}
 							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, true);
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								clearEvent(e);
 								break;
 							}
 							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
-								e.from->changeOneOption(option_mask.can_be_drawn, false);
-								clearEvent(e);
-								break;
-							}
-							case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
-								e.from->setOwner(this);
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								clearEvent(e);
 								break;
 							}
@@ -1567,13 +1565,13 @@ namespace edt {
 								font_loaded = true;
 								setFont(*e.font.font);
 								message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
-								message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+								message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
 								clearEvent(e);
 								break;
 							}
 							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
-								putEvent(e);
+								e.address = getOwner();
+								message(e);
 								clearEvent(e);
 								break;
 							}
@@ -1587,14 +1585,14 @@ namespace edt {
 							case static_cast<int>(tEvent::codes::Close) : {			// Закрыть окно
 								e.type = static_cast<int>(tEvent::types::Broadcast);
 								e.code = static_cast<int>(tEvent::codes::Delete);
-								e.address = owner;
+								e.address = getOwner();
 								e.from = this;
 								putEvent(e);
 								clearEvent(e);
 								break;
 							}
 							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
-								e.address = owner;
+								e.address = getOwner();
 								putEvent(e);
 								clearEvent(e);
 							}
@@ -1611,7 +1609,7 @@ namespace edt {
 									if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
 										changeOneOption(option_mask.is_moving, true);
 									}
-									message(owner, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Activate), this);
+									message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Activate), this);
 									need_rerender = true;
 									clearEvent(e);
 								}
@@ -1644,16 +1642,143 @@ namespace edt {
 			}
 		}
 	}
-	/*
-	tScrollbar::tScrollbar(tObject* _owner, int start_offset, int max_offset, sf::FloatRect rect, unsigned char _orientation) :
-		tRenderRect(_owner, rect),
-		minimum(start_offset),
-		maximum(max_offset),
-		orientation(_orientation),
-		color_space({ 60, 60, 60, 255 }),
-		color_slider({ 120, 120, 120, 255 })
+
+	tDisplay::tDisplay(tAbstractBasicClass* _owner, sf::FloatRect rect):
+		owner(_owner),
+		tGroup((tRenderRect*)this),
+		tRenderRect(_owner, rect)
 	{
-		initScrollbar();
 	}
-	*/
+
+	tDisplay::tDisplay(tAbstractBasicClass* _owner, nlohmann::json& js):
+		owner(_owner),
+		tGroup((tRenderRect*)this, js),
+		tRenderRect(_owner, js)
+	{
+		std::vector<float> vf = js["camera_offset"].get<std::vector<float>>();
+		setCameraOffset({ vf[0], vf[1] });
+	}
+
+	tDisplay::tDisplay(const tDisplay& d):
+		owner(d.owner),
+		tGroup(d),
+		tRenderRect(d)
+	{
+	}
+
+	tDisplay::~tDisplay()
+	{
+	}
+
+	void tDisplay::setCameraOffset(sf::Vector2f new_offset) {
+		render_squad[1].texCoords += new_offset - render_squad[0].texCoords;
+		render_squad[2].texCoords += new_offset - render_squad[0].texCoords;
+		render_squad[3].texCoords += new_offset - render_squad[0].texCoords;
+		render_squad[0].texCoords = new_offset;
+	}
+
+	void tDisplay::draw(sf::RenderTarget& target) {
+		if (checkOption(option_mask.can_be_drawn)) {
+			if (need_rerender) {
+				need_rerender = false;
+				updateTexture();
+			}
+			target.draw(render_squad, &render_texture.getTexture());
+		}
+	}
+
+	void tDisplay::handleEvent(tEvent& e) {
+		if (checkOption(option_mask.can_be_drawn)) {
+			tGroup::handleEvent(e);
+			switch (e.type) {
+				case static_cast<int>(tEvent::types::Broadcast) : {
+					if (e.address == (tRenderRect*)this) {
+						switch (e.code) {
+							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
+								tAbstractBasicClass::clearEvent(e);
+								break;
+							}
+							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
+								tAbstractBasicClass::clearEvent(e);
+								break;
+							}
+							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
+								tAbstractBasicClass::clearEvent(e);
+								break;
+							}
+							case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+								e.from->setOwner((tRenderRect*)this);
+								tAbstractBasicClass::clearEvent(e);
+								break;
+							}
+							case static_cast<int>(tEvent::codes::UpdateTexture) : {	// Обновить текстуру
+								need_rerender = true;
+								tAbstractBasicClass::clearEvent(e);
+								break;
+							}
+							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+								e.address = getOwner();
+								tAbstractBasicClass::message(e);
+								tAbstractBasicClass::clearEvent(e);
+								break;
+							}
+						}
+					}
+					break;
+				}
+				case static_cast<int>(tEvent::types::Button) : {
+					if (e.address == (tRenderRect*)this) {
+						e.address = getOwner();
+						tAbstractBasicClass::putEvent(e);
+						tAbstractBasicClass::clearEvent(e);
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	void tDisplay::updateTexture() {
+		render_texture.clear(clear_color);	// Очиститься
+		tGroup::draw(render_texture);		// Нарисовать подэлементы
+		render_texture.display();			// Обновить "лицевую" текстуру
+
+		tAbstractBasicClass::message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), (tRenderRect*)this);
+	}
+
+	void tDisplay::setOwner(tAbstractBasicClass* new_owner) {
+		owner = new_owner;
+	}
+
+	tAbstractBasicClass* tDisplay::getOwner() {
+		return owner;
+	}
+
+	bool tDisplay::pointIsInsideMe(sf::Vector2i point) {
+		sf::FloatRect rect = tRenderRect::getGlobalBounds();
+		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
+	}
+
+	sf::FloatRect tDisplay::getLocalBounds() {
+		return tRenderRect::getLocalBounds();
+	}
+
+	nlohmann::json tDisplay::saveParamsInJson() {
+		nlohmann::json js = tGroup::saveParamsInJson();
+		nlohmann::json js1 = tRenderRect::saveParamsInJson();
+
+		for (nlohmann::json::iterator it = js1.begin(); it != js1.end(); it++) {	// Прикручиваем содержимое js1 к js
+			js[it.key()] = it.value();
+		}
+
+		js["what_it_it"] = objects_json_ids.tDisplay;
+		js["what_it_it_string"] = "tDisplay";
+		js["camera_offset"] = { render_squad[0].texCoords.x, render_squad[0].texCoords.y };
+
+		return js;
+	}
+
 }

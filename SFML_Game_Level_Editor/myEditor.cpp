@@ -26,8 +26,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 		}
 		case button_codes.Menu :
 		default: {
-			/*
-			edt::tText* text = new edt::tText(this, { 0, 0 }, L"SFML_Game редактор игрового окружения");
+			/*edt::tText* text = new edt::tText(this, { 0, 0 }, L"SFML_Game редактор игрового окружения");
 			text->setFont(getFont());
 			text->setCharSize(66);
 			text->setTextColor({ 255, 255, 255, 255 });
@@ -92,8 +91,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setTextOffset({0, 8});
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -250, -40 + 320 });
-			_insert(button);
-			*/
+			_insert(button);*/
 
 			makeObjectsFromJson(this, json_configuration["menu"]);
 
@@ -111,7 +109,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 					case button_codes.about_program : {
 						sf::FloatRect rect;
 						unsigned int font_size = 32;
-						rect.width = 620;
+						rect.width = 630;
 						rect.height = 410;
 						rect.left = (window.getSize().x - rect.width) / 2;
 						rect.top = (window.getSize().y - rect.height) / 2;
@@ -120,22 +118,20 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 						w->setFont(getFont());
 						w->setCaptionOffset({4, 0});
 
-						sf::Vector2f content_position = { 10, (float)w->getHeapHeight() };
+						sf::Vector2f content_position = { 10, 0 };
 
 						std::fstream file(path_to_folder + "\\Content\\Texts\\about.txt", std::fstream::in | std::fstream::binary);
-						edt::tText* t;	// Текст для вывода в окно
+						edt::tText* t = new edt::tText((edt::tRenderRect*)w->getDisplayPointer(), { content_position.x, content_position.y }, L"Some Text");
+						t->setFont(getFont());
+						t->setCharSize(font_size);
 
 						if (!file.is_open()) {
 							font_size -= 2;
 							std::wstring text = L"Файл ''..\\Content\\Texts\\about.txt'' не найден.\n\nСтранно всё это...\nНа всякий случай вызовите экзорцистов.";
-							t = new edt::tText(w, { content_position.x, content_position.y }, text);
-							t->setFont(getFont());
-							t->setCharSize(font_size);
-							w->_insert(t);
-							content_position.y += std::max<float>(t->getLocalBounds().height, (float)font_size);
+							t->setString(text);
 						}
 						else {
-							std::wstring str = L"";
+							std::wstring text = L"";
 							file.seekg(0, std::fstream::end);
 							
 							unsigned long long file_size = file.tellg();	// Размер файла
@@ -154,14 +150,12 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 								low = c & 0xFF;
 
 								wchar = high << 8 | low;
-								str += wchar;
+								text += wchar;
 							}
 							
-							t = new edt::tText(w, { content_position.x, content_position.y }, str);
-							t->setFont(getFont());
-							t->setCharSize(font_size);
-							w->_insert(t);
+							t->setString(text);
 						}
+						w->getDisplayPointer()->_insert(t);
 
 						file.close();
 						_insert(w);
