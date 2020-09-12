@@ -5,14 +5,24 @@
 namespace edt {
 
 	static const struct sObjectsJsonIds {
-		static const unsigned char tDesktop = 0;
-		static const unsigned char tWindow = 1;
-		static const unsigned char tButton = 2;
-		static const unsigned char tText = 3;
-		static const unsigned char tRectShape = 4;
+		static const unsigned int tDesktop		= 0;
+		static const unsigned int tWindow		= 1;
+		static const unsigned int tButton		= 2;
+		static const unsigned int tText			= 3;
+		static const unsigned int tRectShape	= 4;
+		static const unsigned int tDisplay		= 5;
 	} objects_json_ids;
 
-	class tABC;
+	class tAbstractBasicClass;
+	class tObject;
+	class tGroup;
+	class tRenderRect;
+	class tRectShape;
+	class tDesktop;
+	class tButton;
+	class tWindow;
+	class tText;
+	class tDisplay;
 
 	struct tEvent {
 
@@ -27,8 +37,8 @@ namespace edt {
 
 		unsigned int type = static_cast<int>(types::Nothing); // Из какой сферы событие (тип)
 		unsigned int code = static_cast<int>(codes::Nothing); // Код события
-		tABC* from = nullptr;
-		tABC* address = nullptr;
+		tAbstractBasicClass* from = nullptr;
+		tAbstractBasicClass* address = nullptr;
 		
 		struct sMouse { // Событие от мыши
 			char button = 0;
@@ -57,31 +67,32 @@ namespace edt {
 		} font;
 	};
 
-	class tABC {
+	class tAbstractBasicClass {
 	protected:
-		tABC* owner;
+		tAbstractBasicClass* owner;
 	
 	public:
-		tABC(tABC* _owner);
-		tABC(const tABC& a);
-		~tABC();
+		tAbstractBasicClass(tAbstractBasicClass* _owner);
+		tAbstractBasicClass(const tAbstractBasicClass& a);
+		~tAbstractBasicClass();
 
-		void setOwner(tABC* new_owner);
 		void clearEvent(tEvent& e);
-		void message(tABC* addr, int type, int code, tABC* from);
+		void message(tAbstractBasicClass* addr, int type, int code, tAbstractBasicClass* from);
 		void message(tEvent e);
 
+		virtual void setOwner(tAbstractBasicClass* new_owner);
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e) = 0;
 		virtual void draw(sf::RenderTarget& target) = 0;
 
+		virtual tAbstractBasicClass* getOwner();
 		virtual nlohmann::json saveParamsInJson();
 		virtual sf::FloatRect getLocalBounds() = 0;
 		virtual sf::FloatRect getGlobalBounds();
 	};
 
-	class tObject : public tABC { // Класс объекта
+	class tObject : public tAbstractBasicClass { // Класс объекта
 	public:
 		static const struct sOptionMask {	// Маски операций
 			static const unsigned char is_moving = 1;		// Объект перемещается при помощи мыши
@@ -116,8 +127,8 @@ namespace edt {
 		unsigned char options;	// Битовая штука. Смотри "tObject::option_mask"
 
 	public:
-		tObject(tABC* _owner);
-		tObject(tABC* _owner, nlohmann::json& js);
+		tObject(tAbstractBasicClass* _owner);
+		tObject(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tObject(const tObject &o);
 		virtual ~tObject();
 
@@ -141,26 +152,25 @@ namespace edt {
 		virtual nlohmann::json saveParamsInJson();
 	};
 
-	class tGroup : public tABC { // Класс-контейнер
+	class tGroup : public tAbstractBasicClass { // Класс-контейнер
 	protected:
-		list<tABC*> elem;		// Контейнер элементов, хранящихся в данном классе
+		list<tAbstractBasicClass*> elem;		// Контейнер элементов, хранящихся в данном классе
 
 	public:
-		tGroup(tABC* _owner);
-		tGroup(tABC* _owner, nlohmann::json& js);
+		tGroup(tAbstractBasicClass* _owner);
+		tGroup(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tGroup(const tGroup& g);
 		virtual ~tGroup();
 
-		void _insert(tABC *object);		// Внесение элемента в список подэлементов
-		void select(tABC *object);		// Установка флага "активен" у элемента
-		void forEach(unsigned int code, tABC* from);	// Выполнить команду для всех подэлементов
-
-		bool _delete(tABC *object);		// Удаление элемента из списка
+		void forEach(unsigned int code, tAbstractBasicClass* from);	// Выполнить команду для всех подэлементов
+		void makeObjectsFromJson(tAbstractBasicClass* _owner, nlohmann::json& js);
 
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
-		void makeObjectsFromJson(tABC* _owner, nlohmann::json& js);
-
+		virtual void _insert(tAbstractBasicClass* object);		// Внесение элемента в список подэлементов
+		virtual void select(tAbstractBasicClass* object);		// Установка флага "активен" у элемента
+		
+		virtual bool _delete(tAbstractBasicClass* object);		// Удаление элемента из списка
 		virtual nlohmann::json saveParamsInJson();
 	};
 
@@ -172,8 +182,8 @@ namespace edt {
 		bool need_rerender;					// Нужна ли перерисовка
 
 	public:
-		tRenderRect(tABC* _owner, sf::FloatRect rect = { 0, 0, 64, 64 });
-		tRenderRect(tABC* _owner, nlohmann::json& js);
+		tRenderRect(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 64, 64 });
+		tRenderRect(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tRenderRect(const tRenderRect& r);
 		virtual ~tRenderRect();
 
@@ -184,7 +194,6 @@ namespace edt {
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void move(sf::Vector2f delta);
-		virtual void setCameraOffset(sf::Vector2f new_offset);
 
 		virtual sf::FloatRect getLocalBounds();
 		virtual nlohmann::json saveParamsInJson();
@@ -195,8 +204,8 @@ namespace edt {
 		sf::RectangleShape shape;
 
 	public:
-		tRectShape(tABC* _owner, sf::FloatRect rect = {0, 0, 64, 64}, sf::Color fill_color = sf::Color(255, 255, 255, 255));
-		tRectShape(tABC* _owner, nlohmann::json& js);
+		tRectShape(tAbstractBasicClass* _owner, sf::FloatRect rect = {0, 0, 64, 64}, sf::Color fill_color = sf::Color(255, 255, 255, 255));
+		tRectShape(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tRectShape(const tRectShape& s);
 		virtual ~tRectShape();
 
@@ -259,8 +268,8 @@ namespace edt {
 		bool font_loaded;					// Флаг. Загружен ли шрифт?
 
 	public:
-		tText(tABC* _owner, sf::Vector2f position = {0, 0}, std::wstring string = L"Some text");
-		tText(tABC* _owner, nlohmann::json& js);
+		tText(tAbstractBasicClass* _owner, sf::Vector2f position = {0, 0}, std::wstring string = L"Some text");
+		tText(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tText(const tText& t);
 		virtual ~tText();
 
@@ -300,8 +309,8 @@ namespace edt {
 	public:
 		enum class text_alignment_type { Left, Middle, Right };
 
-		tButton(tABC* _owner, sf::FloatRect rect = { 0, 0, 128, 48 });
-		tButton(tABC* _owner, nlohmann::json& js);
+		tButton(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 128, 48 });
+		tButton(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tButton(const tButton& b);
 		virtual ~tButton();
 
@@ -343,11 +352,11 @@ namespace edt {
 
 		tButton* button_close;				// Кнопка закрытия
 		tRectShape* heap_shape;				// Фигура шапки
-		tRectShape* area_shape;				// Фигура рабочей области
+		tDisplay* display;					// Объект, в котором происходит отрисовка всех динамических подэлементов окна
 
 	public:
-		tWindow(tABC* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
-		tWindow(tABC* _owner, nlohmann::json& js);
+		tWindow(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
+		tWindow(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tWindow(const tWindow& w);
 		virtual ~tWindow();
 
@@ -358,7 +367,9 @@ namespace edt {
 		void setInactiveCaptionColor(sf::Color new_color);
 		void setFont(sf::Font new_font);
 		void setCaptionOffset(sf::Vector2f new_offset);
+		void setCameraOffset(sf::Vector2f new_offset);
 
+		tDisplay* getDisplayPointer();
 		std::wstring getCaption();
 		bool pointIsInHeap(sf::Vector2i point);
 		const int getHeapHeight();
@@ -366,22 +377,32 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
-		virtual void setCameraOffset(sf::Vector2f new_offset);
 		
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual nlohmann::json saveParamsInJson();
 	};
 
 	class tDisplay : public tRenderRect, public tGroup {
-	private:
+	protected:
+		tAbstractBasicClass* owner;
 
 	public:
-		tDisplay(tABC* _owner, sf::FloatRect rect = {0, 0, 100, 100});
-		tDisplay(tABC* _owner, nlohmann::json& js);
+		tDisplay(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 100, 100 });
+		tDisplay(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tDisplay(const tDisplay& d);
 		~tDisplay();
 
+		void setCameraOffset(sf::Vector2f new_offset);
 
+		virtual void draw(sf::RenderTarget& target);
+		virtual void handleEvent(tEvent& e);
+		virtual void updateTexture();
+		virtual void setOwner(tAbstractBasicClass* new_owner);
+
+		virtual tAbstractBasicClass* getOwner();
+		virtual bool pointIsInsideMe(sf::Vector2i point);
+		virtual sf::FloatRect getLocalBounds();
+		virtual nlohmann::json saveParamsInJson();
 	};
 
 }
