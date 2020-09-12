@@ -104,7 +104,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 	edt::tDesktop::handleEvent(e);
 	if (e.address == this) {
 		switch (e.type) {
-			case static_cast<int>(edt::tEvent::types::Button) : {
+			case edt::tEvent::types.Button: {
 				switch (e.code) {
 					case button_codes.about_program : {
 						sf::FloatRect rect;
