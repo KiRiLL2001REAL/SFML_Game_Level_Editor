@@ -25,18 +25,35 @@ namespace edt {
 	class tDisplay;
 
 	struct tEvent {
+		static const struct sTypes { // Типы событий
+			static const unsigned int Nothing		= 0;
+			static const unsigned int Mouse			= 1;
+			static const unsigned int Keyboard		= 2;
+			static const unsigned int Broadcast		= 3;
+			static const unsigned int Button		= 4;
+		} types;
 
-		enum class types { Nothing, Mouse, Keyboard, Broadcast, Button };
+		static const struct sCodes { // Коды событий
+			static const unsigned int Nothing			= 0;
+			static const unsigned int Activate			= 1;
+			static const unsigned int Deactivate		= 2;
+			static const unsigned int Show				= 3;
+			static const unsigned int Hide				= 4;
+			static const unsigned int Move				= 5;
+			static const unsigned int Adopt				= 6;
+			static const unsigned int Delete			= 7;
+			static const unsigned int Close				= 8;
+			static const unsigned int CloseApplication	= 9;
+			static const unsigned int MouseMoved		= 10;
+			static const unsigned int MouseButton		= 11;
+			static const unsigned int ResetButtons		= 12;
+			static const unsigned int UpdateTexture		= 13;
+			static const unsigned int FontRequest		= 14;
+			static const unsigned int FontAnswer		= 15;
+		} codes;
 
-		enum class codes {
-			Nothing, Activate, Deactivate, Show, Hide,
-			Move, Adopt, Delete, Close, CloseApplication,
-			MouseMoved, MouseButton, ResetButtons, UpdateTexture,
-			FontRequest, FontAnswer
-		};
-
-		unsigned int type = static_cast<int>(types::Nothing); // Из какой сферы событие (тип)
-		unsigned int code = static_cast<int>(codes::Nothing); // Код события
+		unsigned int type = types.Nothing; // Из какой сферы событие (тип)
+		unsigned int code = codes.Nothing; // Код события
 		tAbstractBasicClass* from = nullptr;
 		tAbstractBasicClass* address = nullptr;
 		
@@ -77,7 +94,7 @@ namespace edt {
 		~tAbstractBasicClass();
 
 		void clearEvent(tEvent& e);
-		void message(tAbstractBasicClass* addr, int type, int code, tAbstractBasicClass* from);
+		void message(tAbstractBasicClass* addr, unsigned int type, unsigned int code, tAbstractBasicClass* from);
 		void message(tEvent e);
 
 		virtual void setOwner(tAbstractBasicClass* new_owner);

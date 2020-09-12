@@ -22,10 +22,10 @@ namespace edt {
 	}
 
 	void tAbstractBasicClass::clearEvent(tEvent& e) {
-		e.type = static_cast<int>(tEvent::types::Nothing);
+		e.type = tEvent::types.Nothing;
 	}
 
-	void tAbstractBasicClass::message(tAbstractBasicClass* addr, int type, int code, tAbstractBasicClass* from) {
+	void tAbstractBasicClass::message(tAbstractBasicClass* addr, unsigned int type, unsigned int code, tAbstractBasicClass* from) {
 		tEvent e;
 		e.address = addr;
 		e.from = from;
@@ -227,11 +227,11 @@ namespace edt {
 	void tGroup::_insert(tAbstractBasicClass *object) {
 		if (elem.size() != 0) {
 			((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, false);
-			message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+			message(elem.back(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 		}
 		elem.push_back(object);
 		((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, true);
-		message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(elem.back(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	bool tGroup::_delete(tAbstractBasicClass *object) {
@@ -248,7 +248,7 @@ namespace edt {
 				delete* it;		// Удаляем его	1) из памяти
 				elem.erase(it);	//				2) из контейнера
 				((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, true);
-				message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+				message(elem.back(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 				break;	// Вываливаемся из перебора, чтобы не поймать аксес виолэйшн
 			}
 		}
@@ -263,7 +263,7 @@ namespace edt {
 				((tObject*)obj)->changeOneOption(tObject::option_mask.is_active, true);
 				elem.erase(it);			// Удаляем из списка
 				((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, false);
-				message(elem.back(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+				message(elem.back(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 				elem.push_back(obj);	// Кидаем в конец списка
 				break;
 			}
@@ -276,20 +276,20 @@ namespace edt {
 		}
 		for (list<tAbstractBasicClass*>::reverse_iterator it = elem.rbegin(); it != elem.rend(); it++) {
 			switch (code) {
-				case static_cast<int>(tEvent::codes::Deactivate) : {
-					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Deactivate), from);
+				case tEvent::codes.Deactivate: {
+					message(*it, tEvent::types.Broadcast, tEvent::codes.Deactivate, from);
 					break;
 				}
-				case static_cast<int>(tEvent::codes::Show) : {
-					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Show), from);
+				case tEvent::codes.Show: {
+					message(*it, tEvent::types.Broadcast, tEvent::codes.Show, from);
 					break;
 				}
-				case static_cast<int>(tEvent::codes::Hide) : {
-					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Hide), from);
+				case tEvent::codes.Hide: {
+					message(*it, tEvent::types.Broadcast, tEvent::codes.Hide, from);
 					break;
 				}
-				case static_cast<int>(tEvent::codes::ResetButtons) : {
-					message(*it, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::ResetButtons), from);
+				case tEvent::codes.ResetButtons: {
+					message(*it, tEvent::types.Broadcast, tEvent::codes.ResetButtons, from);
 					break;
 				}
 			}
@@ -605,7 +605,7 @@ namespace edt {
 		tEvent e;
 		
 		getEvent(e);
-		while (e.type != static_cast<int>(tEvent::types::Nothing)) {
+		while (e.type != tEvent::types.Nothing) {
 			handleEvent(e);
 			getEvent(e);
 		}
@@ -633,14 +633,14 @@ namespace edt {
 				if (window.pollEvent(event)) {
 					switch (event.type) {
 					case sf::Event::Closed: {				// Окно просит закрыться
-						e.type = static_cast<int>(tEvent::types::Broadcast);
-						e.code = static_cast<int>(tEvent::codes::CloseApplication);
+						e.type = tEvent::types.Broadcast;
+						e.code = tEvent::codes.CloseApplication;
 						e.address = this;
 						break;
 					}
 					case sf::Event::KeyPressed:			// Нажата или отпущена какая-либо кнопка на клавиатуре
 					case sf::Event::KeyReleased: {
-						e.type = static_cast<int>(tEvent::types::Keyboard);
+						e.type = tEvent::types.Keyboard;
 						event.type == sf::Event::KeyPressed ?
 							e.key.what_happened = sf::Event::KeyPressed : e.key.what_happened = sf::Event::KeyReleased;
 						e.key.button = event.key.code;
@@ -652,8 +652,8 @@ namespace edt {
 					}
 					case sf::Event::MouseButtonPressed:	// Нажата или отпущена какая-либо кнопка мыши
 					case sf::Event::MouseButtonReleased: {
-						e.type = static_cast<int>(tEvent::types::Mouse);
-						e.code = static_cast<int>(tEvent::codes::MouseButton);
+						e.type = tEvent::types.Mouse;
+						e.code = tEvent::codes.MouseButton;
 						event.type == sf::Event::MouseButtonPressed ?
 							e.mouse.what_happened = sf::Event::MouseButtonPressed : e.mouse.what_happened = sf::Event::MouseButtonReleased;
 						e.mouse.button = event.mouseButton.button;
@@ -663,8 +663,8 @@ namespace edt {
 						break;
 					}
 					case sf::Event::MouseMoved: {			// Мышь двинулась куда-то
-						e.type = static_cast<int>(tEvent::types::Mouse);
-						e.code = static_cast<int>(tEvent::codes::MouseMoved);
+						e.type = tEvent::types.Mouse;
+						e.code = tEvent::codes.MouseMoved;
 						e.mouse.x = event.mouseMove.x;
 						e.mouse.y = event.mouseMove.y;
 						e.mouse.dX = e.mouse.x - old_mouse_position.x;
@@ -674,13 +674,13 @@ namespace edt {
 						break;
 					}
 					default: {
-						e.type = static_cast<int>(tEvent::types::Nothing);
+						e.type = tEvent::types.Nothing;
 						break;
 					}
 					}
 				}
 				else {
-					e.type = static_cast<int>(tEvent::types::Nothing);
+					e.type = tEvent::types.Nothing;
 				}
 			}
 		}
@@ -689,35 +689,35 @@ namespace edt {
 	void tDesktop::handleEvent(tEvent& e) {
 		tGroup::handleEvent(e);
 		switch (e.type) {
-			case static_cast<int>(tEvent::types::Broadcast) : {	// Общего типа
+			case tEvent::types.Broadcast: {	// Общего типа
 				if (e.address == this) {			// Обработка событий для этого объекта
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::Delete) : {		// Удалить объект
+						case tEvent::codes.Delete: {		// Удалить объект
 							_delete(e.from);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Activate) : {		// Установить фокус на объект
+						case tEvent::codes.Activate: {		// Установить фокус на объект
 							select(e.from);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+						case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+						case tEvent::codes.Show: {			// Показать объект (если он скрыт)
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+						case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
-						case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+						case tEvent::codes.Adopt: {			// Стать владельцем объекта
 							e.from->setOwner(this);
 							_insert(e.from);
 							clearEvent(e);
@@ -726,9 +726,9 @@ namespace edt {
 					}
 				}
 				switch (e.code) {	// Обработка событий от "дальних" объектов
-					case static_cast<int>(tEvent::codes::FontRequest) : {
-						e.type = static_cast<int>(tEvent::types::Broadcast);
-						e.code = static_cast<int>(tEvent::codes::FontAnswer);
+					case tEvent::codes.FontRequest: {
+						e.type = tEvent::types.Broadcast;
+						e.code = tEvent::codes.FontAnswer;
 						if (!custom_font_loaded) {
 							e.font.font = &font_default;
 						}
@@ -743,14 +743,14 @@ namespace edt {
 				}
 				break;
 			}
-			case static_cast<int>(tEvent::types::Button) : {	// От кнопки
+			case tEvent::types.Button: {	// От кнопки
 				switch (e.code) {
-					case static_cast<int>(tEvent::codes::ResetButtons) : {
-						forEach(static_cast<int>(tEvent::codes::ResetButtons), e.from);
+					case tEvent::codes.ResetButtons: {
+						forEach(tEvent::codes.ResetButtons, e.from);
 						clearEvent(e);
 						break;
 					}
-					case static_cast<int>(tEvent::codes::CloseApplication) : {	// Закрыть приложение
+					case tEvent::codes.CloseApplication: {	// Закрыть приложение
 						window.close();
 						clearEvent(e);
 						break;
@@ -990,12 +990,12 @@ namespace edt {
 				return;
 			}
 			// если код в предыдущем блоке выполнился, то код ниже не выполняется
-			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
+			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, this);
 			tEvent e;
 			e.address = getOwner();
 			e.from = this;
-			e.type = static_cast<int>(tEvent::types::Broadcast);
-			e.code = static_cast<int>(tEvent::codes::UpdateTexture);
+			e.type = tEvent::types.Broadcast;
+			e.code = tEvent::codes.UpdateTexture;
 			putEvent(e);
 		}
 	}
@@ -1008,13 +1008,13 @@ namespace edt {
 	void tText::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
+				case tEvent::types.Broadcast: {
 					if (e.address == this) {
 						switch (e.code) {
-							case static_cast<int>(tEvent::codes::FontAnswer) : {
+							case tEvent::codes.FontAnswer: {
 								font_loaded = true;
 								text_object.setFont(*e.font.font);
-								message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								clearEvent(e);
 								break;
 							}
@@ -1041,10 +1041,10 @@ namespace edt {
 		alignment(static_cast<int>(text_alignment_type::Left)),
 		side_offset(10),
 		text_offset(sf::Vector2u(0, 0)),
-		self_code(static_cast<int>(tEvent::codes::Nothing)),
+		self_code(tEvent::codes.Nothing),
 		text(new tText(this))
 	{
-		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	tButton::tButton(tAbstractBasicClass* _owner, nlohmann::json& js) :
@@ -1058,7 +1058,7 @@ namespace edt {
 		self_code = js["code"].get<int>();
 		alignment = js["alignment"].get<char>();
 
-		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	tButton::tButton(const tButton& b) :
@@ -1167,11 +1167,11 @@ namespace edt {
 			render_texture.draw(text_to_display);
 		}
 		else {
-			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), text);
+			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, text);
 		}
 		render_texture.display();
 
-		message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	void tButton::loadCustomSkin(std::string path_to_skin) {
@@ -1179,7 +1179,7 @@ namespace edt {
 			custom_skin_loaded = true;
 			setSize(sf::Vector2f((float)custom_skin.getSize().x, (float)custom_skin.getSize().y));
 			setTextureSize(sf::Vector2u(custom_skin.getSize().x, custom_skin.getSize().y));
-			message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+			message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 		}
 		else {
 			std::cout << "tButton.loadCustomSkin error: Invalid path_to_skin.\n";
@@ -1199,12 +1199,12 @@ namespace edt {
 				break;
 			}
 		}
-		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	void tButton::setTextOffset(sf::Vector2i new_offset) {
 		text_offset = new_offset;
-		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	void tButton::setCode(int new_code) {
@@ -1263,10 +1263,10 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			text->handleEvent(e);
 			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
+				case tEvent::types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этой кнопки
 						switch (e.code) {
-							case static_cast<int>(tEvent::codes::UpdateTexture) : {	// Обновить текстуру
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
 								need_rerender = true;
 								clearEvent(e);
 								break;
@@ -1274,7 +1274,7 @@ namespace edt {
 						}
 					}
 					switch (e.code) {			// Для всех остальных
-						case static_cast<int>(tEvent::codes::ResetButtons) : {
+						case tEvent::codes.ResetButtons: {
 							if (e.from != this && e.from != getOwner()) {
 								mouse_inside[0] = false;
 								mouse_inside[1] = false;
@@ -1285,25 +1285,25 @@ namespace edt {
 					}
 					break;
 				}
-				case static_cast<int>(tEvent::types::Mouse) : {
+				case tEvent::types.Mouse: {
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::MouseMoved) : {
+						case tEvent::codes.MouseMoved: {
 							mouse_inside[1] = mouse_inside[0];	// Предыдущее и текущее состояние флага
 							mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 							if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
-								message(nullptr, static_cast<int>(tEvent::types::Button), static_cast<int>(tEvent::codes::ResetButtons), this);
-								message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+								message(nullptr, tEvent::types.Button, tEvent::codes.ResetButtons, this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								need_rerender = true;
 								clearEvent(e);
 							}
 							break;
 						}
-						case static_cast<int>(edt::tEvent::codes::MouseButton) : {
+						case tEvent::codes.MouseButton: {
 							if (pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
 								if (e.mouse.button == sf::Mouse::Left) {
 									if (e.mouse.what_happened == sf::Event::MouseButtonReleased)	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
 									{
-										message(getOwner(), static_cast<int>(edt::tEvent::types::Button), self_code, this);
+										message(getOwner(), tEvent::types.Button, self_code, this);
 									}
 									clearEvent(e);
 								}
@@ -1366,7 +1366,7 @@ namespace edt {
 		color_caption_inactive = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
 
-		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	tWindow::tWindow(const tWindow& w) :
@@ -1394,18 +1394,18 @@ namespace edt {
 
 		button_close->setAnchor(tObject::anchors.upper_right_corner);
 		button_close->setPosition({ -heap_height + 2, 2});
-		button_close->setCode(static_cast<int>(edt::tEvent::codes::Close));
+		button_close->setCode(tEvent::codes.Close);
 		button_close->setString(L"x");
 		button_close->setTextColor({ 255, 255, 255, 255 });
 		button_close->setCharSize(20);
 		button_close->setOutlineThickness(1);
 		button_close->setTextAlignment(static_cast<int>(tButton::text_alignment_type::Middle));
 		button_close->setTextOffset({ 0, -3 });
-		message(button_close, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(button_close, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 
 		display->setClearColor(color_area);
 
-		message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	void tWindow::setCaption(std::wstring new_caption) {
@@ -1463,7 +1463,7 @@ namespace edt {
 			render_texture.draw(text);
 		}
 		else {	// Если шрифта нет, мы должны запросить его, и после получения обновить текстуру
-			message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::FontRequest), this);
+			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, this);
 		}
 
 		sf::VertexArray frame(sf::LineStrip, 5);	// Рисование обводки окна
@@ -1482,7 +1482,7 @@ namespace edt {
 
 		render_texture.display();
 
-		message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+		message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	void tWindow::setCameraOffset(sf::Vector2f new_offset) {
@@ -1539,34 +1539,34 @@ namespace edt {
 			heap_shape->handleEvent(e);
 			display->handleEvent(e);
 			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
+				case tEvent::types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::UpdateTexture) : {	// Обновить текстуру
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
 								need_rerender = true;
 								clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::FontAnswer) : {	// Забрать выданный системой шрифт
+							case tEvent::codes.FontAnswer: {	// Забрать выданный системой шрифт
 								font_loaded = true;
 								setFont(*e.font.font);
-								message(this, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
-								message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), this);
+								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								clearEvent(e);
 								break;
 							}
@@ -1580,12 +1580,12 @@ namespace edt {
 					}
 					break;
 				}
-				case static_cast<int>(tEvent::types::Button) : {
+				case tEvent::types.Button: {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Close) : {			// Закрыть окно
-								e.type = static_cast<int>(tEvent::types::Broadcast);
-								e.code = static_cast<int>(tEvent::codes::Delete);
+							case tEvent::codes.Close: {			// Закрыть окно
+								e.type = tEvent::types.Broadcast;
+								e.code = tEvent::codes.Delete;
 								e.address = getOwner();
 								e.from = this;
 								putEvent(e);
@@ -1601,16 +1601,16 @@ namespace edt {
 					}
 					break;
 				}
-				case static_cast<int>(tEvent::types::Mouse) : {
+				case tEvent::types.Mouse: {
 					switch (e.code) {
-						case static_cast<int>(tEvent::codes::MouseButton) : {
+						case tEvent::codes.MouseButton: {
 							if (e.mouse.button == sf::Mouse::Left && pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
 								if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
 									// Если в окно тыкнули левой кнопкой мыши
 									if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
 										changeOneOption(option_mask.is_moving, true);
 									}
-									message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::Activate), this);
+									message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
 									need_rerender = true;
 									clearEvent(e);
 								}
@@ -1624,11 +1624,11 @@ namespace edt {
 							}
 							break;
 						}
-						case static_cast<int>(tEvent::codes::MouseMoved) : {
+						case tEvent::codes.MouseMoved: {
 							mouse_inside[1] = mouse_inside[0];
 							mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 							if (mouse_inside[0]) {
-								message(nullptr, static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::ResetButtons), this);
+								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
 								need_rerender = true;
 								clearEvent(e);
 							}
@@ -1692,30 +1692,30 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			tGroup::handleEvent(e);
 			switch (e.type) {
-				case static_cast<int>(tEvent::types::Broadcast) : {
+				case tEvent::types.Broadcast: {
 					if (e.address == (tRenderRect*)this) {
 						switch (e.code) {
-							case static_cast<int>(tEvent::codes::Deactivate) : {	// Снять фокус с объекта
+							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::Show) : {			// Показать объект (если он скрыт)
+							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::Hide) : {			// Спрятать объект (если он не скрыт)
+							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::Adopt) : {			// Стать владельцем объекта
+							case tEvent::codes.Adopt: {			// Стать владельцем объекта
 								e.from->setOwner((tRenderRect*)this);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case static_cast<int>(tEvent::codes::UpdateTexture) : {	// Обновить текстуру
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
 								need_rerender = true;
 								tAbstractBasicClass::clearEvent(e);
 								break;
@@ -1730,7 +1730,7 @@ namespace edt {
 					}
 					break;
 				}
-				case static_cast<int>(tEvent::types::Button) : {
+				case tEvent::types.Button: {
 					if (e.address == (tRenderRect*)this) {
 						e.address = getOwner();
 						tAbstractBasicClass::putEvent(e);
@@ -1747,7 +1747,7 @@ namespace edt {
 		tGroup::draw(render_texture);		// Нарисовать подэлементы
 		render_texture.display();			// Обновить "лицевую" текстуру
 
-		tAbstractBasicClass::message(getOwner(), static_cast<int>(tEvent::types::Broadcast), static_cast<int>(tEvent::codes::UpdateTexture), (tRenderRect*)this);
+		tAbstractBasicClass::message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, (tRenderRect*)this);
 	}
 
 	void tDisplay::setOwner(tAbstractBasicClass* new_owner) {
