@@ -188,6 +188,8 @@ namespace huf {
 
 			unsigned char c;
 			std::string byte = "";
+			std::vector<unsigned char> data_buffer = {};
+			unsigned int lalala = 0;
 
 			for (unsigned long long iii = 0; iii < file_size; iii++) {	// Читаем файл	
 				file.read((char*)&c, sizeof(c));
@@ -201,7 +203,13 @@ namespace huf {
 						a = a << 1;
 						a |= tmp[i] == '1';
 					}
-					ofile.write((char*)&a, sizeof(a));
+
+					if (lalala % 2 == 0) {	// немного безумия
+						a = ~a;
+					}
+					lalala++;
+
+					data_buffer.push_back(a); //ofile.write((char*)&a, sizeof(a));
 					byte.erase(0, 8);	// Оставим то, что не записали в файл (начало следующего байта(-ов))
 					bit_count -= 8;
 				}
@@ -213,7 +221,17 @@ namespace huf {
 					a = a << 1;
 					a |= byte[i] == '1';
 				}
-				ofile.write((char*)&a, sizeof(a));
+
+				if (lalala % 2 == 0) {	// немного безумия
+					a = ~a;
+				}
+				lalala++;
+
+				data_buffer.push_back(a); //ofile.write((char*)&a, sizeof(a));
+			}
+
+			for (auto& it : data_buffer) { // Вывод data_buffer в файл
+				ofile.write((char*)&it, sizeof(it));
 			}
 
 			ofile.close();
@@ -281,9 +299,17 @@ namespace huf {
 				
 				unsigned char mask[8] = { 128, 64, 32, 16, 8, 4, 2, 1 };
 				unsigned begI = 0; 
+				unsigned int lalala = 0;
+
 				for (unsigned long long iii = 0; iii < file_size; iii++) {
 					unsigned char c;
 					file.read((char*)&c, sizeof(c));
+
+					if (lalala % 2 == 0) {
+						c = ~c;
+					}
+					lalala++;
+
 					if (last_byte_bit_count != 0)
 						if (iii == file_size - 1) {
 							begI = 8 - last_byte_bit_count;

@@ -31,7 +31,7 @@ namespace huf {
 		void makeCodes(
 			tTree* root, 						// Корень словаря
 			std::map<unsigned char,	std::string>& codes, // Ассоциативный массив символов с их кодами в виде vector<bool>
-			std::string& current_code		// ССылка на пустой массив (так надо)
+			std::string& current_code		// Ссылка на пустой массив (так надо)
 		);
 		tListNode* makeTree(std::map<unsigned char, unsigned int> &freq);
 

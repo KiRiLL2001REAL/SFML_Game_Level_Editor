@@ -47,31 +47,35 @@ void print_json(nlohmann::json& js, std::string path_to_file) {
 			for (unsigned int j = 0; j < tabs; j++) {
 				buffer += '\t';
 			}
-			file << buffer;
-			buffer = "";
+			//file << buffer;
+			//buffer = "";
 		}
 		if (deferred) {		// Печать отложенного символа
 			deferred = false;
-			file << deferred_char;
+			buffer += deferred_char;
+			//file << deferred_char;
 		}
 		switch (state_machine) {
 		case 0: {					// Стандартная обработка и вывод
 			switch (content[i]) {
 			case '"': {
 				state_machine = 1;
-				buffer += "\"";
+				buffer += '\"';
 				break;
 			}
 			case '{':
 			case '[': {
-				file << content[i] << '\n';
+				buffer += content[i];
+				buffer += '\n';
+				//file << content[i] << '\n';
 				tabs++;
 				need_tabs = true;
 				break;
 			}
 			case '}':
 			case ']': {
-				file << '\n';
+				buffer += '\n';
+				//file << '\n';
 				tabs--;
 				need_tabs = true;
 				deferred = true;
@@ -79,12 +83,14 @@ void print_json(nlohmann::json& js, std::string path_to_file) {
 				break;
 			}
 			case ',': {
-				file << ",\n";
+				buffer += ",\n";
+				//file << ",\n";
 				need_tabs = true;
 				break;
 			}
 			default: {
-				file << content[i];
+				buffer += content[i];
+				//file << content[i];
 				break;
 			}
 			}
@@ -93,8 +99,8 @@ void print_json(nlohmann::json& js, std::string path_to_file) {
 		case 1: {					// Вывод строки (частный случай, тк в ней могут содержаться влияющие на форматирование символы)
 			buffer += content[i];
 			if (content[i] == '"') {
-				file << buffer;
-				buffer = "";
+				//file << buffer;
+				//buffer = "";
 				state_machine = 0;
 			}
 			break;
@@ -103,8 +109,10 @@ void print_json(nlohmann::json& js, std::string path_to_file) {
 	}
 	if (deferred) {		// Печать отложенного символа
 		deferred = false;
-		file << deferred_char;
+		buffer += deferred_char;
+		//file << deferred_char;
 	}
+	file << buffer;
 	file.close();
 }
 
