@@ -373,6 +373,7 @@ namespace edt {
 		tButton* button_close;				// Кнопка закрытия
 		tRectShape* heap_shape;				// Фигура шапки
 		tDisplay* display;					// Объект, в котором происходит отрисовка всех динамических подэлементов окна
+		tScrollbar* scrollbar_v, * scrollbar_h;	// Ползунки
 
 	public:
 		tWindow(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
@@ -427,6 +428,8 @@ namespace edt {
 
 	class tScrollbar : public tRenderRect {
 	public:
+		static const int thickness = 24;	// Ширина скролбара
+
 		static const struct sOptionMask {	// Маски операций (переопределено для scrollbar)
 			static const unsigned char is_moving = 1;				// Объект перемещается при помощи мыши
 			static const unsigned char is_resizing = 2;				// Объект меняет размер при помощи мыши
@@ -439,15 +442,13 @@ namespace edt {
 		} option_mask;
 
 	protected:
-		static const int thickness = 32;	// Ширина скролбара
-
 		tButton* arrow_first, * arrow_second;	// Стрелки
 		tRectShape* scroller;					// Ползунок
 		sf::Vector2f old_position;				// Предыдущая позиция ползунка
 		sf::Color color_scroller_area;	// Цвет зоны, по которой бегает ползунок
 
 	public:
-		tScrollbar(tAbstractBasicClass* _owner, bool vertical = true, sf::FloatRect rect = { 0, 0, 32, 240});
+		tScrollbar(tAbstractBasicClass* _owner, bool vertical = true, sf::FloatRect rect = { 0, 0, thickness, thickness * 8});
 		tScrollbar(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tScrollbar(const tScrollbar& s);
 		virtual ~tScrollbar();
@@ -458,6 +459,7 @@ namespace edt {
 		virtual void handleEvent(tEvent& e);
 		virtual void setTextureSize(sf::Vector2u new_size);
 
+		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual nlohmann::json saveParamsInJson();
 	};
 

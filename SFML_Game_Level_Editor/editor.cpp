@@ -1365,7 +1365,9 @@ namespace edt {
 		caption_offset({2, 2}),
 		button_close(new tButton(this, { 0, 0, heap_height - 4 , heap_height - 4 })),
 		heap_shape(new tRectShape(this, { 0, 0, rect.width, heap_height }, color_heap)),
-		display(new tDisplay(this, { 0, heap_height, rect.width, rect.height - heap_height }))
+		display(new tDisplay(this, { 0, heap_height, rect.width, rect.height - heap_height })),
+		scrollbar_v(new tScrollbar(this, true, { 0, 0, tScrollbar::thickness, rect.height - tScrollbar::thickness - heap_height - 1 })),
+		scrollbar_h(new tScrollbar(this, false, { 0, 0, rect.width - tScrollbar::thickness - 2, tScrollbar::thickness }))
 	{
 		changeOneOption(option_mask.can_be_moved, true);
 		changeOneOption(option_mask.can_be_resized, true);
@@ -1421,14 +1423,14 @@ namespace edt {
 	}
 
 	tWindow::~tWindow() {
-		delete button_close, heap_shape, display;
+		delete button_close, heap_shape, display, scrollbar_v, scrollbar_h;
 	}
 
 	void tWindow::initWindow() {
 		sf::FloatRect rect = getLocalBounds();
 
-		button_close->setAnchor(tObject::anchors.upper_right_corner);
-		button_close->setPosition({ -heap_height + 2, 2});
+		button_close->setAnchor(anchors.upper_right_corner);
+		button_close->setPosition({ -heap_height + 2, 2 });
 		button_close->setCode(tEvent::codes.Close);
 		button_close->setString(L"x");
 		button_close->setTextColor({ 255, 255, 255, 255 });
@@ -1439,6 +1441,12 @@ namespace edt {
 		message(button_close, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 
 		display->setClearColor(color_area);
+
+		scrollbar_v->setAnchor(anchors.upper_right_corner);
+		scrollbar_v->setPosition({ -tScrollbar::thickness - 2, heap_height });
+
+		scrollbar_h->setAnchor(anchors.bottom_left_corner);
+		scrollbar_h->setPosition({ 1, -tScrollbar::thickness - 2 });
 
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
@@ -1486,6 +1494,8 @@ namespace edt {
 		display->draw(render_texture);
 		heap_shape->draw(render_texture);
 		button_close->draw(render_texture);
+		scrollbar_v->draw(render_texture);
+		scrollbar_h->draw(render_texture);
 
 		if (font_loaded) {
 			sf::Text text;
@@ -1810,7 +1820,7 @@ namespace edt {
 		tRenderRect(_owner),
 		arrow_first(new tButton(this, {0, 0, thickness, thickness})),
 		arrow_second(new tButton(this, { 0, 0, thickness, thickness })),
-		scroller(new tRectShape(this, { 0, 0, thickness, thickness })),
+		scroller(new tRectShape(this, { 0, 0, thickness - 2, thickness - 2 })),
 		old_position(0.f, 0.f),
 		color_scroller_area({ 241, 241, 241, 255 })
 	{
@@ -1818,18 +1828,20 @@ namespace edt {
 		changeOneOption(option_mask.can_be_resized, false);
 		changeOneOption(option_mask.vectically_orientated, vertical);
 
+		clear_color = color_scroller_area;
+
 		setPosition({ rect.left, rect.top });
 		setSize({ rect.width, rect.height });
 		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
 
-		scroller->setColor({ 193, 193, 193, 255 });
+		scroller->setColor({ 60, 60, 60, 255 });
 		if (vertical) {
 			arrow_first->setString(L"^");
 			arrow_first->setPosition({ 0, 0 });
 			arrow_second->setString(L"v");
 			arrow_second->setAnchor(anchors.bottom_left_corner);
 			arrow_second->setPosition({ 0, -thickness });
-			scroller->setPosition({ 0, thickness });
+			scroller->setPosition({ 1, thickness + 1 });
 		}
 		else {
 			arrow_first->setString(L"<");
@@ -1837,9 +1849,11 @@ namespace edt {
 			arrow_second->setString(L">");
 			arrow_second->setAnchor(anchors.upper_right_corner);
 			arrow_second->setPosition({ -thickness, 0 });
-			scroller->setPosition({ thickness, 0 });
+			scroller->setPosition({ thickness + 1, 1 });
 		}
 		updateScrollerSize();
+		
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	tScrollbar::tScrollbar(tAbstractBasicClass* _owner, nlohmann::json& js) :
@@ -1853,7 +1867,11 @@ namespace edt {
 		color_scroller_area = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
 
+		clear_color = color_scroller_area;
+
 		updateScrollerSize();
+
+		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
 	tScrollbar::tScrollbar(const tScrollbar& s) :
@@ -1872,23 +1890,35 @@ namespace edt {
 
 	void tScrollbar::updateScrollerSize() {
 		tDisplay* disp = ((tWindow*)getOwner())->getDisplayPointer();
-		sf::FloatRect rect = getLocalBounds();
+		sf::FloatRect scrollbar_rect = getLocalBounds();
 		sf::Vector2f scroller_size;
+
+		sf::Vector2f display_texture_size = { (float)disp->getTextureSize().x, (float)disp->getTextureSize().y };
+		sf::FloatRect display_bounds = disp->getLocalBounds();
 		if (checkOption(option_mask.vectically_orientated)) {
 			// Отношение лежит в диапазоне от 0 до 1. Домножаем его на максимальный размер ползунка
 			// с учётом "стрелок" на скроллбаре и получаем текущий размер ползунка.
-			scroller_size.x = thickness;
-			scroller_size.y = (float)disp->getTextureSize().y / disp->getLocalBounds().width * (rect.height - 2 * thickness);
+			/*
+			scroller_size.x = thickness - 3;
+			scroller_size.y = ((float)disp->getTextureSize().y / disp->getLocalBounds().width) * (scrollbar_rect.height - 2 * thickness) - 3;
+			*/
+			scroller_size.x = thickness - 3;
+			scroller_size.y = (display_texture_size.y / display_bounds.height) * (scrollbar_rect.height - 2 * thickness) - 2;
 		}
 		else {
-			scroller_size.x = (float)disp->getTextureSize().x / disp->getLocalBounds().height * (rect.width - 2 * thickness);
-			scroller_size.y = thickness;
+			/*
+			scroller_size.x = ((float)disp->getTextureSize().x / disp->getLocalBounds().height) * (scrollbar_rect.width - 2 * thickness) - 3;
+			scroller_size.y = thickness - 3;
+			*/
+			scroller_size.x = (display_texture_size.x / display_bounds.width) * (scrollbar_rect.width - 2 * thickness) - 2;
+			scroller_size.y = thickness - 3;
 		}
 		scroller->setSize(scroller_size);
 	}
 
 	void tScrollbar::updateTexture() {
-		sf::Vector2u size = getTextureSize();
+		render_texture.clear(clear_color);
+
 		arrow_first->draw(render_texture);
 		arrow_second->draw(render_texture);
 		scroller->draw(render_texture);
@@ -1902,19 +1932,42 @@ namespace edt {
 			arrow_first->handleEvent(e);
 			arrow_second->handleEvent(e);
 			scroller->handleEvent(e);
+			
+			switch (e.type) {
+				case tEvent::types.Broadcast: {
+					if (e.address = this) {
+						switch (e.code) {
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
+								need_rerender = true;
+								clearEvent(e);
+								break;
+							}
+							default: {		// Если не обработалось, то "проталкиваем" на уровень ниже
+								e.address = getOwner();
+								message(e);
+								clearEvent(e);
+								break;
+							}
+						}
+					}
+					break;
+				}
+			}
 
 			// Нужно вернуть из-за пределов скроллбара (если он там окажется)
 			sf::FloatRect scroller_rect = scroller->getLocalBounds();
 			if ((old_position.x != scroller_rect.left) || (old_position.y != scroller_rect.top)) {
 				if (checkOption(option_mask.vectically_orientated)) {
-					scroller_rect.left = 0;
-					CLAMP(scroller_rect.top, thickness, scroller_rect.height - thickness - scroller_rect.height);
+					scroller_rect.left = 1;
+					CLAMP(scroller_rect.top, thickness + 1, scroller_rect.height - thickness - scroller_rect.height - 1);
 				}
 				else {
-					scroller_rect.top = 0;
-					CLAMP(scroller_rect.left, thickness, scroller_rect.width - thickness - scroller_rect.width);
+					scroller_rect.top = 1;
+					CLAMP(scroller_rect.left, thickness + 1, scroller_rect.width - thickness - scroller_rect.width - 1);
 				}
 				scroller->setPosition({ scroller_rect.left, scroller_rect.top });
+				old_position = { scroller_rect.left, scroller_rect.top };
+				message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 			}
 		}
 	}
@@ -1927,6 +1980,11 @@ namespace edt {
 		render_squad[3].texCoords = { 0.f, (float)new_size.y - 1 };
 		need_rerender = true;
 		updateScrollerSize();
+	}
+
+	bool tScrollbar::pointIsInsideMe(sf::Vector2i point) {
+		sf::FloatRect rect = getGlobalBounds();
+		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
 	nlohmann::json tScrollbar::saveParamsInJson() {
