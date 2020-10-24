@@ -1573,6 +1573,9 @@ namespace edt {
 			button_close->handleEvent(e);
 			heap_shape->handleEvent(e);
 			display->handleEvent(e);
+			scrollbar_v->handleEvent(e);
+			//scrollbar_h->handleEvent(e);
+
 			switch (e.type) {
 				case tEvent::types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этого окна
@@ -1935,7 +1938,7 @@ namespace edt {
 			
 			switch (e.type) {
 				case tEvent::types.Broadcast: {
-					if (e.address = this) {
+					if (e.address == this) {
 						switch (e.code) {
 							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
 								need_rerender = true;
@@ -1953,7 +1956,7 @@ namespace edt {
 					break;
 				}
 			}
-
+			
 			// Нужно вернуть из-за пределов скроллбара (если он там окажется)
 			sf::FloatRect scroller_rect = scroller->getLocalBounds();
 			if ((old_position.x != scroller_rect.left) || (old_position.y != scroller_rect.top)) {
