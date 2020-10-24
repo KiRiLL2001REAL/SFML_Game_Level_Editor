@@ -14,3 +14,7 @@
 #include "huffman.h"
 #include "json.hpp"
 #include "other.h"
+
+#define MAX(a, b) (a > b ? a : b)
+#define MIN(a, b) (a < b ? a : b)
+#define CLAMP(x, bord_l, bord_r) (x > bord_l ? (x < bord_r ? x : bord_r) : bord_l)

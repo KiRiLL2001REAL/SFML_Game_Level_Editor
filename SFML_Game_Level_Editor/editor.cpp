@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "editor.h"
 
+#define vec std::vector
+
 namespace edt {
 
 	tAbstractBasicClass::tAbstractBasicClass(tAbstractBasicClass* _owner) :
@@ -90,7 +92,7 @@ namespace edt {
 
 		options = js["options"].get<unsigned char>();
 		
-		std::vector<float> vf = js["position"].get<std::vector<float>>();
+		vec<float> vf = js["position"].get<vec<float>>();
 		
 		setPosition({ vf[0], vf[1] });
 	}
@@ -372,13 +374,13 @@ namespace edt {
 		render_squad(sf::VertexArray(sf::Quads, 4)),
 		need_rerender(true)
 	{
-		std::vector<unsigned char> vuc = js["clear_color"].get<std::vector<unsigned char>>();
+		vec<unsigned char> vuc = js["clear_color"].get<vec<unsigned char>>();
 		clear_color = {vuc[0], vuc[1], vuc[2], vuc[3]};
 
-		std::vector<float> vf = js["size"].get<std::vector<float>>();
+		vec<float> vf = js["size"].get<vec<float>>();
 		setSize({ vf[0], vf[1] });
 
-		std::vector<unsigned int> vui = js["texture_size"].get<std::vector<unsigned int>>();
+		vec<unsigned int> vui = js["texture_size"].get<vec<unsigned int>>();
 		render_texture.create(vui[0], vui[1]);
 		setTextureSize({ vui[0], vui[1] });
 
@@ -413,6 +415,10 @@ namespace edt {
 		clear_color = color;
 	}
 
+	sf::Vector2u tRenderRect::getTextureSize() {
+		return render_texture.getSize();
+	}
+
 	void tRenderRect::setSize(sf::Vector2f new_size) {
 		render_squad[0].position = { x, y };
 		render_squad[1].position = { x + new_size.x, y };
@@ -438,8 +444,7 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			if (need_rerender) {
 				need_rerender = false;
-				render_texture.clear(clear_color);	// Очиститься
-				render_texture.display();			// Обновить "лицевую" текстуру
+				updateTexture();
 			}
 			target.draw(render_squad, &render_texture.getTexture());	// Отобразиться
 		}
@@ -514,7 +519,7 @@ namespace edt {
 					style = styles[style_str];
 				}
 
-				std::vector<unsigned int> w_size = json_configuration["sfml_window"]["size"].get<std::vector<unsigned int>>();;
+				vec<unsigned int> w_size = json_configuration["sfml_window"]["size"].get<vec<unsigned int>>();;
 
 				background.setSize({ (float)w_size[0], (float)w_size[1] });
 				window_size = { w_size[0], w_size[1] };
@@ -806,10 +811,10 @@ namespace edt {
 	tRectShape::tRectShape(tAbstractBasicClass* _owner, nlohmann::json& js) :
 		tObject(_owner, js)
 	{		
-		std::vector<float> vf = js["size"].get<std::vector<float>>();
+		vec<float> vf = js["size"].get<vec<float>>();
 		setSize({ vf[0], vf[1] });
 
-		std::vector<unsigned char> vuc = js["color"].get<std::vector<unsigned char>>();
+		vec<unsigned char> vuc = js["color"].get<vec<unsigned char>>();
 		setColor({ vuc[0], vuc[1], vuc[2], vuc[3] });
 
 		setPosition({ x, y });
@@ -853,7 +858,47 @@ namespace edt {
 	}
 
 	void tRectShape::handleEvent(tEvent& e) {
-		return;
+		if (checkOption(option_mask.can_be_drawn)) {
+			switch (e.type) {
+			case tEvent::types.Mouse: {
+				switch (e.code) {
+				case tEvent::codes.MouseButton: {
+					if (e.mouse.button == sf::Mouse::Left && pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
+						if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
+							// Если тыкнули левой кнопкой мыши
+							if (pointIsInsideMe({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
+								changeOneOption(option_mask.is_moving, true);
+							}
+							message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+							clearEvent(e);
+						}
+						else {
+							// Если отпустили кнопку
+							if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {
+								changeOneOption(option_mask.is_moving, false);
+								clearEvent(e);
+							}
+						}
+					}
+					break;
+				}
+				case tEvent::codes.MouseMoved: {
+					mouse_inside[1] = mouse_inside[0];
+					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
+					if (mouse_inside[0]) {
+						message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
+						clearEvent(e);
+					}
+					if (checkOption(option_mask.is_moving)) {
+						move({ (float)e.mouse.dX, (float)e.mouse.dY });
+					}
+					break;
+				}
+				}
+				break;
+			}
+			}
+		}
 	}
 
 	bool tRectShape::pointIsInsideMe(sf::Vector2i point) {
@@ -899,10 +944,10 @@ namespace edt {
 		tObject(_owner, js),
 		font_loaded(false)
 	{
-		std::vector<int> vi = js["text"].get<std::vector<int>>();
+		vec<int> vi = js["text"].get<vec<int>>();
 		setString(convertIntVectorToWstring(vi));
 		
-		std::vector<unsigned char> vuc = js["color"].get<std::vector<unsigned char>>();
+		vec<unsigned char> vuc = js["color"].get<vec<unsigned char>>();
 		setTextColor({ vuc[0], vuc[1], vuc[2], vuc[3] });
 
 		setCharSize(js["char_size"].get<unsigned int>());
@@ -1053,7 +1098,7 @@ namespace edt {
 		side_offset(10),
 		text(new tText(this, js["text"]))
 	{
-		std::vector<int> vi = js["text_offset"].get<std::vector<int>>();
+		vec<int> vi = js["text_offset"].get<vec<int>>();
 		text_offset = { vi[0], vi[1] };
 		self_code = js["code"].get<int>();
 		alignment = js["alignment"].get<char>();
@@ -1249,16 +1294,6 @@ namespace edt {
 		return js;
 	}
 
-	void tButton::draw(sf::RenderTarget& target) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			if (need_rerender) {
-				need_rerender = false;
-				updateTexture();
-			}
-			target.draw(render_squad, &render_texture.getTexture());
-		}
-	}
-
 	void tButton::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			text->handleEvent(e);
@@ -1335,9 +1370,9 @@ namespace edt {
 		changeOneOption(option_mask.can_be_moved, true);
 		changeOneOption(option_mask.can_be_resized, true);
 
-		setPosition({rect.left, rect.top});
-		setSize({rect.width, rect.height});
-		setTextureSize({(unsigned int)rect.width, (unsigned int)rect.height});
+		setPosition({ rect.left, rect.top });
+		setSize({ rect.width, rect.height });
+		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
 
 		initWindow();
 	}
@@ -1349,20 +1384,20 @@ namespace edt {
 		heap_shape(new tRectShape(this, js["heap_shape"])),
 		display(new tDisplay(this, js["display"]))
 	{
-		std::vector<int> vi = js["caption"].get<std::vector<int>>();
+		vec<int> vi = js["caption"].get<vec<int>>();
 		caption = convertIntVectorToWstring(vi);
-		std::vector<float> vf = js["caption_offset"].get<std::vector<float>>();
+		vec<float> vf = js["caption_offset"].get<vec<float>>();
 		caption_offset = { vf[0], vf[1] };
-		std::vector<unsigned char> vuc = js["color_heap"].get<std::vector<unsigned char>>();
+		vec<unsigned char> vuc = js["color_heap"].get<vec<unsigned char>>();
 		color_heap = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
-		vuc = js["color_area"].get<std::vector<unsigned char>>();
+		vuc = js["color_area"].get<vec<unsigned char>>();
 		color_area = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
-		vuc = js["color_caption_active"].get<std::vector<unsigned char>>();
+		vuc = js["color_caption_active"].get<vec<unsigned char>>();
 		color_caption_active = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
-		vuc = js["color_caption_inactive"].get<std::vector<unsigned char>>();
+		vuc = js["color_caption_inactive"].get<vec<unsigned char>>();
 		color_caption_inactive = { vuc[0], vuc[1], vuc[2], vuc[3] };
 		vuc.clear();
 
@@ -1523,16 +1558,6 @@ namespace edt {
 		return js;
 	}
 
-	void tWindow::draw(sf::RenderTarget& target) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			if (need_rerender) {
-				need_rerender = false;
-				updateTexture();
-			}
-			target.draw(render_squad, &render_texture.getTexture());
-		}
-	}
-
 	void tWindow::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			button_close->handleEvent(e);
@@ -1656,7 +1681,7 @@ namespace edt {
 		tGroup((tRenderRect*)this, js),
 		tRenderRect(_owner, js)
 	{
-		std::vector<float> vf = js["camera_offset"].get<std::vector<float>>();
+		vec<float> vf = js["camera_offset"].get<vec<float>>();
 		setCameraOffset({ vf[0], vf[1] });
 	}
 
@@ -1679,13 +1704,7 @@ namespace edt {
 	}
 
 	void tDisplay::draw(sf::RenderTarget& target) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			if (need_rerender) {
-				need_rerender = false;
-				updateTexture();
-			}
-			target.draw(render_squad, &render_texture.getTexture());
-		}
+		tRenderRect::draw(target);
 	}
 
 	void tDisplay::handleEvent(tEvent& e) {
@@ -1780,9 +1799,147 @@ namespace edt {
 			js[it.key()] = it.value();
 		}
 
-		js["what_it_it"] = objects_json_ids.tDisplay;
-		js["what_it_it_string"] = "tDisplay";
+		js["what_is_it"] = objects_json_ids.tDisplay;
+		js["what_is_it_string"] = "tDisplay";
 		js["camera_offset"] = { render_squad[0].texCoords.x, render_squad[0].texCoords.y };
+
+		return js;
+	}
+
+	tScrollbar::tScrollbar(tAbstractBasicClass* _owner, bool vertical, sf::FloatRect rect) :
+		tRenderRect(_owner),
+		arrow_first(new tButton(this, {0, 0, thickness, thickness})),
+		arrow_second(new tButton(this, { 0, 0, thickness, thickness })),
+		scroller(new tRectShape(this, { 0, 0, thickness, thickness })),
+		old_position(0.f, 0.f),
+		color_scroller_area({ 241, 241, 241, 255 })
+	{
+		changeOneOption(option_mask.can_be_moved, false);
+		changeOneOption(option_mask.can_be_resized, false);
+		changeOneOption(option_mask.vectically_orientated, vertical);
+
+		setPosition({ rect.left, rect.top });
+		setSize({ rect.width, rect.height });
+		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
+
+		scroller->setColor({ 193, 193, 193, 255 });
+		if (vertical) {
+			arrow_first->setString(L"^");
+			arrow_first->setPosition({ 0, 0 });
+			arrow_second->setString(L"v");
+			arrow_second->setAnchor(anchors.bottom_left_corner);
+			arrow_second->setPosition({ 0, -thickness });
+			scroller->setPosition({ 0, thickness });
+		}
+		else {
+			arrow_first->setString(L"<");
+			arrow_first->setPosition({ 0, 0 });
+			arrow_second->setString(L">");
+			arrow_second->setAnchor(anchors.upper_right_corner);
+			arrow_second->setPosition({ -thickness, 0 });
+			scroller->setPosition({ thickness, 0 });
+		}
+		updateScrollerSize();
+	}
+
+	tScrollbar::tScrollbar(tAbstractBasicClass* _owner, nlohmann::json& js) :
+		tRenderRect(_owner, js),
+		arrow_first(new tButton(this, js["arrow_first"])),
+		arrow_second(new tButton(this, js["arrow_second"])),
+		scroller(new tRectShape(this, { 0, 0, thickness, thickness })),
+		old_position(0.f, 0.f)
+	{
+		vec<unsigned char> vuc = js["color_scroller_area"].get<vec<unsigned char>>();
+		color_scroller_area = { vuc[0], vuc[1], vuc[2], vuc[3] };
+		vuc.clear();
+
+		updateScrollerSize();
+	}
+
+	tScrollbar::tScrollbar(const tScrollbar& s) :
+		tRenderRect(s),
+		arrow_first(s.arrow_first),
+		arrow_second(s.arrow_second),
+		scroller(s.scroller),
+		old_position(s.old_position),
+		color_scroller_area(s.color_scroller_area)
+	{
+	}
+
+	tScrollbar::~tScrollbar() {
+		delete arrow_first, arrow_second, scroller;
+	}
+
+	void tScrollbar::updateScrollerSize() {
+		tDisplay* disp = ((tWindow*)getOwner())->getDisplayPointer();
+		sf::FloatRect rect = getLocalBounds();
+		sf::Vector2f scroller_size;
+		if (checkOption(option_mask.vectically_orientated)) {
+			// Отношение лежит в диапазоне от 0 до 1. Домножаем его на максимальный размер ползунка
+			// с учётом "стрелок" на скроллбаре и получаем текущий размер ползунка.
+			scroller_size.x = thickness;
+			scroller_size.y = (float)disp->getTextureSize().y / disp->getLocalBounds().width * (rect.height - 2 * thickness);
+		}
+		else {
+			scroller_size.x = (float)disp->getTextureSize().x / disp->getLocalBounds().height * (rect.width - 2 * thickness);
+			scroller_size.y = thickness;
+		}
+		scroller->setSize(scroller_size);
+	}
+
+	void tScrollbar::updateTexture() {
+		sf::Vector2u size = getTextureSize();
+		arrow_first->draw(render_texture);
+		arrow_second->draw(render_texture);
+		scroller->draw(render_texture);
+		render_texture.display();
+
+		message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+	}
+
+	void tScrollbar::handleEvent(tEvent& e) {
+		if (checkOption(option_mask.can_be_drawn)) {
+			arrow_first->handleEvent(e);
+			arrow_second->handleEvent(e);
+			scroller->handleEvent(e);
+
+			// Нужно вернуть из-за пределов скроллбара (если он там окажется)
+			sf::FloatRect scroller_rect = scroller->getLocalBounds();
+			if ((old_position.x != scroller_rect.left) || (old_position.y != scroller_rect.top)) {
+				if (checkOption(option_mask.vectically_orientated)) {
+					scroller_rect.left = 0;
+					CLAMP(scroller_rect.top, thickness, scroller_rect.height - thickness - scroller_rect.height);
+				}
+				else {
+					scroller_rect.top = 0;
+					CLAMP(scroller_rect.left, thickness, scroller_rect.width - thickness - scroller_rect.width);
+				}
+				scroller->setPosition({ scroller_rect.left, scroller_rect.top });
+			}
+		}
+	}
+
+	void tScrollbar::setTextureSize(sf::Vector2u new_size) {
+		render_texture.create(new_size.x, new_size.y);
+		render_squad[0].texCoords = { 0.f, 0.f };
+		render_squad[1].texCoords = { (float)new_size.x - 1, 0.f };
+		render_squad[2].texCoords = { (float)new_size.x - 1, (float)new_size.y - 1 };
+		render_squad[3].texCoords = { 0.f, (float)new_size.y - 1 };
+		need_rerender = true;
+		updateScrollerSize();
+	}
+
+	nlohmann::json tScrollbar::saveParamsInJson() {
+		nlohmann::json js = tRenderRect::saveParamsInJson();
+
+		js["what_it_it"] = objects_json_ids.tScrollbar;
+		js["what_is_it_string"] = "tScrollbar";
+
+		js["arrow_first"] = arrow_first->saveParamsInJson();
+		js["arrow_second"] = arrow_second->saveParamsInJson();
+		
+		sf::Color color = color_scroller_area;
+		js["color_scroller_area"] = { color.r, color.g, color.b, color.a };
 
 		return js;
 	}

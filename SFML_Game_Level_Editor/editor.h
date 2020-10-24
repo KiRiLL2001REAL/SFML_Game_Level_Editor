@@ -11,6 +11,7 @@ namespace edt {
 		static const unsigned int tText			= 3;
 		static const unsigned int tRectShape	= 4;
 		static const unsigned int tDisplay		= 5;
+		static const unsigned int tScrollbar	= 6;
 	} objects_json_ids;
 
 	class tAbstractBasicClass;
@@ -23,6 +24,7 @@ namespace edt {
 	class tWindow;
 	class tText;
 	class tDisplay;
+	class tScrollbar;
 
 	struct tEvent {
 		static const struct sTypes { // Типы событий
@@ -206,6 +208,8 @@ namespace edt {
 
 		void setClearColor(sf::Color new_color);
 
+		sf::Vector2u getTextureSize();
+
 		virtual void setSize(sf::Vector2f new_size);
 		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
@@ -341,7 +345,6 @@ namespace edt {
 		void setCharSize(unsigned int new_char_size);
 		void setOutlineThickness(unsigned char new_thickness);
 
-		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
 
@@ -391,7 +394,6 @@ namespace edt {
 		bool pointIsInHeap(sf::Vector2i point);
 		const int getHeapHeight();
 
-		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
 		
@@ -407,7 +409,7 @@ namespace edt {
 		tDisplay(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 100, 100 });
 		tDisplay(tAbstractBasicClass* _owner, nlohmann::json& js);
 		tDisplay(const tDisplay& d);
-		~tDisplay();
+		virtual ~tDisplay();
 
 		void setCameraOffset(sf::Vector2f new_offset);
 
@@ -420,6 +422,42 @@ namespace edt {
 		virtual tAbstractBasicClass* getOwner();
 		virtual bool pointIsInsideMe(sf::Vector2i point);
 		virtual sf::FloatRect getLocalBounds();
+		virtual nlohmann::json saveParamsInJson();
+	};
+
+	class tScrollbar : public tRenderRect {
+	public:
+		static const struct sOptionMask {	// Маски операций (переопределено для scrollbar)
+			static const unsigned char is_moving = 1;				// Объект перемещается при помощи мыши
+			static const unsigned char is_resizing = 2;				// Объект меняет размер при помощи мыши
+			static const unsigned char can_be_drawn = 4;			// Можно ли выводить этот объект на экран
+			static const unsigned char is_active = 8;				// Активен ли объект
+			static const unsigned char vectically_orientated = 16;	// Вертикальный ли scrollbar
+			static const unsigned char dummy_2 = 32;				// Бит не задействован
+			static const unsigned char can_be_resized = 64;			// Можно ли менять размер объекта при помощи мыши
+			static const unsigned char can_be_moved = 128;			// Можно ли перемещать объект при помощи мыши
+		} option_mask;
+
+	protected:
+		static const int thickness = 32;	// Ширина скролбара
+
+		tButton* arrow_first, * arrow_second;	// Стрелки
+		tRectShape* scroller;					// Ползунок
+		sf::Vector2f old_position;				// Предыдущая позиция ползунка
+		sf::Color color_scroller_area;	// Цвет зоны, по которой бегает ползунок
+
+	public:
+		tScrollbar(tAbstractBasicClass* _owner, bool vertical = true, sf::FloatRect rect = { 0, 0, 32, 240});
+		tScrollbar(tAbstractBasicClass* _owner, nlohmann::json& js);
+		tScrollbar(const tScrollbar& s);
+		virtual ~tScrollbar();
+
+		void updateScrollerSize();
+
+		virtual void updateTexture();	// tWindow должен следить за тем, кто послал ему updateTextureEvent, чтобы ерзать tDisplay'ем
+		virtual void handleEvent(tEvent& e);
+		virtual void setTextureSize(sf::Vector2u new_size);
+
 		virtual nlohmann::json saveParamsInJson();
 	};
 
