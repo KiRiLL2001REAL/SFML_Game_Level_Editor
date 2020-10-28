@@ -262,7 +262,6 @@ namespace edt {
 		for (it = elem.begin(); it != elem.end(); it++) {	// Пока не нашли, перебираем список
 			if (*it == object) {
 				tAbstractBasicClass* obj = *it;		// Запоминаем объект
-				((tObject*)obj)->changeOneOption(tObject::option_mask.is_active, true);
 				elem.erase(it);			// Удаляем из списка
 				((tObject*)elem.back())->changeOneOption(tObject::option_mask.is_active, false);
 				message(elem.back(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
@@ -704,6 +703,7 @@ namespace edt {
 						}
 						case tEvent::codes.Activate: {		// Установить фокус на объект
 							select(e.from);
+							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
 							clearEvent(e);
 							break;
 						}
@@ -860,49 +860,48 @@ namespace edt {
 	void tRectShape::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			switch (e.type) {
-			case tEvent::types.Mouse: {
-				switch (e.code) {
-				case tEvent::codes.MouseButton: {
-					if (e.mouse.button == sf::Mouse::Left && pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
-						if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
-							// Если тыкнули левой кнопкой мыши
-							if (pointIsInsideMe({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
-								changeOneOption(option_mask.is_moving, true);
-							}
-							message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
-							clearEvent(e);
-						}
-						else {
-							// Если отпустили кнопку
-							if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {
-								changeOneOption(option_mask.is_moving, false);
+				case tEvent::types.Mouse: {
+					switch (e.code) {
+						case tEvent::codes.MouseButton: {
+							if (pointIsInsideMe({ e.mouse.x, e.mouse.y })) {	// Если мышь внутри, ...
+								if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
+									changeOneOption(option_mask.is_moving, false);
+								}
+								else if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
+									if (e.mouse.button == sf::Mouse::Left) {	// Если тыкнули левой кнопкой мыши
+										if (checkOption(option_mask.can_be_moved)) {
+											changeOneOption(option_mask.is_moving, true);
+										}
+										message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+									}
+								}
 								clearEvent(e);
 							}
+							break;
+						}
+						case tEvent::codes.MouseMoved: {
+							mouse_inside[1] = mouse_inside[0];
+							mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
+							if (mouse_inside[0]) {
+								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
+								//clearEvent(e);
+							}
+							if (checkOption(option_mask.is_moving)) {
+								move({ (float)e.mouse.dX, (float)e.mouse.dY });
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+							}
+							break;
 						}
 					}
 					break;
 				}
-				case tEvent::codes.MouseMoved: {
-					mouse_inside[1] = mouse_inside[0];
-					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
-					if (mouse_inside[0]) {
-						message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
-						clearEvent(e);
-					}
-					if (checkOption(option_mask.is_moving)) {
-						move({ (float)e.mouse.dX, (float)e.mouse.dY });
-					}
-					break;
-				}
-				}
-				break;
-			}
 			}
 		}
 	}
 
 	bool tRectShape::pointIsInsideMe(sf::Vector2i point) {
-		return false;
+		sf::FloatRect rect = getGlobalBounds();
+		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
 	sf::FloatRect tRectShape::getLocalBounds() {
@@ -1007,7 +1006,8 @@ namespace edt {
 	}
 
 	bool tText::pointIsInsideMe(sf::Vector2i point) {
-		return false;
+		sf::FloatRect rect = getGlobalBounds();
+		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
 	nlohmann::json tText::saveParamsInJson() {
@@ -1329,19 +1329,18 @@ namespace edt {
 								message(nullptr, tEvent::types.Button, tEvent::codes.ResetButtons, this);
 								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								need_rerender = true;
-								clearEvent(e);
+								//clearEvent(e);
 							}
 							break;
 						}
 						case tEvent::codes.MouseButton: {
 							if (pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
 								if (e.mouse.button == sf::Mouse::Left) {
-									if (e.mouse.what_happened == sf::Event::MouseButtonReleased)	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
-									{
+									if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
 										message(getOwner(), tEvent::types.Button, self_code, this);
 									}
-									clearEvent(e);
 								}
+								clearEvent(e);
 							}
 							
 							break;
@@ -1384,7 +1383,9 @@ namespace edt {
 		font_loaded(false),
 		button_close(new tButton(this, js["button_close"])),
 		heap_shape(new tRectShape(this, js["heap_shape"])),
-		display(new tDisplay(this, js["display"]))
+		display(new tDisplay(this, js["display"])),
+		scrollbar_v(new tScrollbar(this, js["scrollbar_v"])),
+		scrollbar_h(new tScrollbar(this, js["scrollbar_h"]))
 	{
 		vec<int> vi = js["caption"].get<vec<int>>();
 		caption = convertIntVectorToWstring(vi);
@@ -1418,7 +1419,9 @@ namespace edt {
 		caption_offset(w.caption_offset),
 		button_close(w.button_close),
 		heap_shape(w.heap_shape),
-		display(w.display)
+		display(w.display),
+		scrollbar_v(w.scrollbar_v),
+		scrollbar_h(w.scrollbar_h)
 	{
 	}
 
@@ -1534,6 +1537,14 @@ namespace edt {
 		display->setCameraOffset(new_offset);
 	}
 
+	void tWindow::setDisplayTextureSize(sf::Vector2u new_size) {
+		display->setTextureSize(new_size);
+		scrollbar_v->updateScrollerSize();
+		scrollbar_h->updateScrollerSize();
+		message(scrollbar_v, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+		message(scrollbar_h, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+	}
+
 	const int tWindow::getHeapHeight() {
 		return heap_height;
 	}
@@ -1564,6 +1575,8 @@ namespace edt {
 		js["button_close"] = button_close->saveParamsInJson();
 		js["heap_shape"] = heap_shape->saveParamsInJson();
 		js["display"] = display->saveParamsInJson();
+		js["scrollbar_v"] = scrollbar_v->saveParamsInJson();
+		js["scrollbar_h"] = scrollbar_h->saveParamsInJson();
 
 		return js;
 	}
@@ -1571,15 +1584,19 @@ namespace edt {
 	void tWindow::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			button_close->handleEvent(e);
-			heap_shape->handleEvent(e);
 			display->handleEvent(e);
 			scrollbar_v->handleEvent(e);
-			//scrollbar_h->handleEvent(e);
+			scrollbar_h->handleEvent(e);
 
 			switch (e.type) {
 				case tEvent::types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
+							case tEvent::codes.Activate: {		// Установить фокус на объект
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
+								clearEvent(e);
+								break;
+							}
 							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
@@ -1642,23 +1659,20 @@ namespace edt {
 				case tEvent::types.Mouse: {
 					switch (e.code) {
 						case tEvent::codes.MouseButton: {
-							if (e.mouse.button == sf::Mouse::Left && pointIsInsideMe({ e.mouse.x, e.mouse.y })) {
-								if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
-									// Если в окно тыкнули левой кнопкой мыши
-									if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
-										changeOneOption(option_mask.is_moving, true);
-									}
-									message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
-									need_rerender = true;
-									clearEvent(e);
+							if (pointIsInsideMe({ e.mouse.x, e.mouse.y })) {	// Если мышь внутри, ...
+								if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
+									changeOneOption(option_mask.is_moving, false);
 								}
-								else {
-									// Если отпустили кнопку
-									if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {
-										changeOneOption(option_mask.is_moving, false);
-										clearEvent(e);
+								else if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
+									if (e.mouse.button == sf::Mouse::Left) {	// Если в окно тыкнули левой кнопкой мыши
+										if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
+											changeOneOption(option_mask.is_moving, true);
+										}
+										message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+										need_rerender = true;
 									}
 								}
+								clearEvent(e);
 							}
 							break;
 						}
@@ -1668,7 +1682,7 @@ namespace edt {
 							if (mouse_inside[0]) {
 								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
 								need_rerender = true;
-								clearEvent(e);
+								//clearEvent(e);
 							}
 							if (checkOption(option_mask.is_moving)) {
 								move({ (float)e.mouse.dX, (float)e.mouse.dY });
@@ -1819,24 +1833,8 @@ namespace edt {
 		return js;
 	}
 
-	tScrollbar::tScrollbar(tAbstractBasicClass* _owner, bool vertical, sf::FloatRect rect) :
-		tRenderRect(_owner),
-		arrow_first(new tButton(this, {0, 0, thickness, thickness})),
-		arrow_second(new tButton(this, { 0, 0, thickness, thickness })),
-		scroller(new tRectShape(this, { 0, 0, thickness - 2, thickness - 2 })),
-		old_position(0.f, 0.f),
-		color_scroller_area({ 241, 241, 241, 255 })
-	{
-		changeOneOption(option_mask.can_be_moved, false);
-		changeOneOption(option_mask.can_be_resized, false);
-		changeOneOption(option_mask.vectically_orientated, vertical);
-
-		clear_color = color_scroller_area;
-
-		setPosition({ rect.left, rect.top });
-		setSize({ rect.width, rect.height });
-		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
-
+	void tScrollbar::initScrollbar(const bool vertical) {
+		scroller->changeOneOption(option_mask.can_be_moved, true);
 		scroller->setColor({ 60, 60, 60, 255 });
 		if (vertical) {
 			arrow_first->setString(L"^");
@@ -1855,8 +1853,29 @@ namespace edt {
 			scroller->setPosition({ thickness + 1, 1 });
 		}
 		updateScrollerSize();
-		
+
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+	}
+
+	tScrollbar::tScrollbar(tAbstractBasicClass* _owner, const bool vertical, sf::FloatRect rect) :
+		tRenderRect(_owner),
+		arrow_first(new tButton(this, {0, 0, thickness, thickness})),
+		arrow_second(new tButton(this, { 0, 0, thickness, thickness })),
+		scroller(new tRectShape(this, { 0, 0, thickness - 2, thickness - 2 })),
+		old_position(0.f, 0.f),
+		color_scroller_area({ 241, 241, 241, 255 })
+	{
+		changeOneOption(option_mask.can_be_moved, false);
+		changeOneOption(option_mask.can_be_resized, false);
+		changeOneOption(option_mask.vectically_orientated, vertical);
+
+		clear_color = color_scroller_area;
+
+		setPosition({ rect.left, rect.top });
+		setSize({ rect.width, rect.height });
+		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
+
+		initScrollbar(vertical);
 	}
 
 	tScrollbar::tScrollbar(tAbstractBasicClass* _owner, nlohmann::json& js) :
@@ -1903,17 +1922,17 @@ namespace edt {
 			// с учётом "стрелок" на скроллбаре и получаем текущий размер ползунка.
 			/*
 			scroller_size.x = thickness - 3;
-			scroller_size.y = ((float)disp->getTextureSize().y / disp->getLocalBounds().width) * (scrollbar_rect.height - 2 * thickness) - 3;
+			scroller_size.y = (disp->getLocalBounds().width / (float)disp->getTextureSize().y) * (scrollbar_rect.height - 2 * thickness) - 3;
 			*/
 			scroller_size.x = thickness - 3;
-			scroller_size.y = (display_texture_size.y / display_bounds.height) * (scrollbar_rect.height - 2 * thickness) - 2;
+			scroller_size.y = (display_bounds.height / display_texture_size.y) * (scrollbar_rect.height - 2 * thickness) - 2;
 		}
 		else {
 			/*
-			scroller_size.x = ((float)disp->getTextureSize().x / disp->getLocalBounds().height) * (scrollbar_rect.width - 2 * thickness) - 3;
+			scroller_size.x = (disp->getLocalBounds().height / (float)disp->getTextureSize().x) * (scrollbar_rect.width - 2 * thickness) - 3;
 			scroller_size.y = thickness - 3;
 			*/
-			scroller_size.x = (display_texture_size.x / display_bounds.width) * (scrollbar_rect.width - 2 * thickness) - 2;
+			scroller_size.x = (display_bounds.width / display_texture_size.x) * (scrollbar_rect.width - 2 * thickness) - 2;
 			scroller_size.y = thickness - 3;
 		}
 		scroller->setSize(scroller_size);
@@ -1940,6 +1959,26 @@ namespace edt {
 				case tEvent::types.Broadcast: {
 					if (e.address == this) {
 						switch (e.code) {
+							case tEvent::codes.Activate: {		// Установить фокус на объект
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
+								clearEvent(e);
+								break;
+							}
+							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
+								clearEvent(e);
+								break;
+							}
+							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
+								clearEvent(e);
+								break;
+							}
+							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
+								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
+								clearEvent(e);
+								break;
+							}
 							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
 								need_rerender = true;
 								clearEvent(e);
@@ -1955,18 +1994,35 @@ namespace edt {
 					}
 					break;
 				}
+				case tEvent::types.Mouse: {
+					switch (e.code) {
+						case tEvent::codes.MouseMoved: {
+							mouse_inside[1] = mouse_inside[0];
+							mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
+							if (mouse_inside[0]) {
+								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
+								need_rerender = true;
+								//clearEvent(e);
+							}
+							break;
+						}
+					}
+					break;
+				}
 			}
-			
+
 			// Нужно вернуть из-за пределов скроллбара (если он там окажется)
 			sf::FloatRect scroller_rect = scroller->getLocalBounds();
+			sf::FloatRect rect = getLocalBounds();
+			
 			if ((old_position.x != scroller_rect.left) || (old_position.y != scroller_rect.top)) {
 				if (checkOption(option_mask.vectically_orientated)) {
 					scroller_rect.left = 1;
-					CLAMP(scroller_rect.top, thickness + 1, scroller_rect.height - thickness - scroller_rect.height - 1);
+					scroller_rect.top = CLAMP(scroller_rect.top, thickness + 1, rect.height - scroller_rect.height - thickness - 1);
 				}
 				else {
 					scroller_rect.top = 1;
-					CLAMP(scroller_rect.left, thickness + 1, scroller_rect.width - thickness - scroller_rect.width - 1);
+					scroller_rect.left = CLAMP(scroller_rect.left, thickness + 1, rect.width - scroller_rect.width - thickness - 1);
 				}
 				scroller->setPosition({ scroller_rect.left, scroller_rect.top });
 				old_position = { scroller_rect.left, scroller_rect.top };

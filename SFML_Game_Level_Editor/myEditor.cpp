@@ -106,22 +106,25 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 		switch (e.type) {
 			case edt::tEvent::types.Button: {
 				switch (e.code) {
-					case button_codes.about_program : {
+					case button_codes.about_program: {
 						sf::FloatRect rect;
 						unsigned int font_size = 32;
 						rect.width = 630;
 						rect.height = 410;
 						rect.left = (window.getSize().x - rect.width) / 2;
 						rect.top = (window.getSize().y - rect.height) / 2;
-						
-						edt::tWindow *w = new edt::tWindow(this, rect, L"О программе");
-						w->setFont(getFont());
-						w->setCaptionOffset({4, 0});
 
+						edt::tWindow* w = new edt::tWindow(this, rect, L"О программе");
+						w->setFont(getFont());
+						w->setCaptionOffset({ 4, 0 });
+					
+						edt::tDisplay* display = w->getDisplayPointer();
+						w->setDisplayTextureSize({ 1260, 600 });
+					
 						sf::Vector2f content_position = { 10, 0 };
 
 						std::fstream file(path_to_folder + "\\Content\\Texts\\about.txt", std::fstream::in | std::fstream::binary);
-						edt::tText* t = new edt::tText((edt::tRenderRect*)w->getDisplayPointer(), { content_position.x, content_position.y }, L"Some Text");
+						edt::tText* t = new edt::tText((edt::tRenderRect*)display, { content_position.x, content_position.y }, L"Some Text");
 						t->setFont(getFont());
 						t->setCharSize(font_size);
 
@@ -155,7 +158,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 							
 							t->setString(text);
 						}
-						w->getDisplayPointer()->_insert(t);
+						display->_insert(t);
 
 						file.close();
 						_insert(w);

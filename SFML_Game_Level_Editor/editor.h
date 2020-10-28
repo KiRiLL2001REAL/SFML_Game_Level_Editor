@@ -353,8 +353,10 @@ namespace edt {
 	};
 
 	class tWindow : public tRenderRect {
-	private:
+	public:
 		static const int heap_height = 32;
+
+	private:
 		static const unsigned char caption_char_size = 24;
 
 		void initWindow();
@@ -389,6 +391,7 @@ namespace edt {
 		void setFont(sf::Font new_font);
 		void setCaptionOffset(sf::Vector2f new_offset);
 		void setCameraOffset(sf::Vector2f new_offset);
+		void setDisplayTextureSize(sf::Vector2u new_size);
 
 		tDisplay* getDisplayPointer();
 		std::wstring getCaption();
@@ -440,6 +443,9 @@ namespace edt {
 			static const unsigned char can_be_resized = 64;			// Можно ли менять размер объекта при помощи мыши
 			static const unsigned char can_be_moved = 128;			// Можно ли перемещать объект при помощи мыши
 		} option_mask;
+
+	private:
+		void initScrollbar(bool vertical);
 
 	protected:
 		tButton* arrow_first, * arrow_second;	// Стрелки
