@@ -377,6 +377,8 @@ namespace edt {
 		tDisplay* display;					// Объект, в котором происходит отрисовка всех динамических подэлементов окна
 		tScrollbar* scrollbar_v, * scrollbar_h;	// Ползунки
 
+		sf::Vector2f last_scrollbar_offset;	// Предыдущее смещение ползунков
+
 	public:
 		tWindow(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
 		tWindow(tAbstractBasicClass* _owner, nlohmann::json& js);
@@ -391,6 +393,7 @@ namespace edt {
 		void setFont(sf::Font new_font);
 		void setCaptionOffset(sf::Vector2f new_offset);
 		void setCameraOffset(sf::Vector2f new_offset);
+		void setDisplaySize(sf::Vector2f new_size);
 		void setDisplayTextureSize(sf::Vector2u new_size);
 
 		tDisplay* getDisplayPointer();
@@ -432,6 +435,7 @@ namespace edt {
 	class tScrollbar : public tRenderRect {
 	public:
 		static const int thickness = 24;	// Ширина скролбара
+		static const int default_step = 32;	// Шаг прокрутки стрелочками в пикселях
 
 		static const struct sOptionMask {	// Маски операций (переопределено для scrollbar)
 			static const unsigned char is_moving = 1;				// Объект перемещается при помощи мыши
@@ -449,9 +453,11 @@ namespace edt {
 
 	protected:
 		tButton* arrow_first, * arrow_second;	// Стрелки
-		tRectShape* scroller;					// Ползунок
+		tRectShape* slider;						// Ползунок
 		sf::Vector2f old_position;				// Предыдущая позиция ползунка
 		sf::Color color_scroller_area;	// Цвет зоны, по которой бегает ползунок
+		sf::Vector2f target_size;			// Размер целевого элемента
+		sf::Vector2u target_texture_size;	// Размер текстуры целевого элемента
 
 	public:
 		tScrollbar(tAbstractBasicClass* _owner, bool vertical = true, sf::FloatRect rect = { 0, 0, thickness, thickness * 8});
@@ -460,6 +466,11 @@ namespace edt {
 		virtual ~tScrollbar();
 
 		void updateScrollerSize();
+		void setTargetSize(sf::Vector2f new_size);
+		void setTargetTextureSize(sf::Vector2u new_size);
+		void moveSlider(const int step);
+
+		float getPixelOffset();
 
 		virtual void updateTexture();	// tWindow должен следить за тем, кто послал ему updateTextureEvent, чтобы ерзать tDisplay'ем
 		virtual void handleEvent(tEvent& e);
