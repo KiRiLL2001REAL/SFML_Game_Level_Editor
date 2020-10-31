@@ -119,7 +119,7 @@ void myDesktop::handleEvent(edt::tEvent& e) {
 						w->setCaptionOffset({ 4, 0 });
 					
 						edt::tDisplay* display = w->getDisplayPointer();
-						w->setDisplayTextureSize({ 1260, 600 });
+						//w->setDisplayTextureSize({ 1260, 600 });
 					
 						sf::Vector2f content_position = { 10, 0 };
 

@@ -1604,6 +1604,36 @@ namespace edt {
 			scrollbar_v->handleEvent(e);
 			scrollbar_h->handleEvent(e);
 
+			/*
+			>>>>>>>>>> Временная штука. Это нужно будет переместить в блок изменения размеров окна (сделать ивент) <<<<<<<<<<
+			*/
+
+			auto dispTexSize = display->getTextureSize();
+
+			if (scrollbar_v->checkOption(option_mask.can_be_drawn) && dispTexSize.y <= getTextureSize().y - heap_height) {
+				// Если скроллбар активен и размер текстуры дисплея влезают в зону отрисовки окна, тогда выключаем скроллбар
+				display->setSize({ getLocalBounds().width, display->getLocalBounds().height });
+				scrollbar_v->changeOneOption(option_mask.can_be_drawn, false);
+			}
+			else if (!scrollbar_v->checkOption(option_mask.can_be_drawn) && dispTexSize.y > getTextureSize().y - heap_height) {
+				display->setSize({ getLocalBounds().width - tScrollbar::thickness - 2, display->getLocalBounds().height });
+				scrollbar_v->changeOneOption(option_mask.can_be_drawn, true);
+			}
+
+			if (scrollbar_h->checkOption(option_mask.can_be_drawn) && display->getTextureSize().x <= getTextureSize().x) {
+				// Если скроллбар активен и размер текстуры дисплея влезает в зону отрисовки окна, тогда выключаем скроллбар
+				display->setSize({ display->getLocalBounds().width, getLocalBounds().height - heap_height });
+				scrollbar_h->changeOneOption(option_mask.can_be_drawn, false);
+			}
+			else if (!scrollbar_h->checkOption(option_mask.can_be_drawn) && display->getTextureSize().x > getTextureSize().x) {
+				display->setSize({ display->getLocalBounds().width, getLocalBounds().height - heap_height - tScrollbar::thickness - 2 });
+				scrollbar_h->changeOneOption(option_mask.can_be_drawn, true);
+			}
+			
+			/*
+			>>>>>>>>>> Временная штука. Это нужно будет переместить в блок изменения размеров окна (сделать ивент) <<<<<<<<<<
+			*/
+
 			sf::Vector2f scrollbar_offset = { scrollbar_h->getPixelOffset(), scrollbar_v->getPixelOffset() };
 			if (scrollbar_offset != last_scrollbar_offset) {
 				setCameraOffset(scrollbar_offset);
