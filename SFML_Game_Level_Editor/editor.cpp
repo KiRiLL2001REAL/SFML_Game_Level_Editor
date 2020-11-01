@@ -24,7 +24,7 @@ namespace edt {
 	}
 
 	void tAbstractBasicClass::clearEvent(tEvent& e) {
-		e.type = e.types.Nothing;
+		e.type = tEvent::types.Nothing;
 	}
 
 	void tAbstractBasicClass::message(tAbstractBasicClass* addr, unsigned int type, unsigned int code, tAbstractBasicClass* from) {
