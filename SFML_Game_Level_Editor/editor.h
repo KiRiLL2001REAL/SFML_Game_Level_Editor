@@ -27,31 +27,58 @@ namespace edt {
 	class tScrollbar;
 
 	struct tEvent {
-		static const struct sTypes { // Типы событий
-			static const unsigned int Nothing		= 0;
-			static const unsigned int Mouse			= 1;
-			static const unsigned int Keyboard		= 2;
-			static const unsigned int Broadcast		= 3;
-			static const unsigned int Button		= 4;
-		} types;
+	private:
+		struct sMouse {
+			char button = 0;
+			char what_happened = 0;
+			int x = 0;
+			int y = 0;
+			int dX = 0;
+			int dY = 0;
+		};
+		struct sKey {
+			char button = 0;
+			int what_happened = 0;
+			bool control = false;
+			bool alt = false;
+			bool shift = false;
+		};
+		struct sText {
+			std::wstring string = L"";
+			char char_size = 12;
+			int x = 0;
+			int y = 0;
+			sf::Color color = sf::Color(255, 255, 255, 255);
+		};
+		struct sFont {
+			sf::Font* font = nullptr;
+		};
+	public:
 
-		static const struct sCodes { // Коды событий
-			static const unsigned int Nothing			= 0;
-			static const unsigned int Activate			= 1;
-			static const unsigned int Deactivate		= 2;
-			static const unsigned int Show				= 3;
-			static const unsigned int Hide				= 4;
-			static const unsigned int Move				= 5;
-			static const unsigned int Adopt				= 6;
-			static const unsigned int Delete			= 7;
-			static const unsigned int Close				= 8;
-			static const unsigned int CloseApplication	= 9;
-			static const unsigned int MouseMoved		= 10;
-			static const unsigned int MouseButton		= 11;
-			static const unsigned int ResetButtons		= 12;
-			static const unsigned int UpdateTexture		= 13;
-			static const unsigned int FontRequest		= 14;
-			static const unsigned int FontAnswer		= 15;
+		static const struct sTypes {	// Типы событий
+			static const unsigned int Nothing = 0;
+			static const unsigned int Mouse = 1;
+			static const unsigned int Keyboard = 2;
+			static const unsigned int Broadcast = 3;
+			static const unsigned int Button = 4;
+		} types;
+		static const struct sCodes {	// Коды событий
+			static const unsigned int Nothing = 0;
+			static const unsigned int Activate = 1;
+			static const unsigned int Deactivate = 2;
+			static const unsigned int Show = 3;
+			static const unsigned int Hide = 4;
+			static const unsigned int Move = 5;
+			static const unsigned int Adopt = 6;
+			static const unsigned int Delete = 7;
+			static const unsigned int Close = 8;
+			static const unsigned int CloseApplication = 9;
+			static const unsigned int MouseMoved = 10;
+			static const unsigned int MouseButton = 11;
+			static const unsigned int ResetButtons = 12;
+			static const unsigned int UpdateTexture = 13;
+			static const unsigned int FontRequest = 14;
+			static const unsigned int FontAnswer = 15;
 		} codes;
 
 		unsigned int type = types.Nothing; // Из какой сферы событие (тип)
@@ -59,31 +86,10 @@ namespace edt {
 		tAbstractBasicClass* from = nullptr;
 		tAbstractBasicClass* address = nullptr;
 		
-		struct sMouse { // Событие от мыши
-			char button = 0;
-			char what_happened = 0;
-			int x = 0;
-			int y = 0;
-			int dX = 0;
-			int dY = 0;
-		} mouse;
-		struct sKey { // Событие от клавиатуры
-			char button = 0;
-			int what_happened = 0;
-			bool control = false;
-			bool alt = false;
-			bool shift = false;
-		} key;
-		struct sText { // Вывод текста
-			std::wstring string = L"";
-			char char_size = 12;
-			int x = 0;
-			int y = 0;
-			sf::Color color = sf::Color(255, 255, 255, 255);
-		} text;
-		struct sFont {	// Запрос шрифта
-			sf::Font* font = nullptr;
-		} font;
+		sMouse mouse;	// Событие от мыши
+		sKey key;	// Событие от клавиатуры
+		sText text;	// Вывод текста
+		sFont font;	// Запрос шрифта
 	};
 
 	class tAbstractBasicClass {
@@ -99,16 +105,19 @@ namespace edt {
 		void message(tAbstractBasicClass* addr, unsigned int type, unsigned int code, tAbstractBasicClass* from);
 		void message(tEvent e);
 
-		virtual void setOwner(tAbstractBasicClass* new_owner);
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
 		virtual void handleEvent(tEvent& e) = 0;
 		virtual void draw(sf::RenderTarget& target) = 0;
 
-		virtual tAbstractBasicClass* getOwner();
-		virtual nlohmann::json saveParamsInJson();
-		virtual sf::FloatRect getLocalBounds() = 0;
-		virtual sf::FloatRect getGlobalBounds();
+		// Setters
+		virtual void setOwner(tAbstractBasicClass* new_owner);
+
+		// Getters
+		virtual tAbstractBasicClass* getOwner() const;
+		virtual nlohmann::json getParamsInJson() const;
+		virtual sf::FloatRect getLocalBounds() const;
+		virtual sf::FloatRect getGlobalBounds() const;
 	};
 
 	class tObject : public tAbstractBasicClass { // Класс объекта
@@ -151,24 +160,25 @@ namespace edt {
 		tObject(const tObject &o);
 		virtual ~tObject();
 
-		void setAnchor(unsigned char new_anchor);
-		void setOptions(unsigned char new_options);
-		void changeOneOption(unsigned char one_option, bool state);
-		
-		bool checkOption(unsigned char option);
-		sf::Vector2f getPosition();
-		unsigned char getOptions();
-		unsigned char getAnchor();
-
 		virtual void move(sf::Vector2f delta);
 		virtual void draw(sf::RenderTarget& target);
-		virtual void setPosition(sf::Vector2f new_position);
-		virtual void setSize(sf::Vector2f new_size);
 		virtual void updateTexture() = 0;
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
-		virtual sf::Vector2f getRelativeStartPosition();	// Возвращает начальную точку системы координат (ориентируясь на якорь)
-		virtual bool pointIsInsideMe(sf::Vector2i point) = 0;
-		virtual nlohmann::json saveParamsInJson();
+		// Setters
+		void setAnchor(const unsigned char &new_anchor);
+		void setOptions(const unsigned char &new_options);
+		void changeOneOption(const unsigned char &one_option, const bool &state);
+		virtual void setPosition(const sf::Vector2f &new_position);
+		virtual void setSize(const sf::Vector2f &new_size);
+		
+		// Getters
+		bool checkOption(unsigned char option) const;
+		sf::Vector2f getPosition() const;
+		unsigned char getOptions() const;
+		unsigned char getAnchor() const;
+		virtual sf::Vector2f getRelativeStartPosition() const;	// Возвращает начальную точку системы координат (ориентируясь на якорь)
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tGroup : public tAbstractBasicClass { // Класс-контейнер
@@ -187,10 +197,11 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 		virtual void _insert(tAbstractBasicClass* object);		// Внесение элемента в список подэлементов
-		virtual void select(tAbstractBasicClass* object);		// Установка флага "активен" у элемента
-		
 		virtual bool _delete(tAbstractBasicClass* object);		// Удаление элемента из списка
-		virtual nlohmann::json saveParamsInJson();
+		virtual void select(tAbstractBasicClass* object);		// Установка флага "активен" у элемента
+
+		// Getters
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tRenderRect : public tObject {
@@ -206,18 +217,19 @@ namespace edt {
 		tRenderRect(const tRenderRect& r);
 		virtual ~tRenderRect();
 
-		void setClearColor(sf::Color new_color);
-
-		sf::Vector2u getTextureSize();
-
-		virtual void setSize(sf::Vector2f new_size);
-		virtual void setPosition(sf::Vector2f new_position);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void move(sf::Vector2f delta);
-		virtual void setTextureSize(sf::Vector2u new_size);
 
-		virtual sf::FloatRect getLocalBounds();
-		virtual nlohmann::json saveParamsInJson();
+		// Setters
+		void setClearColor(const sf::Color &new_color);
+		virtual void setSize(const sf::Vector2f &new_size);
+		virtual void setPosition(const sf::Vector2f &new_position);
+		virtual void setTextureSize(const sf::Vector2u &new_size);
+
+		// Getters
+		sf::Vector2u getTextureSize() const;
+		virtual sf::FloatRect getLocalBounds() const;
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tRectShape : public tObject {
@@ -230,18 +242,20 @@ namespace edt {
 		tRectShape(const tRectShape& s);
 		virtual ~tRectShape();
 
-		void setColor(sf::Color new_color);
-
 		virtual void draw(sf::RenderTarget& target);
-		virtual void setPosition(sf::Vector2f new_position);
-		virtual void setSize(sf::Vector2f new_size);
 		virtual void move(sf::Vector2f delta);
 		virtual void updateTexture();
 		virtual void handleEvent(tEvent& e);
-		
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual sf::FloatRect getLocalBounds();
-		virtual nlohmann::json saveParamsInJson();
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
+
+		// Setters
+		void setColor(const sf::Color &new_color);
+		virtual void setPosition(const sf::Vector2f &new_position);
+		virtual void setSize(const sf::Vector2f &new_size);
+
+		// Getters
+		virtual sf::FloatRect getLocalBounds() const;
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tDesktop : public tGroup {
@@ -263,13 +277,10 @@ namespace edt {
 		virtual ~tDesktop();
 
 		void run();								// Главный цикл
-		void saveData();						// Сохранить данные в файл
+		void saveData() const;						// Сохранить данные в файл
 		void loadCustomFont(std::string path_to_font);	// Установить пользовательский шрифт
 		void completeEvents();					// Выполнить события
-
-		sf::Font& getFont();					// Получить шрифт
-		bool windowIsOpen();					// Возвращает статус окна
-
+		bool windowIsOpen() const;					// Возвращает статус окна
 		virtual void changeScreen(char new_screen_code);// Изменить экран (меню, редактор карты, редактор NPC и т.д.)
 		virtual void putEvent(tEvent e);
 		virtual void getEvent(tEvent& e);
@@ -277,9 +288,11 @@ namespace edt {
 		virtual void updateTexture();
 		virtual void draw(sf::RenderTarget& target);
 
-		virtual sf::FloatRect getLocalBounds();
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual nlohmann::json saveParamsInJson();
+		// Getters
+		sf::Font& getFont() const;					// Получить шрифт
+		virtual sf::FloatRect getLocalBounds() const;
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tText : public tObject {
@@ -294,38 +307,39 @@ namespace edt {
 		tText(const tText& t);
 		virtual ~tText();
 
-		void setString(std::wstring new_string);
-		void setTextColor(sf::Color new_color);
-		void setFont(sf::Font new_font);
-		void setCharSize(unsigned int new_char_size);
-		void setOutlineThickness(unsigned char new_thickness);
-
-		bool getFontState();	// Загружен или нет
-		sf::Text& getTextObject();
-		sf::Color getFillColor();
-
 		virtual void draw(sf::RenderTarget& target);
-		virtual void setPosition(sf::Vector2f new_position);
 		virtual void handleEvent(tEvent& e);
 		virtual void move(sf::Vector2f delta);
 		virtual void updateTexture();
 
-		virtual sf::FloatRect getLocalBounds();
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual nlohmann::json saveParamsInJson();
+		// Setters
+		void setString(const std::wstring &new_string);
+		void setTextColor(const sf::Color &new_color);
+		void setFont(const sf::Font &new_font);
+		void setCharSize(const unsigned int &new_char_size);
+		void setOutlineThickness(const unsigned char &new_thickness);
+		virtual void setPosition(const sf::Vector2f &new_position);
+
+		// Getters
+		bool getFontState() const;	// Загружен или нет
+		sf::Text& getTextObject() const;
+		sf::Color getFillColor() const;
+		virtual sf::FloatRect getLocalBounds() const;
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tButton : public tRenderRect {
 	protected:
 		const unsigned char side_offset;
 
-		int self_code;						// Код, который посылает кнопка при нажатии на неё
-		bool custom_skin_loaded;			// Флаг. Загружен ли пользовательский скин кнопки?
-		char alignment;						// Тип выравнивания
-		sf::Texture custom_skin;			// Пользовательский скин кпопки
-		sf::Vector2i text_offset;			// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
+		int self_code;					// Код, который посылает кнопка при нажатии на неё
+		bool custom_skin_loaded;		// Флаг. Загружен ли пользовательский скин кнопки?
+		char alignment;					// Тип выравнивания
+		sf::Texture custom_skin;		// Пользовательский скин кпопки
+		sf::Vector2i text_offset;		// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		
-		tText* text;							// Текст внутри кнопки
+		tText* text;					// Текст внутри кнопки
 
 	public:
 		enum class text_alignment_type { Left, Middle, Right };
@@ -336,20 +350,22 @@ namespace edt {
 		virtual ~tButton();
 
 		void loadCustomSkin(std::string path_to_skin);
-		void setTextAlignment(char new_alignment);
-		void setTextOffset(sf::Vector2i new_offset);
-		void setCode(int new_code);
-		void setFont(sf::Font new_font);
-		void setString(std::wstring new_string);
-		void setTextColor(sf::Color new_color);
-		void setCharSize(unsigned int new_char_size);
-		void setOutlineThickness(unsigned char new_thickness);
-
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual nlohmann::json saveParamsInJson();
+		// Setters
+		void setTextAlignment(const char &new_alignment);
+		void setTextOffset(const sf::Vector2i &new_offset);
+		void setCode(const int &new_code);
+		void setFont(const sf::Font &new_font);
+		void setString(const std::wstring &new_string);
+		void setTextColor(const sf::Color &new_color);
+		void setCharSize(const unsigned int &new_char_size);
+		void setOutlineThickness(const unsigned char &new_thickness);
+
+		// Getters
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tWindow : public tRenderRect {
@@ -365,19 +381,19 @@ namespace edt {
 		bool font_loaded;	// Флаг. Загружен ли шрифт?
 		sf::Font font;		// Шрифт
 
-		std::wstring caption;				// Заголовок окна
-		sf::Color color_heap;				// Цвет шапки
-		sf::Color color_area;				// Цвет основной части
-		sf::Color color_caption_active;		// Цвет заголовка активного окна
-		sf::Color color_caption_inactive;	// Цвет заголовка неактивного окна
-		sf::Vector2f caption_offset;		// Настройка смещения заголовка, в случае, если он криво выводится (это всё из-за шрифтов)
+		std::wstring caption;					// Заголовок окна
+		sf::Color color_heap;					// Цвет шапки
+		sf::Color color_area;					// Цвет основной части
+		sf::Color color_caption_active;			// Цвет заголовка активного окна
+		sf::Color color_caption_inactive;		// Цвет заголовка неактивного окна
+		sf::Vector2f caption_offset;			// Настройка смещения заголовка, в случае, если он криво выводится (это всё из-за шрифтов)
 
-		tButton* button_close;				// Кнопка закрытия
-		tRectShape* heap_shape;				// Фигура шапки
-		tDisplay* display;					// Объект, в котором происходит отрисовка всех динамических подэлементов окна
+		tButton* button_close;					// Кнопка закрытия
+		tRectShape* heap_shape;					// Фигура шапки
+		tDisplay* display;						// Объект, в котором происходит отрисовка всех динамических подэлементов окна
 		tScrollbar* scrollbar_v, * scrollbar_h;	// Ползунки
 
-		sf::Vector2f last_scrollbar_offset;	// Предыдущее смещение ползунков
+		sf::Vector2f last_scrollbar_offset;		// Предыдущее смещение ползунков
 
 	public:
 		tWindow(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 300, 300 }, std::wstring caption = L"Default caption");
@@ -385,27 +401,28 @@ namespace edt {
 		tWindow(const tWindow& w);
 		virtual ~tWindow();
 
-		void setCaption(std::wstring new_caption);
-		void setHeapColor(sf::Color new_color);
-		void setAreaColor(sf::Color new_color);
-		void setActiveCaptionColor(sf::Color new_color);
-		void setInactiveCaptionColor(sf::Color new_color);
-		void setFont(sf::Font new_font);
-		void setCaptionOffset(sf::Vector2f new_offset);
-		void setCameraOffset(sf::Vector2f new_offset);
-		void setDisplaySize(sf::Vector2f new_size);
-		void setDisplayTextureSize(sf::Vector2u new_size);
-
-		tDisplay* getDisplayPointer();
-		std::wstring getCaption();
-		bool pointIsInHeap(sf::Vector2i point);
-		const int getHeapHeight();
-
+		bool pointIsInHeap(sf::Vector2i point) const;
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
-		
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual nlohmann::json saveParamsInJson();
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
+
+		// Setters
+		void setCaption(const std::wstring &new_caption);
+		void setHeapColor(const sf::Color &new_color);
+		void setAreaColor(const sf::Color &new_color);
+		void setActiveCaptionColor(const sf::Color &new_color);
+		void setInactiveCaptionColor(const sf::Color &new_color);
+		void setFont(const sf::Font &new_font);
+		void setCaptionOffset(const sf::Vector2f &new_offset);
+		void setCameraOffset(const sf::Vector2f &new_offset);
+		void setDisplaySize(const sf::Vector2f &new_size);
+		void setDisplayTextureSize(const sf::Vector2u &new_size);
+
+		// Getters
+		tDisplay* getDisplayPointer() const;
+		std::wstring getCaption() const;
+		const int getHeapHeight() const;
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tDisplay : public tRenderRect, public tGroup {
@@ -418,18 +435,20 @@ namespace edt {
 		tDisplay(const tDisplay& d);
 		virtual ~tDisplay();
 
-		void setCameraOffset(sf::Vector2f new_offset);
-
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
-		virtual void setOwner(tAbstractBasicClass* new_owner);
-		virtual void setTextureSize(sf::Vector2u new_size);
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
-		virtual tAbstractBasicClass* getOwner();
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual sf::FloatRect getLocalBounds();
-		virtual nlohmann::json saveParamsInJson();
+		// Setters
+		void setCameraOffset(const sf::Vector2f &new_offset);
+		virtual void setOwner(tAbstractBasicClass* new_owner);
+		virtual void setTextureSize(const sf::Vector2u &new_size);
+
+		// Getters
+		virtual tAbstractBasicClass* getOwner() const;
+		virtual sf::FloatRect getLocalBounds() const;
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 	class tScrollbar : public tRenderRect {
@@ -455,9 +474,9 @@ namespace edt {
 		tButton* arrow_first, * arrow_second;	// Стрелки
 		tRectShape* slider;						// Ползунок
 		sf::Vector2f old_position;				// Предыдущая позиция ползунка
-		sf::Color color_scroller_area;	// Цвет зоны, по которой бегает ползунок
-		sf::Vector2f target_size;			// Размер целевого элемента
-		sf::Vector2u target_texture_size;	// Размер текстуры целевого элемента
+		sf::Color color_scroller_area;			// Цвет зоны, по которой бегает ползунок
+		sf::Vector2f target_size;				// Размер целевого элемента
+		sf::Vector2u target_texture_size;		// Размер текстуры целевого элемента
 
 	public:
 		tScrollbar(tAbstractBasicClass* _owner, bool vertical = true, sf::FloatRect rect = { 0, 0, thickness, thickness * 8});
@@ -466,18 +485,19 @@ namespace edt {
 		virtual ~tScrollbar();
 
 		void updateScrollerSize();
-		void setTargetSize(sf::Vector2f new_size);
-		void setTargetTextureSize(sf::Vector2u new_size);
-		void moveSlider(const int step);
-
-		float getPixelOffset();
-
-		virtual void updateTexture();	// tWindow должен следить за тем, кто послал ему updateTextureEvent, чтобы ерзать tDisplay'ем
+		virtual void updateTexture();
 		virtual void handleEvent(tEvent& e);
-		virtual void setTextureSize(sf::Vector2u new_size);
+		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
-		virtual bool pointIsInsideMe(sf::Vector2i point);
-		virtual nlohmann::json saveParamsInJson();
+		// Setters
+		void moveSlider(const int &step);
+		void setTargetSize(const sf::Vector2f &new_size);
+		void setTargetTextureSize(const sf::Vector2u &new_size);
+		virtual void setTextureSize(const sf::Vector2u &new_size);
+
+		// Getters
+		float getPixelOffset() const;
+		virtual nlohmann::json getParamsInJson() const;
 	};
 
 }

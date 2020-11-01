@@ -24,7 +24,7 @@ namespace edt {
 	}
 
 	void tAbstractBasicClass::clearEvent(tEvent& e) {
-		e.type = tEvent::types.Nothing;
+		e.type = e.types.Nothing;
 	}
 
 	void tAbstractBasicClass::message(tAbstractBasicClass* addr, unsigned int type, unsigned int code, tAbstractBasicClass* from) {
@@ -42,7 +42,7 @@ namespace edt {
 		else putEvent(e);
 	}
 
-	tAbstractBasicClass* tAbstractBasicClass::getOwner() {
+	tAbstractBasicClass* tAbstractBasicClass::getOwner() const {
 		return owner;
 	}
 
@@ -55,11 +55,20 @@ namespace edt {
 		return;
 	}
 
-	nlohmann::json tAbstractBasicClass::saveParamsInJson() {
+	nlohmann::json tAbstractBasicClass::getParamsInJson() const {
 		return nlohmann::json();
 	}
 
-	sf::FloatRect tAbstractBasicClass::getGlobalBounds() {
+	sf::FloatRect tAbstractBasicClass::getLocalBounds() const {
+		return sf::FloatRect(
+			0,
+			0,
+			1.f,
+			1.f
+		);
+	}
+
+	sf::FloatRect tAbstractBasicClass::getGlobalBounds() const {
 		if (owner != nullptr) {
 			sf::FloatRect owner_rect = getOwner()->getGlobalBounds();
 			sf::FloatRect local_rect = getLocalBounds();
@@ -111,19 +120,19 @@ namespace edt {
 	tObject::~tObject() {
 	}
 
-	sf::Vector2f tObject::getPosition() {
+	sf::Vector2f tObject::getPosition() const {
 		return sf::Vector2f(x, y);
 	}
 
-	unsigned char tObject::getOptions() {
+	unsigned char tObject::getOptions() const {
 		return options;
 	}
 
-	bool tObject::checkOption(unsigned char option) {
+	bool tObject::checkOption(unsigned char option) const {
 		return (options & option) == option; // Если результат побитовой конъюнкции совпал с "option", то всё окей
 	}
 
-	void tObject::changeOneOption(unsigned char one_option, bool state) {
+	void tObject::changeOneOption(const unsigned char &one_option, const bool &state) {
 		if (state) {	// Если нужно взвести бит
 			options |= one_option;	// Применяем результат побитового ИЛИ от "options" и параметра "one_option"
 			return;
@@ -131,15 +140,15 @@ namespace edt {
 		options &= ~one_option;	// Иначе применяем результат побитового И от "options" и инвертированного параметра "one_option"
 	}
 
-	void tObject::setOptions(unsigned char new_options) {
+	void tObject::setOptions(const unsigned char &new_options) {
 		options = new_options;
 	}
 
-	void tObject::setAnchor(unsigned char new_anchor) {
+	void tObject::setAnchor(const unsigned char &new_anchor) {
 		anchor = new_anchor;
 	}
 
-	unsigned char tObject::getAnchor() {
+	unsigned char tObject::getAnchor() const {
 		return anchor;
 	}
 
@@ -148,7 +157,7 @@ namespace edt {
 		y += deltaPos.y;
 	}
 
-	void tObject::setPosition(sf::Vector2f new_position) {
+	void tObject::setPosition(const sf::Vector2f &new_position) {
 		x = new_position.x;
 		y = new_position.y;
 	}
@@ -157,11 +166,11 @@ namespace edt {
 		return;
 	}
 
-	void tObject::setSize(sf::Vector2f new_size) {
+	void tObject::setSize(const sf::Vector2f &new_size) {
 		return;
 	}
 
-	sf::Vector2f tObject::getRelativeStartPosition() {
+	sf::Vector2f tObject::getRelativeStartPosition() const {
 		unsigned char i = 0;
 		sf::FloatRect owner_rect;
 		sf::Vector2f offset = { 0, 0 };
@@ -188,7 +197,11 @@ namespace edt {
 		return offset;
 	}
 
-	nlohmann::json tObject::saveParamsInJson() {
+	bool tObject::pointIsInsideMe(sf::Vector2i point) const {
+		return false;
+	}
+
+	nlohmann::json tObject::getParamsInJson() const {
 		nlohmann::json js;
 
 		js["position"] = { x, y };
@@ -239,7 +252,6 @@ namespace edt {
 	bool tGroup::_delete(tAbstractBasicClass *object) {
 		bool success = false;
 		list<tAbstractBasicClass*>::iterator it;
-
 		for (it = elem.begin(); it != elem.end(); it++) {	// Поиск удаляемого элемента
 			if (*it == object) {
 				success = true;
@@ -343,12 +355,12 @@ namespace edt {
 		}
 	}
 
-	nlohmann::json tGroup::saveParamsInJson() {
+	nlohmann::json tGroup::getParamsInJson() const {
 		nlohmann::json js;
 		unsigned int id = 0;
-		for (list<tAbstractBasicClass*>::iterator it = elem.begin(); it != elem.end(); it++) {
+		for (auto &it : elem) {
 			std::string str = std::to_string(id);
-			js["elem"][str] = (*it)->saveParamsInJson();
+			js["elem"][str] = it->getParamsInJson();
 			id++;
 		}
 
@@ -401,7 +413,7 @@ namespace edt {
 	tRenderRect::~tRenderRect() {
 	}
 
-	void tRenderRect::setTextureSize(sf::Vector2u new_size) {
+	void tRenderRect::setTextureSize(const sf::Vector2u &new_size) {
 		render_texture.create(new_size.x, new_size.y);
 		render_squad[0].texCoords = { 0.f, 0.f };
 		render_squad[1].texCoords = { (float)new_size.x - 1, 0.f };
@@ -410,22 +422,22 @@ namespace edt {
 		need_rerender = true;
 	}
 
-	void tRenderRect::setClearColor(sf::Color color) {
+	void tRenderRect::setClearColor(const sf::Color &color) {
 		clear_color = color;
 	}
 
-	sf::Vector2u tRenderRect::getTextureSize() {
+	sf::Vector2u tRenderRect::getTextureSize() const {
 		return render_texture.getSize();
 	}
 
-	void tRenderRect::setSize(sf::Vector2f new_size) {
+	void tRenderRect::setSize(const sf::Vector2f &new_size) {
 		render_squad[0].position = { x, y };
 		render_squad[1].position = { x + new_size.x, y };
 		render_squad[2].position = { x + new_size.x, y + new_size.y };
 		render_squad[3].position = { x, y + new_size.y };
 	}
 
-	void tRenderRect::setPosition(sf::Vector2f new_position) {
+	void tRenderRect::setPosition(const sf::Vector2f &new_position) {
 		tObject::setPosition(new_position);
 		sf::Vector2f offset = getRelativeStartPosition();
 
@@ -458,7 +470,7 @@ namespace edt {
 		}
 	}
 
-	sf::FloatRect tRenderRect::getLocalBounds() {
+	sf::FloatRect tRenderRect::getLocalBounds() const {
 		return sf::FloatRect(
 			render_squad[0].position.x,
 			render_squad[0].position.y,
@@ -467,8 +479,8 @@ namespace edt {
 		);
 	}
 
-	nlohmann::json tRenderRect::saveParamsInJson() {
-		nlohmann::json js = tObject::saveParamsInJson();
+	nlohmann::json tRenderRect::getParamsInJson() const {
+		nlohmann::json js = tObject::getParamsInJson();
 
 		sf::Vector2f size = render_squad[2].position - render_squad[0].position;
 		sf::Vector2u tex_size = render_texture.getSize();
@@ -560,7 +572,7 @@ namespace edt {
 		};
 		/*sf::Vector2u size = window.getSize();
 		nlohmann::json js;
-		js["menu"] = saveParamsInJson();
+		js["menu"] = getParamsInJson();
 		js["sfml_window"]["caption"] = "SFML_Game environment editor";
 		js["sfml_window"]["size"] = { size.x, size.y };
 		js["sfml_window"]["style"] = "Default";
@@ -571,7 +583,7 @@ namespace edt {
 		file.close();*/
 	}
 
-	bool tDesktop::windowIsOpen() {
+	bool tDesktop::windowIsOpen() const {
 		return window.isOpen();
 	}
 
@@ -593,7 +605,7 @@ namespace edt {
 		};
 	}
 
-	void tDesktop::saveData() {
+	void tDesktop::saveData() const {
 	}
 
 	void tDesktop::loadCustomFont(std::string path_to_font) {
@@ -607,19 +619,18 @@ namespace edt {
 
 	void tDesktop::completeEvents() {
 		tEvent e;
-		
 		getEvent(e);
-		while (e.type != tEvent::types.Nothing) {
+		while (e.type != e.types.Nothing) {
 			handleEvent(e);
 			getEvent(e);
 		}
 	}
 
-	sf::Font& tDesktop::getFont() {
+	sf::Font& tDesktop::getFont() const {
 		if (custom_font_loaded)
-			return custom_font;
+			return (sf::Font&)custom_font;
 		else 
-			return font_default;
+			return (sf::Font&)font_default;
 	}
 
 	void tDesktop::putEvent(tEvent e) {
@@ -637,14 +648,14 @@ namespace edt {
 				if (window.pollEvent(event)) {
 					switch (event.type) {
 					case sf::Event::Closed: {				// Окно просит закрыться
-						e.type = tEvent::types.Broadcast;
-						e.code = tEvent::codes.CloseApplication;
+						e.type = e.types.Button;
+						e.code = e.codes.CloseApplication;
 						e.address = this;
 						break;
 					}
 					case sf::Event::KeyPressed:			// Нажата или отпущена какая-либо кнопка на клавиатуре
 					case sf::Event::KeyReleased: {
-						e.type = tEvent::types.Keyboard;
+						e.type = e.types.Keyboard;
 						event.type == sf::Event::KeyPressed ?
 							e.key.what_happened = sf::Event::KeyPressed : e.key.what_happened = sf::Event::KeyReleased;
 						e.key.button = event.key.code;
@@ -656,8 +667,8 @@ namespace edt {
 					}
 					case sf::Event::MouseButtonPressed:	// Нажата или отпущена какая-либо кнопка мыши
 					case sf::Event::MouseButtonReleased: {
-						e.type = tEvent::types.Mouse;
-						e.code = tEvent::codes.MouseButton;
+						e.type = e.types.Mouse;
+						e.code = e.codes.MouseButton;
 						event.type == sf::Event::MouseButtonPressed ?
 							e.mouse.what_happened = sf::Event::MouseButtonPressed : e.mouse.what_happened = sf::Event::MouseButtonReleased;
 						e.mouse.button = event.mouseButton.button;
@@ -667,8 +678,8 @@ namespace edt {
 						break;
 					}
 					case sf::Event::MouseMoved: {			// Мышь двинулась куда-то
-						e.type = tEvent::types.Mouse;
-						e.code = tEvent::codes.MouseMoved;
+						e.type = e.types.Mouse;
+						e.code = e.codes.MouseMoved;
 						e.mouse.x = event.mouseMove.x;
 						e.mouse.y = event.mouseMove.y;
 						e.mouse.dX = e.mouse.x - old_mouse_position.x;
@@ -678,13 +689,13 @@ namespace edt {
 						break;
 					}
 					default: {
-						e.type = tEvent::types.Nothing;
+						e.type = e.types.Nothing;
 						break;
 					}
 					}
 				}
 				else {
-					e.type = tEvent::types.Nothing;
+					e.type = e.types.Nothing;
 				}
 			}
 		}
@@ -693,36 +704,36 @@ namespace edt {
 	void tDesktop::handleEvent(tEvent& e) {
 		tGroup::handleEvent(e);
 		switch (e.type) {
-			case tEvent::types.Broadcast: {	// Общего типа
+			case e.types.Broadcast: {	// Общего типа
 				if (e.address == this) {			// Обработка событий для этого объекта
 					switch (e.code) {
-						case tEvent::codes.Delete: {		// Удалить объект
+						case e.codes.Delete: {		// Удалить объект
 							_delete(e.from);
 							clearEvent(e);
 							break;
 						}
-						case tEvent::codes.Activate: {		// Установить фокус на объект
+						case e.codes.Activate: {		// Установить фокус на объект
 							select(e.from);
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
 							clearEvent(e);
 							break;
 						}
-						case tEvent::codes.Deactivate: {	// Снять фокус с объекта
+						case e.codes.Deactivate: {	// Снять фокус с объекта
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
-						case tEvent::codes.Show: {			// Показать объект (если он скрыт)
+						case e.codes.Show: {			// Показать объект (если он скрыт)
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
-						case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
+						case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
-						case tEvent::codes.Adopt: {			// Стать владельцем объекта
+						case e.codes.Adopt: {			// Стать владельцем объекта
 							e.from->setOwner(this);
 							_insert(e.from);
 							clearEvent(e);
@@ -731,9 +742,9 @@ namespace edt {
 					}
 				}
 				switch (e.code) {	// Обработка событий от "дальних" объектов
-					case tEvent::codes.FontRequest: {
-						e.type = tEvent::types.Broadcast;
-						e.code = tEvent::codes.FontAnswer;
+					case e.codes.FontRequest: {
+						e.type = e.types.Broadcast;
+						e.code = e.codes.FontAnswer;
 						if (!custom_font_loaded) {
 							e.font.font = &font_default;
 						}
@@ -748,14 +759,14 @@ namespace edt {
 				}
 				break;
 			}
-			case tEvent::types.Button: {	// От кнопки
+			case e.types.Button: {	// От кнопки
 				switch (e.code) {
-					case tEvent::codes.ResetButtons: {
-						forEach(tEvent::codes.ResetButtons, e.from);
+					case e.codes.ResetButtons: {
+						forEach(e.codes.ResetButtons, e.from);
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.CloseApplication: {	// Закрыть приложение
+					case e.codes.CloseApplication: {	// Закрыть приложение
 						window.close();
 						clearEvent(e);
 						break;
@@ -775,7 +786,7 @@ namespace edt {
 		tGroup::draw(target);
 	}
 
-	sf::FloatRect tDesktop::getLocalBounds() {
+	sf::FloatRect tDesktop::getLocalBounds() const {
 		return {
 			0,
 			0,
@@ -784,15 +795,15 @@ namespace edt {
 		};
 	}
 
-	bool tDesktop::pointIsInsideMe(sf::Vector2i point) {
+	bool tDesktop::pointIsInsideMe(sf::Vector2i point) const {
 		sf::Vector2i size = (sf::Vector2i)window.getSize();
 		return (point.x >= 0 && point.x <= size.x && point.y >= 0 && point.y <= size.y);
 	}
 
-	nlohmann::json tDesktop::saveParamsInJson() {
+	nlohmann::json tDesktop::getParamsInJson() const {
 		nlohmann::json js;
 
-		js = tGroup::saveParamsInJson();
+		js = tGroup::getParamsInJson();
 
 		js["what_is_it"] = objects_json_ids.tDesktop;
 		js["what_is_it_string"] = "tDesktop";
@@ -829,7 +840,7 @@ namespace edt {
 	tRectShape::~tRectShape() {
 	}
 
-	void tRectShape::setColor(sf::Color new_color) {
+	void tRectShape::setColor(const sf::Color &new_color) {
 		shape.setFillColor(new_color);
 	}
 
@@ -839,12 +850,12 @@ namespace edt {
 		}
 	}
 
-	void tRectShape::setPosition(sf::Vector2f new_position) {
+	void tRectShape::setPosition(const sf::Vector2f &new_position) {
 		tObject::setPosition(new_position);
 		shape.setPosition(new_position + getRelativeStartPosition());
 	}
 
-	void tRectShape::setSize(sf::Vector2f new_size) {
+	void tRectShape::setSize(const sf::Vector2f &new_size) {
 		shape.setSize(new_size);
 	}
 
@@ -860,11 +871,11 @@ namespace edt {
 	void tRectShape::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			switch (e.type) {
-				case tEvent::types.Mouse: {
+				case e.types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case tEvent::codes.MouseButton: {
+						case e.codes.MouseButton: {
 							if (mouse_inside[0]) {	// Если мышь внутри, ...
 								if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
 									changeOneOption(option_mask.is_moving, false);
@@ -874,20 +885,20 @@ namespace edt {
 										if (checkOption(option_mask.can_be_moved)) {
 											changeOneOption(option_mask.is_moving, true);
 										}
-										message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+										message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
 									}
 								}
 								clearEvent(e);
 							}
 							break;
 						}
-						case tEvent::codes.MouseMoved: {
+						case e.codes.MouseMoved: {
 							if (checkOption(option_mask.is_moving)) {
 								move({ (float)e.mouse.dX, (float)e.mouse.dY });
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
 							}
 							if (mouse_inside[0] != mouse_inside[1]) {
-								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
+								message(nullptr, e.types.Broadcast, e.codes.ResetButtons, this);
 								clearEvent(e);
 							}
 							break;
@@ -899,12 +910,12 @@ namespace edt {
 		}
 	}
 
-	bool tRectShape::pointIsInsideMe(sf::Vector2i point) {
+	bool tRectShape::pointIsInsideMe(sf::Vector2i point) const {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
-	sf::FloatRect tRectShape::getLocalBounds() {
+	sf::FloatRect tRectShape::getLocalBounds() const {
 		return sf::FloatRect(
 			shape.getPosition().x,
 			shape.getPosition().y,
@@ -913,8 +924,8 @@ namespace edt {
 		);
 	}
 
-	nlohmann::json tRectShape::saveParamsInJson() {
-		nlohmann::json js = tObject::saveParamsInJson();
+	nlohmann::json tRectShape::getParamsInJson() const {
+		nlohmann::json js = tObject::getParamsInJson();
 
 		sf::Vector2f size = shape.getSize();
 		sf::Color color = shape.getFillColor();
@@ -967,51 +978,51 @@ namespace edt {
 	tText::~tText() {
 	}
 
-	void tText::setString(std::wstring new_string) {
+	void tText::setString(const std::wstring &new_string) {
 		text_object.setString(new_string);
 	}
 
-	void tText::setTextColor(sf::Color new_color) {
+	void tText::setTextColor(const sf::Color &new_color) {
 		text_object.setFillColor(new_color);
 	}
 
-	void tText::setFont(sf::Font new_font) {
+	void tText::setFont(const sf::Font &new_font) {
 		font_loaded = true;
 		font = new_font;
 		text_object.setFont(font);
 	}
 
-	void tText::setCharSize(unsigned int new_char_size) {
+	void tText::setCharSize(const unsigned int &new_char_size) {
 		text_object.setCharacterSize(new_char_size);
 	}
 
-	void tText::setOutlineThickness(unsigned char new_thickness) {
+	void tText::setOutlineThickness(const unsigned char &new_thickness) {
 		text_object.setOutlineThickness(new_thickness);
 	}
 
-	bool tText::getFontState() {
+	bool tText::getFontState() const {
 		return font_loaded;
 	}
 
-	sf::Text& tText::getTextObject() {
-		return text_object;
+	sf::Text& tText::getTextObject() const {
+		return (sf::Text&)text_object;
 	}
 
-	sf::Color tText::getFillColor() {
+	sf::Color tText::getFillColor() const {
 		return text_object.getFillColor();
 	}
 
-	sf::FloatRect tText::getLocalBounds() {
+	sf::FloatRect tText::getLocalBounds() const {
 		return text_object.getLocalBounds();
 	}
 
-	bool tText::pointIsInsideMe(sf::Vector2i point) {
+	bool tText::pointIsInsideMe(sf::Vector2i point) const {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
-	nlohmann::json tText::saveParamsInJson() {
-		nlohmann::json js = tObject::saveParamsInJson();
+	nlohmann::json tText::getParamsInJson() const {
+		nlohmann::json js = tObject::getParamsInJson();
 
 		sf::Color color = text_object.getFillColor();
 		std::wstring text = (std::wstring)text_object.getString();
@@ -1039,13 +1050,13 @@ namespace edt {
 			tEvent e;
 			e.address = getOwner();
 			e.from = this;
-			e.type = tEvent::types.Broadcast;
-			e.code = tEvent::codes.UpdateTexture;
+			e.type = e.types.Broadcast;
+			e.code = e.codes.UpdateTexture;
 			putEvent(e);
 		}
 	}
 
-	void tText::setPosition(sf::Vector2f new_position) {
+	void tText::setPosition(const sf::Vector2f &new_position) {
 		tObject::setPosition(new_position);
 		text_object.setPosition(new_position + getRelativeStartPosition());
 	}
@@ -1053,13 +1064,13 @@ namespace edt {
 	void tText::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			switch (e.type) {
-				case tEvent::types.Broadcast: {
+				case e.types.Broadcast: {
 					if (e.address == this) {
 						switch (e.code) {
-							case tEvent::codes.FontAnswer: {
+							case e.codes.FontAnswer: {
 								font_loaded = true;
 								text_object.setFont(*e.font.font);
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
 								clearEvent(e);
 								break;
 							}
@@ -1067,7 +1078,7 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::types.Mouse: {
+				case e.types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 				}
@@ -1086,11 +1097,11 @@ namespace edt {
 
 	tButton::tButton(tAbstractBasicClass* _owner, sf::FloatRect rect) :
 		tRenderRect(_owner, rect),
+		self_code(tEvent::codes.Nothing),
 		custom_skin_loaded(false),
 		alignment(static_cast<int>(text_alignment_type::Left)),
 		side_offset(10),
 		text_offset(sf::Vector2u(0, 0)),
-		self_code(tEvent::codes.Nothing),
 		text(new tText(this))
 	{
 	}
@@ -1231,7 +1242,7 @@ namespace edt {
 		}
 	}
 
-	void tButton::setTextAlignment(char new_alignment) {
+	void tButton::setTextAlignment(const char &new_alignment) {
 		switch (new_alignment) {
 			case static_cast<int>(tButton::text_alignment_type::Middle) :
 			case static_cast<int>(tButton::text_alignment_type::Right) : {
@@ -1247,49 +1258,49 @@ namespace edt {
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	void tButton::setTextOffset(sf::Vector2i new_offset) {
+	void tButton::setTextOffset(const sf::Vector2i &new_offset) {
 		text_offset = new_offset;
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	void tButton::setCode(int new_code) {
+	void tButton::setCode(const int &new_code) {
 		self_code = new_code;
 	}
 
-	void tButton::setFont(sf::Font new_font) {
+	void tButton::setFont(const sf::Font &new_font) {
 		text->setFont(new_font);
 	}
 
-	void tButton::setString(std::wstring new_string) {
+	void tButton::setString(const std::wstring &new_string) {
 		text->setString(new_string);
 	}
 
-	void tButton::setTextColor(sf::Color new_color) {
+	void tButton::setTextColor(const sf::Color &new_color) {
 		text->setTextColor(new_color);
 	}
 
-	void tButton::setCharSize(unsigned int new_char_size) {
+	void tButton::setCharSize(const unsigned int &new_char_size) {
 		text->setCharSize(new_char_size);
 	}
 
-	void tButton::setOutlineThickness(unsigned char new_thickness) {
+	void tButton::setOutlineThickness(const unsigned char &new_thickness) {
 		text->setOutlineThickness(new_thickness);
 	}
 
-	bool tButton::pointIsInsideMe(sf::Vector2i point) {
+	bool tButton::pointIsInsideMe(sf::Vector2i point) const {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
-	nlohmann::json tButton::saveParamsInJson() {
-		nlohmann::json js = tRenderRect::saveParamsInJson();
+	nlohmann::json tButton::getParamsInJson() const {
+		nlohmann::json js = tRenderRect::getParamsInJson();
 
 		js["what_is_it"] = objects_json_ids.tButton;
 		js["what_is_it_string"] = "tButton";
 		js["code"] = self_code;
 		js["alignment"] = alignment;
 		js["text_offset"] = { text_offset.x, text_offset.y };
-		js["text"] = text->saveParamsInJson();
+		js["text"] = text->getParamsInJson();
 
 		return js;
 	}
@@ -1298,11 +1309,11 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			text->handleEvent(e);
 			switch (e.type) {
-				case tEvent::types.Broadcast: {
+				case e.types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этой кнопки
 						switch (e.code) {
-							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+							case e.codes.UpdateTexture: {	// Обновить текстуру
+								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
 								need_rerender = true;
 								clearEvent(e);
 								break;
@@ -1310,7 +1321,7 @@ namespace edt {
 						}
 					}
 					switch (e.code) {			// Для всех остальных
-						case tEvent::codes.ResetButtons: {
+						case e.codes.ResetButtons: {
 							if (e.from != this && e.from != getOwner()) {
 								mouse_inside[0] = false;
 								mouse_inside[1] = false;
@@ -1321,23 +1332,23 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::types.Mouse: {
+				case e.types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case tEvent::codes.MouseMoved: {
+						case e.codes.MouseMoved: {
 							if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
-								message(nullptr, tEvent::types.Button, tEvent::codes.ResetButtons, this);
-								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(nullptr, e.types.Button, e.codes.ResetButtons, this);
+								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
 								clearEvent(e);
 							}
 							break;
 						}
-						case tEvent::codes.MouseButton: {
+						case e.codes.MouseButton: {
 							if (mouse_inside[0]) {
 								if (e.mouse.button == sf::Mouse::Left) {
 									if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
-										message(getOwner(), tEvent::types.Button, self_code, this);
+										message(getOwner(), e.types.Button, self_code, this);
 									}
 								}
 								clearEvent(e);
@@ -1459,40 +1470,40 @@ namespace edt {
 		scrollbar_h->setTargetTextureSize(display->getTextureSize());
 	}
 
-	void tWindow::setCaption(std::wstring new_caption) {
+	void tWindow::setCaption(const std::wstring &new_caption) {
 		caption = new_caption;
 	}
 
-	tDisplay* tWindow::getDisplayPointer() {
+	tDisplay* tWindow::getDisplayPointer() const {
 		return display;
 	}
 
-	std::wstring tWindow::getCaption() {
+	std::wstring tWindow::getCaption() const {
 		return caption;
 	}
 
-	void tWindow::setHeapColor(sf::Color new_color) {
+	void tWindow::setHeapColor(const sf::Color &new_color) {
 		color_heap = new_color;
 	}
 
-	void tWindow::setAreaColor(sf::Color new_color) {
+	void tWindow::setAreaColor(const sf::Color &new_color) {
 		color_area = new_color;
 	}
 
-	void tWindow::setActiveCaptionColor(sf::Color new_color) {
+	void tWindow::setActiveCaptionColor(const sf::Color &new_color) {
 		color_caption_active = new_color;
 	}
 
-	void tWindow::setInactiveCaptionColor(sf::Color new_color) {
+	void tWindow::setInactiveCaptionColor(const sf::Color &new_color) {
 		color_caption_inactive = new_color;
 	}
 
-	void tWindow::setFont(sf::Font new_font) {
+	void tWindow::setFont(const sf::Font &new_font) {
 		font_loaded = true;
 		font = new_font;
 	}
 
-	void tWindow::setCaptionOffset(sf::Vector2f new_offset) {
+	void tWindow::setCaptionOffset(const sf::Vector2f &new_offset) {
 		caption_offset = new_offset;
 	}
 
@@ -1536,11 +1547,11 @@ namespace edt {
 		render_texture.display();
 	}
 
-	void tWindow::setCameraOffset(sf::Vector2f new_offset) {
+	void tWindow::setCameraOffset(const sf::Vector2f &new_offset) {
 		display->setCameraOffset(new_offset);
 	}
 
-	void tWindow::setDisplaySize(sf::Vector2f new_size) {
+	void tWindow::setDisplaySize(const sf::Vector2f &new_size) {
 		display->setSize(new_size);
 		scrollbar_v->setTargetSize(new_size);
 		scrollbar_h->setTargetSize(new_size);
@@ -1550,7 +1561,7 @@ namespace edt {
 		message(scrollbar_h, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	void tWindow::setDisplayTextureSize(sf::Vector2u new_size) {
+	void tWindow::setDisplayTextureSize(const sf::Vector2u &new_size) {
 		display->setTextureSize(new_size);
 		scrollbar_v->setTargetTextureSize(new_size);
 		scrollbar_h->setTargetTextureSize(new_size);
@@ -1560,22 +1571,22 @@ namespace edt {
 		message(scrollbar_h, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	const int tWindow::getHeapHeight() {
+	const int tWindow::getHeapHeight() const {
 		return heap_height;
 	}
 
-	bool tWindow::pointIsInHeap(sf::Vector2i point) {
+	bool tWindow::pointIsInHeap(sf::Vector2i point) const {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + heap_height);
 	}
 
-	bool tWindow::pointIsInsideMe(sf::Vector2i point) {
+	bool tWindow::pointIsInsideMe(sf::Vector2i point) const {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
-	nlohmann::json tWindow::saveParamsInJson() {
-		nlohmann::json js = tRenderRect::saveParamsInJson();
+	nlohmann::json tWindow::getParamsInJson() const {
+		nlohmann::json js = tRenderRect::getParamsInJson();
 
 		js["what_is_it"] = objects_json_ids.tWindow;
 		js["what_is_it_string"] = "tWindow";
@@ -1587,11 +1598,11 @@ namespace edt {
 		js["color_caption_active"] = { color_caption_active.r, color_caption_active.g, color_caption_active.b, color_caption_active.a };
 		js["color_caption_inactive"] = { color_caption_inactive.r, color_caption_inactive.g, color_caption_inactive.b, color_caption_inactive.a };
 
-		js["button_close"] = button_close->saveParamsInJson();
-		js["heap_shape"] = heap_shape->saveParamsInJson();
-		js["display"] = display->saveParamsInJson();
-		js["scrollbar_v"] = scrollbar_v->saveParamsInJson();
-		js["scrollbar_h"] = scrollbar_h->saveParamsInJson();
+		js["button_close"] = button_close->getParamsInJson();
+		js["heap_shape"] = heap_shape->getParamsInJson();
+		js["display"] = display->getParamsInJson();
+		js["scrollbar_v"] = scrollbar_v->getParamsInJson();
+		js["scrollbar_h"] = scrollbar_h->getParamsInJson();
 
 		return js;
 	}
@@ -1641,41 +1652,41 @@ namespace edt {
 			}
 
 			switch (e.type) {
-				case tEvent::types.Broadcast: {
+				case e.types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case tEvent::codes.Activate: {		// Установить фокус на объект
+							case e.codes.Activate: {		// Установить фокус на объект
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+								message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
+							case e.codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
+							case e.codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
+							case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+							case e.codes.UpdateTexture: {	// Обновить текстуру
+								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
 								need_rerender = true;
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.FontAnswer: {	// Забрать выданный системой шрифт
+							case e.codes.FontAnswer: {	// Забрать выданный системой шрифт
 								font_loaded = true;
 								setFont(*e.font.font);
-								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
+								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
 								clearEvent(e);
 								break;
 							}
@@ -1689,12 +1700,12 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::types.Button: {
+				case e.types.Button: {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case tEvent::codes.Close: {			// Закрыть окно
-								e.type = tEvent::types.Broadcast;
-								e.code = tEvent::codes.Delete;
+							case e.codes.Close: {			// Закрыть окно
+								e.type = e.types.Broadcast;
+								e.code = e.codes.Delete;
 								e.address = getOwner();
 								e.from = this;
 								putEvent(e);
@@ -1710,11 +1721,11 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::types.Mouse: {
+				case e.types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case tEvent::codes.MouseButton: {
+						case e.codes.MouseButton: {
 							if (mouse_inside[0]) {	// Если мышь внутри, ...
 								if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
 									changeOneOption(option_mask.is_moving, false);
@@ -1724,7 +1735,7 @@ namespace edt {
 										if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
 											changeOneOption(option_mask.is_moving, true);
 										}
-										message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+										message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
 										need_rerender = true;
 									}
 								}
@@ -1732,13 +1743,13 @@ namespace edt {
 							}
 							break;
 						}
-						case tEvent::codes.MouseMoved: {
+						case e.codes.MouseMoved: {
 							if (mouse_inside[0] != mouse_inside[1]) {
-								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
+								message(nullptr, e.types.Broadcast, e.codes.ResetButtons, this);
 								clearEvent(e);
 							}
 							if (mouse_inside[0]) {
-								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
 								clearEvent(e);
 							}
 							if (checkOption(option_mask.is_moving)) {
@@ -1780,7 +1791,7 @@ namespace edt {
 	{
 	}
 
-	void tDisplay::setCameraOffset(sf::Vector2f new_offset) {
+	void tDisplay::setCameraOffset(const sf::Vector2f &new_offset) {
 		render_squad[1].texCoords += new_offset - render_squad[0].texCoords;
 		render_squad[2].texCoords += new_offset - render_squad[0].texCoords;
 		render_squad[3].texCoords += new_offset - render_squad[0].texCoords;
@@ -1795,31 +1806,31 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			tGroup::handleEvent(e);
 			switch (e.type) {
-				case tEvent::types.Broadcast: {
+				case e.types.Broadcast: {
 					if (e.address == (tRenderRect*)this) {
 						switch (e.code) {
-							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
+							case e.codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
+							case e.codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
+							case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Adopt: {			// Стать владельцем объекта
+							case e.codes.Adopt: {			// Стать владельцем объекта
 								e.from->setOwner((tRenderRect*)this);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
-								tAbstractBasicClass::message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, (tRenderRect*)this);
+							case e.codes.UpdateTexture: {	// Обновить текстуру
+								tAbstractBasicClass::message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, (tRenderRect*)this);
 								need_rerender = true;
 								tAbstractBasicClass::clearEvent(e);
 								break;
@@ -1834,7 +1845,7 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::types.Button: {
+				case e.types.Button: {
 					if (e.address == (tRenderRect*)this) {
 						e.address = getOwner();
 						tAbstractBasicClass::putEvent(e);
@@ -1842,7 +1853,7 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::types.Mouse: {
+				case e.types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 				}
@@ -1860,27 +1871,27 @@ namespace edt {
 		owner = new_owner;
 	}
 
-	void tDisplay::setTextureSize(sf::Vector2u new_size) {
+	void tDisplay::setTextureSize(const sf::Vector2u &new_size) {
 		render_texture.create(new_size.x, new_size.y);
 		need_rerender = true;
 	}
 
-	tAbstractBasicClass* tDisplay::getOwner() {
+	tAbstractBasicClass* tDisplay::getOwner() const {
 		return owner;
 	}
 
-	bool tDisplay::pointIsInsideMe(sf::Vector2i point) {
+	bool tDisplay::pointIsInsideMe(sf::Vector2i point) const {
 		sf::FloatRect rect = tRenderRect::getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
-	sf::FloatRect tDisplay::getLocalBounds() {
+	sf::FloatRect tDisplay::getLocalBounds() const {
 		return tRenderRect::getLocalBounds();
 	}
 
-	nlohmann::json tDisplay::saveParamsInJson() {
-		nlohmann::json js = tGroup::saveParamsInJson();
-		nlohmann::json js1 = tRenderRect::saveParamsInJson();
+	nlohmann::json tDisplay::getParamsInJson() const {
+		nlohmann::json js = tGroup::getParamsInJson();
+		nlohmann::json js1 = tRenderRect::getParamsInJson();
 
 		for (nlohmann::json::iterator it = js1.begin(); it != js1.end(); it++) {	// Прикручиваем содержимое js1 к js
 			js[it.key()] = it.value();
@@ -1997,15 +2008,15 @@ namespace edt {
 		slider->setSize(scroller_size);
 	}
 
-	void tScrollbar::setTargetSize(sf::Vector2f new_size) {
+	void tScrollbar::setTargetSize(const sf::Vector2f &new_size) {
 		target_size = new_size;
 	}
 
-	void tScrollbar::setTargetTextureSize(sf::Vector2u new_size) {
+	void tScrollbar::setTargetTextureSize(const sf::Vector2u &new_size) {
 		target_texture_size = new_size;
 	}
 
-	void tScrollbar::moveSlider(const int _step) {
+	void tScrollbar::moveSlider(const int &_step) {
 		sf::Vector2f step = { 0.f, 0.f };
 		if (checkOption(option_mask.vectically_orientated)) {
 			step.y = (float)_step / target_texture_size.y;
@@ -2023,7 +2034,7 @@ namespace edt {
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	float tScrollbar::getPixelOffset() {
+	float tScrollbar::getPixelOffset() const {
 		float length_of_moving_zone, slider_pos, targ_tex_size, targ_size;
 		if (checkOption(option_mask.vectically_orientated)) {
 			length_of_moving_zone = getLocalBounds().height - slider->getLocalBounds().height - thickness;
@@ -2062,32 +2073,32 @@ namespace edt {
 			slider->handleEvent(e);
 			
 			switch (e.type) {
-				case tEvent::types.Broadcast: {
+				case e.types.Broadcast: {
 					if (e.address == this) {
 						switch (e.code) {
-							case tEvent::codes.Activate: {		// Установить фокус на объект
+							case e.codes.Activate: {		// Установить фокус на объект
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+								message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
+							case e.codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
+							case e.codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
+							case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								clearEvent(e);
 								break;
 							}
-							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
-								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+							case e.codes.UpdateTexture: {	// Обновить текстуру
+								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
 								need_rerender = true;
 								clearEvent(e);
 								break;
@@ -2102,7 +2113,7 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::types.Button: {
+				case e.types.Button: {
 					if (e.address == this) {
 						if (e.from == arrow_first || e.from == arrow_second) {
 							if (e.from == arrow_first) {
@@ -2111,23 +2122,23 @@ namespace edt {
 							else {
 								moveSlider(default_step);
 							}
-							message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+							message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
 						}
 					}
 					break;
 				}
-				case tEvent::types.Mouse: {
+				case e.types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case tEvent::codes.MouseMoved: {
+						case e.codes.MouseMoved: {
 							if (mouse_inside[0] != mouse_inside[1]) {
-								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
+								message(nullptr, e.types.Broadcast, e.codes.ResetButtons, this);
 								clearEvent(e);
 							}
 							if (mouse_inside[0]) {
 								
-								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
 								clearEvent(e);
 							}
 							break;
@@ -2152,12 +2163,12 @@ namespace edt {
 				}
 				slider->setPosition({ slider_rect.left, slider_rect.top });
 				old_position = { slider_rect.left, slider_rect.top };
-				message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+				message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
 			}
 		}
 	}
 
-	void tScrollbar::setTextureSize(sf::Vector2u new_size) {
+	void tScrollbar::setTextureSize(const sf::Vector2u &new_size) {
 		render_texture.create(new_size.x, new_size.y);
 		render_squad[0].texCoords = { 0.f, 0.f };
 		render_squad[1].texCoords = { (float)new_size.x - 1, 0.f };
@@ -2167,19 +2178,19 @@ namespace edt {
 		updateScrollerSize();
 	}
 
-	bool tScrollbar::pointIsInsideMe(sf::Vector2i point) {
+	bool tScrollbar::pointIsInsideMe(sf::Vector2i point) const {
 		sf::FloatRect rect = getGlobalBounds();
 		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
 	}
 
-	nlohmann::json tScrollbar::saveParamsInJson() {
-		nlohmann::json js = tRenderRect::saveParamsInJson();
+	nlohmann::json tScrollbar::getParamsInJson() const {
+		nlohmann::json js = tRenderRect::getParamsInJson();
 
 		js["what_it_it"] = objects_json_ids.tScrollbar;
 		js["what_is_it_string"] = "tScrollbar";
 
-		js["arrow_first"] = arrow_first->saveParamsInJson();
-		js["arrow_second"] = arrow_second->saveParamsInJson();
+		js["arrow_first"] = arrow_first->getParamsInJson();
+		js["arrow_second"] = arrow_second->getParamsInJson();
 		
 		sf::Color color = color_scroller_area;
 		js["color_scroller_area"] = { color.r, color.g, color.b, color.a };
