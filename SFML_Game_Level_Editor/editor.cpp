@@ -1050,8 +1050,8 @@ namespace edt {
 			tEvent e;
 			e.address = getOwner();
 			e.from = this;
-			e.type = e.types.Broadcast;
-			e.code = e.codes.UpdateTexture;
+			e.type = tEvent::types.Broadcast;
+			e.code = tEvent::codes.UpdateTexture;
 			putEvent(e);
 		}
 	}
