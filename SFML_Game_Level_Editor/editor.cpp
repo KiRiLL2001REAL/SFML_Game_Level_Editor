@@ -360,6 +360,7 @@ namespace edt {
 
 		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
 		setSize({ rect.width, rect.height });
+		setTextureRect({ 0.f, 0.f, rect.width, rect.height });
 	}
 
 	tRenderRect::tRenderRect(tAbstractBasicClass* _owner, nlohmann::json& js) :
@@ -372,6 +373,7 @@ namespace edt {
 
 		vec<float> vf = js["size"].get<vec<float>>();
 		setSize({ vf[0], vf[1] });
+		setTextureRect({ 0.f, 0.f, vf[0], vf[1] });
 
 		vec<unsigned int> vui = js["texture_size"].get<vec<unsigned int>>();
 		render_texture.create(vui[0], vui[1]);
@@ -397,15 +399,18 @@ namespace edt {
 
 	void tRenderRect::setTextureSize(const sf::Vector2u &new_size) {
 		render_texture.create(new_size.x, new_size.y);
-		render_squad[0].texCoords = { 0.f, 0.f };
-		render_squad[1].texCoords = { (float)new_size.x - 1, 0.f };
-		render_squad[2].texCoords = { (float)new_size.x - 1, (float)new_size.y - 1 };
-		render_squad[3].texCoords = { 0.f, (float)new_size.y - 1 };
 		need_rerender = true;
 	}
 
 	void tRenderRect::setClearColor(const sf::Color &color) {
 		clear_color = color;
+	}
+
+	void tRenderRect::setTextureRect(const sf::FloatRect& rect) {
+		render_squad[0].texCoords = { rect.left, rect.top };
+		render_squad[1].texCoords = { rect.left + rect.width, rect.top };
+		render_squad[2].texCoords = { rect.left + rect.width, rect.top + rect.height };
+		render_squad[3].texCoords = { rect.left, rect.top + rect.height };
 	}
 
 	sf::Vector2u tRenderRect::getTextureSize() const {
@@ -552,14 +557,14 @@ namespace edt {
 
 			sf::sleep(sf::milliseconds(5));
 		};
-		/*sf::Vector2u size = window.getSize();
+		sf::Vector2u size = window.getSize();
 		nlohmann::json js;
 		js["menu"] = getParamsInJson();
 		js["sfml_window"]["caption"] = "SFML_Game environment editor";
 		js["sfml_window"]["size"] = { size.x, size.y };
 		js["sfml_window"]["style"] = "Default";
 		js["sfml_window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
-		print_json(js, path_to_folder + "\\Content\\Config\\forms.conf");*/
+		print_json(js, path_to_folder + "\\Content\\Config\\forms.conf");
 		/*std::fstream file(path_to_folder + "\\Content\\Config\\forms.conf", std::fstream::out);
 		file << js;
 		file.close();*/
@@ -1412,7 +1417,7 @@ namespace edt {
 
 
 	tWindow::tWindow(tAbstractBasicClass* _owner, sf::FloatRect rect, std::wstring _caption) :
-		tRenderRect(_owner),
+		tRenderRect(_owner, rect),
 		font_loaded(false),
 		caption(_caption),
 		color_heap(sf::Color(100, 100, 100, 255)),
@@ -2016,7 +2021,7 @@ namespace edt {
 		tRenderRect(_owner, js),
 		arrow_first(new tButton(this, js["arrow_first"])),
 		arrow_second(new tButton(this, js["arrow_second"])),
-		slider(new tRectShape(this, { 0, 0, thickness, thickness })),
+		slider(new tRectShape(this, js["slider"])),
 		old_position(0.f, 0.f),
 		target_size({ 1.f, 1.f }),
 		target_texture_size({ 1, 1 })
@@ -2262,6 +2267,7 @@ namespace edt {
 
 		js["arrow_first"] = arrow_first->getParamsInJson();
 		js["arrow_second"] = arrow_second->getParamsInJson();
+		js["slider"] = slider->getParamsInJson();
 		
 		sf::Color color = color_scroller_area;
 		js["color_scroller_area"] = { color.r, color.g, color.b, color.a };

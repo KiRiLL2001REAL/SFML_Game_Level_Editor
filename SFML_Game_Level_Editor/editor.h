@@ -223,6 +223,7 @@ namespace edt {
 
 		// Setters
 		void setClearColor(const sf::Color &new_color);
+		void setTextureRect(const sf::FloatRect & new_rect);
 		virtual void setSize(const sf::Vector2f &new_size);
 		virtual void setPosition(const sf::Vector2f &new_position);
 		virtual void setTextureSize(const sf::Vector2u &new_size);
