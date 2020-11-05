@@ -1104,17 +1104,19 @@ namespace edt {
 	tButton::tButton(tAbstractBasicClass* _owner, sf::FloatRect rect) :
 		tRenderRect(_owner, rect),
 		self_code(tEvent::codes.Nothing),
-		custom_skin_loaded(false),
-		alignment(static_cast<int>(text_alignment_type::Left)),
+		alignment(text_alignment_type.Left),
 		side_offset(10),
 		text_offset(sf::Vector2u(0, 0)),
 		text(new tText(this))
 	{
+		changeOneOption(option_mask.custom_skin_loaded, false);
+		changeOneOption(option_mask.text_can_be_showed, true);
+		path_to_skin[0] = "";
+		path_to_skin[1] = "";
 	}
 
 	tButton::tButton(tAbstractBasicClass* _owner, nlohmann::json& js) :
 		tRenderRect(_owner, js),
-		custom_skin_loaded(false),
 		side_offset(10),
 		text(new tText(this, js["text"]))
 	{
@@ -1122,19 +1124,22 @@ namespace edt {
 		text_offset = { vi[0], vi[1] };
 		self_code = js["code"].get<int>();
 		alignment = js["alignment"].get<char>();
-
+		path_to_skin[0] = js["path_to_skin_0"].get<std::string>();
+		path_to_skin[1] = js["path_to_skin_1"].get<std::string>();
+		loadCustomSkin(path_to_skin[0], 0);
+		loadCustomSkin(path_to_skin[1], 1);
 	}
 
 	tButton::tButton(const tButton& b) :
 		tRenderRect(b),
 		side_offset(b.side_offset),
 		self_code(b.self_code),
-		custom_skin_loaded(b.custom_skin_loaded),
 		alignment(b.alignment),
-		custom_skin(b.custom_skin),
 		text_offset(b.text_offset),
 		text(b.text)
 	{
+		custom_skin[0] = b.custom_skin[0];
+		custom_skin[1] = b.custom_skin[1];
 	}
 
 	tButton::~tButton() {
@@ -1143,10 +1148,18 @@ namespace edt {
 
 	void tButton::updateTexture() {
 		render_texture.clear(clear_color);
-		if (custom_skin_loaded) {	// Если загружен пользовательский скин кнопки, то выводим его
+		if (checkOption(option_mask.custom_skin_loaded)) {	// Если загружен пользовательский скин кнопки, то выводим его
 			sf::Sprite spr;
-			spr.setTexture(custom_skin);
-			spr.setPosition(sf::Vector2f(0, 0));
+			int index = 0;
+			if (mouse_inside[0]) {
+				index = 1;
+			}
+			spr.setTexture(custom_skin[index]);
+			spr.setScale({
+				(float)render_texture.getSize().x / custom_skin[index].getSize().x,
+				(float)render_texture.getSize().y / custom_skin[index].getSize().y
+			});
+			spr.setPosition({ 0.f, 0.f });
 			render_texture.draw(spr);
 		}
 		else {						// Иначе - рисуем стандартную кнопку
@@ -1202,45 +1215,65 @@ namespace edt {
 			arr[3].position = point[3];
 			render_texture.draw(arr);
 		}
-		if (text->getFontState()) {				// Если подгружен шрифт, то выводим текст
-			sf::Text text_to_display = text->getTextObject();
-			mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
-			switch (alignment) {			// Настройка выравнивания
-				case static_cast<int>(tButton::text_alignment_type::Right) : {
-					text_to_display.setOrigin({ (float)text_to_display.getLocalBounds().width, (float)text_to_display.getLocalBounds().height });
-					text_to_display.setPosition({ (float)render_texture.getSize().x - side_offset - text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y });
-					break;
+		if (checkOption(option_mask.text_can_be_showed)) {
+			if (text->getFontState()) {				// Если подгружен шрифт, то выводим текст
+				sf::Text text_to_display = text->getTextObject();
+				mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
+				switch (alignment) {			// Настройка выравнивания
+					case text_alignment_type.Right : {
+						text_to_display.setOrigin({
+							(float)text_to_display.getLocalBounds().width,
+							(float)text_to_display.getLocalBounds().height
+						});
+						text_to_display.setPosition({
+							(float)render_texture.getSize().x - side_offset - text_offset.x,
+							(float)render_texture.getSize().y / 2 + text_offset.y
+						});
+						break;
+					}
+					case text_alignment_type.Middle : {
+						text_to_display.setOrigin({
+							text_to_display.getLocalBounds().width / 2,
+							(float)text_to_display.getLocalBounds().height
+						});
+						text_to_display.setPosition({
+							(float)render_texture.getSize().x / 2 + text_offset.x,
+							(float)render_texture.getSize().y / 2 + text_offset.y
+						});
+						break;
+					}
+					case text_alignment_type.Left :
+					default: {
+						text_to_display.setOrigin({
+							0,
+							(float)text_to_display.getLocalBounds().height
+						});
+						text_to_display.setPosition({
+							(float)side_offset + text_offset.x,
+							(float)render_texture.getSize().y / 2 + text_offset.x
+						});
+						break;
+					}
 				}
-				case static_cast<int>(tButton::text_alignment_type::Middle) : {
-					text_to_display.setOrigin({ text_to_display.getLocalBounds().width / 2, (float)text_to_display.getLocalBounds().height });
-					text_to_display.setPosition({ (float)render_texture.getSize().x / 2 + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.y });
-					break;
-				}
-				case static_cast<int>(tButton::text_alignment_type::Left) :
-				default: {
-					text_to_display.setOrigin({ 0, (float)text_to_display.getLocalBounds().height });
-					text_to_display.setPosition({ (float)side_offset + text_offset.x, (float)render_texture.getSize().y / 2 + text_offset.x });
-					break;
-				}
+				text_to_display.setFillColor(sf::Color::Black);	// Немного контраста
+				text_to_display.move({ 1, 1 });
+				render_texture.draw(text_to_display);
+				text_to_display.setFillColor(text->getFillColor());		// А это уже сам вывод текста
+				text_to_display.move({ -1, -1 });
+				render_texture.draw(text_to_display);
 			}
-			text_to_display.setFillColor(sf::Color::Black);	// Немного контраста
-			text_to_display.move({ 1, 1 });
-			render_texture.draw(text_to_display);
-			text_to_display.setFillColor(text->getFillColor());		// А это уже сам вывод текста
-			text_to_display.move({ -1, -1 });
-			render_texture.draw(text_to_display);
-		}
-		else {
-			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, text);
+			else {
+				message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, text);
+			}
 		}
 		render_texture.display();
 	}
 
-	void tButton::loadCustomSkin(std::string path_to_skin) {
-		if (custom_skin.loadFromFile(path_to_skin)) {
-			custom_skin_loaded = true;
-			setSize(sf::Vector2f((float)custom_skin.getSize().x, (float)custom_skin.getSize().y));
-			setTextureSize(sf::Vector2u(custom_skin.getSize().x, custom_skin.getSize().y));
+	void tButton::loadCustomSkin(const std::string &path_to_skin, const int& cell) {
+		if (custom_skin[cell].loadFromFile(path_to_skin)) {
+			this->path_to_skin[cell] = path_to_skin;
+			changeOneOption(option_mask.custom_skin_loaded, true);
+			setTextureSize({ custom_skin[cell].getSize().x, custom_skin[cell].getSize().y });
 			message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 		}
 		else {
@@ -1250,14 +1283,14 @@ namespace edt {
 
 	void tButton::setTextAlignment(const char &new_alignment) {
 		switch (new_alignment) {
-			case static_cast<int>(tButton::text_alignment_type::Middle) :
-			case static_cast<int>(tButton::text_alignment_type::Right) : {
+			case text_alignment_type.Middle :
+			case text_alignment_type.Right : {
 				alignment = new_alignment;
 				break;
 			}
-			case static_cast<int>(tButton::text_alignment_type::Left) :
+			case text_alignment_type.Left :
 			default: {
-				alignment = static_cast<int>(tButton::text_alignment_type::Left);
+				alignment = text_alignment_type.Left;
 				break;
 			}
 		}
@@ -1307,6 +1340,8 @@ namespace edt {
 		js["alignment"] = alignment;
 		js["text_offset"] = { text_offset.x, text_offset.y };
 		js["text"] = text->getParamsInJson();
+		js["path_to_skin_0"] = path_to_skin[0];
+		js["path_to_skin_1"] = path_to_skin[1];
 
 		return js;
 	}
@@ -1463,7 +1498,7 @@ namespace edt {
 		button_close->setTextColor({ 255, 255, 255, 255 });
 		button_close->setCharSize(20);
 		button_close->setOutlineThickness(1);
-		button_close->setTextAlignment(static_cast<int>(tButton::text_alignment_type::Middle));
+		button_close->setTextAlignment(tButton::text_alignment_type.Middle);
 		button_close->setTextOffset({ 0, -3 });
 		message(button_close, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 

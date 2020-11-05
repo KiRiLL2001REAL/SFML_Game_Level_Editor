@@ -39,7 +39,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
-			button->setTextAlignment(static_cast<int>(edt::tButton::text_alignment_type::Middle));
+			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -300, -40 + 320 - 340 });
@@ -51,7 +51,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
-			button->setTextAlignment(static_cast<int>(edt::tButton::text_alignment_type::Middle));
+			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -300, -40 + 320 - 255 });
@@ -63,7 +63,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
-			button->setTextAlignment(static_cast<int>(edt::tButton::text_alignment_type::Middle));
+			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -300, -40 + 320 - 170 });
@@ -75,7 +75,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 255, 255 });
-			button->setTextAlignment(static_cast<int>(edt::tButton::text_alignment_type::Middle));
+			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -250, -40 + 320 - 85 });
@@ -83,11 +83,11 @@ void myDesktop::changeScreen(char new_screen_code) {
 
 			button = new edt::tButton(this, { 0, 0, 500, 80 });
 			button->setString(L"Выход");
-			button->setCode(static_cast<int>(edt::tEvent::codes::CloseApplication));
+			button->setCode(edt::tEvent::codes.CloseApplication);
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 0, 0, 255 });
-			button->setTextAlignment(static_cast<int>(edt::tButton::text_alignment_type::Middle));
+			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
 			button->setTextOffset({0, 8});
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -250, -40 + 320 });
