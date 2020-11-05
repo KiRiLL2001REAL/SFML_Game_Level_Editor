@@ -1131,8 +1131,10 @@ namespace edt {
 		alignment = js["alignment"].get<char>();
 		path_to_skin[0] = js["path_to_skin_0"].get<std::string>();
 		path_to_skin[1] = js["path_to_skin_1"].get<std::string>();
-		loadCustomSkin(path_to_skin[0], 0);
-		loadCustomSkin(path_to_skin[1], 1);
+		if (checkOption(option_mask.custom_skin_loaded)) {
+			loadCustomSkin(path_to_skin[0], 0);
+			loadCustomSkin(path_to_skin[1], 1);
+		}
 	}
 
 	tButton::tButton(const tButton& b) :
