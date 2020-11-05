@@ -288,25 +288,7 @@ namespace edt {
 			from = this;
 		}
 		for (list<tAbstractBasicClass*>::reverse_iterator it = elem.rbegin(); it != elem.rend(); it++) {
-			switch (code) {
-				case tEvent::codes.Deactivate: {
-					message(*it, tEvent::types.Broadcast, tEvent::codes.Deactivate, from);
-					break;
-				}
-				case tEvent::codes.Show: {
-					message(*it, tEvent::types.Broadcast, tEvent::codes.Show, from);
-					break;
-				}
-				case tEvent::codes.Hide: {
-					message(*it, tEvent::types.Broadcast, tEvent::codes.Hide, from);
-					break;
-				}
-				case tEvent::codes.ResetButtons: {
-					message(*it, tEvent::types.Broadcast, tEvent::codes.ResetButtons, from);
-					break;
-				}
-			}
-
+			message(*it, tEvent::types.Broadcast, code, from);
 		}
 	}
 
@@ -620,7 +602,7 @@ namespace edt {
 	void tDesktop::completeEvents() {
 		tEvent e;
 		getEvent(e);
-		while (e.type != e.types.Nothing) {
+		while (e.type != tEvent::types.Nothing) {
 			handleEvent(e);
 			getEvent(e);
 		}
@@ -648,14 +630,14 @@ namespace edt {
 				if (window.pollEvent(event)) {
 					switch (event.type) {
 					case sf::Event::Closed: {				// Окно просит закрыться
-						e.type = e.types.Button;
-						e.code = e.codes.CloseApplication;
+						e.type = tEvent::types.Button;
+						e.code = tEvent::codes.CloseApplication;
 						e.address = this;
 						break;
 					}
 					case sf::Event::KeyPressed:			// Нажата или отпущена какая-либо кнопка на клавиатуре
 					case sf::Event::KeyReleased: {
-						e.type = e.types.Keyboard;
+						e.type = tEvent::types.Keyboard;
 						event.type == sf::Event::KeyPressed ?
 							e.key.what_happened = sf::Event::KeyPressed : e.key.what_happened = sf::Event::KeyReleased;
 						e.key.button = event.key.code;
@@ -667,8 +649,8 @@ namespace edt {
 					}
 					case sf::Event::MouseButtonPressed:	// Нажата или отпущена какая-либо кнопка мыши
 					case sf::Event::MouseButtonReleased: {
-						e.type = e.types.Mouse;
-						e.code = e.codes.MouseButton;
+						e.type = tEvent::types.Mouse;
+						e.code = tEvent::codes.MouseButton;
 						event.type == sf::Event::MouseButtonPressed ?
 							e.mouse.what_happened = sf::Event::MouseButtonPressed : e.mouse.what_happened = sf::Event::MouseButtonReleased;
 						e.mouse.button = event.mouseButton.button;
@@ -678,8 +660,8 @@ namespace edt {
 						break;
 					}
 					case sf::Event::MouseMoved: {			// Мышь двинулась куда-то
-						e.type = e.types.Mouse;
-						e.code = e.codes.MouseMoved;
+						e.type = tEvent::types.Mouse;
+						e.code = tEvent::codes.MouseMoved;
 						e.mouse.x = event.mouseMove.x;
 						e.mouse.y = event.mouseMove.y;
 						e.mouse.dX = e.mouse.x - old_mouse_position.x;
@@ -689,51 +671,58 @@ namespace edt {
 						break;
 					}
 					default: {
-						e.type = e.types.Nothing;
+						e.type = tEvent::types.Nothing;
 						break;
 					}
 					}
 				}
 				else {
-					e.type = e.types.Nothing;
+					e.type = tEvent::types.Nothing;
 				}
 			}
 		}
 	}
 
 	void tDesktop::handleEvent(tEvent& e) {
+		if (e.type == tEvent::types.Mouse && 
+			e.code == tEvent::codes.MouseButton && 
+			e.mouse.what_happened == sf::Event::MouseButtonReleased &&
+			e.mouse.button == sf::Mouse::Left) {	// Если отжата левая кнопка мыши, то останавливаем движение всех элементов
+			
+			forEach(tEvent::codes.StopAndDoNotMove);
+		}
 		tGroup::handleEvent(e);
 		switch (e.type) {
-			case e.types.Broadcast: {	// Общего типа
+			case tEvent::types.Broadcast: {	// Общего типа
 				if (e.address == this) {			// Обработка событий для этого объекта
 					switch (e.code) {
-						case e.codes.Delete: {		// Удалить объект
+						case tEvent::codes.Delete: {		// Удалить объект
 							_delete(e.from);
 							clearEvent(e);
 							break;
 						}
-						case e.codes.Activate: {		// Установить фокус на объект
+						case tEvent::codes.Activate: {		// Установить фокус на объект
 							select(e.from);
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
 							clearEvent(e);
 							break;
 						}
-						case e.codes.Deactivate: {	// Снять фокус с объекта
+						case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 							clearEvent(e);
 							break;
 						}
-						case e.codes.Show: {			// Показать объект (если он скрыт)
+						case tEvent::codes.Show: {			// Показать объект (если он скрыт)
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 							clearEvent(e);
 							break;
 						}
-						case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
+						case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
 							((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 							clearEvent(e);
 							break;
 						}
-						case e.codes.Adopt: {			// Стать владельцем объекта
+						case tEvent::codes.Adopt: {			// Стать владельцем объекта
 							e.from->setOwner(this);
 							_insert(e.from);
 							clearEvent(e);
@@ -742,9 +731,9 @@ namespace edt {
 					}
 				}
 				switch (e.code) {	// Обработка событий от "дальних" объектов
-					case e.codes.FontRequest: {
-						e.type = e.types.Broadcast;
-						e.code = e.codes.FontAnswer;
+					case tEvent::codes.FontRequest: {
+						e.type = tEvent::types.Broadcast;
+						e.code = tEvent::codes.FontAnswer;
 						if (!custom_font_loaded) {
 							e.font.font = &font_default;
 						}
@@ -759,14 +748,14 @@ namespace edt {
 				}
 				break;
 			}
-			case e.types.Button: {	// От кнопки
+			case tEvent::types.Button: {	// От кнопки
 				switch (e.code) {
-					case e.codes.ResetButtons: {
-						forEach(e.codes.ResetButtons, e.from);
+					case tEvent::codes.ResetButtons: {
+						forEach(tEvent::codes.ResetButtons, e.from);
 						clearEvent(e);
 						break;
 					}
-					case e.codes.CloseApplication: {	// Закрыть приложение
+					case tEvent::codes.CloseApplication: {	// Закрыть приложение
 						window.close();
 						clearEvent(e);
 						break;
@@ -871,34 +860,46 @@ namespace edt {
 	void tRectShape::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			switch (e.type) {
-				case e.types.Mouse: {
+				case tEvent::types.Broadcast: {
+					if (e.address == this) {
+						switch (e.code) {
+							case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
+								changeOneOption(option_mask.is_moving_by_mouse, false);
+								// Не обнуляем событие
+								break;
+							}
+						}
+					}
+					break;
+				}
+				case tEvent::types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case e.codes.MouseButton: {
+						case tEvent::codes.MouseButton: {
 							if (mouse_inside[0]) {	// Если мышь внутри, ...
 								if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
-									changeOneOption(option_mask.is_moving, false);
+									changeOneOption(option_mask.is_moving_by_mouse, false);
 								}
 								else if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
 									if (e.mouse.button == sf::Mouse::Left) {	// Если тыкнули левой кнопкой мыши
 										if (checkOption(option_mask.can_be_moved)) {
-											changeOneOption(option_mask.is_moving, true);
+											changeOneOption(option_mask.is_moving_by_mouse, true);
 										}
-										message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
+										message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
 									}
 								}
 								clearEvent(e);
 							}
 							break;
 						}
-						case e.codes.MouseMoved: {
-							if (checkOption(option_mask.is_moving)) {
+						case tEvent::codes.MouseMoved: {
+							if (checkOption(option_mask.is_moving_by_mouse)) {
 								move({ (float)e.mouse.dX, (float)e.mouse.dY });
-								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 							}
 							if (mouse_inside[0] != mouse_inside[1]) {
-								message(nullptr, e.types.Broadcast, e.codes.ResetButtons, this);
+								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
 								clearEvent(e);
 							}
 							break;
@@ -1064,21 +1065,26 @@ namespace edt {
 	void tText::handleEvent(tEvent& e) {
 		if (checkOption(option_mask.can_be_drawn)) {
 			switch (e.type) {
-				case e.types.Broadcast: {
+				case tEvent::types.Broadcast: {
 					if (e.address == this) {
 						switch (e.code) {
-							case e.codes.FontAnswer: {
+							case tEvent::codes.FontAnswer: {
 								font_loaded = true;
 								text_object.setFont(*e.font.font);
-								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								clearEvent(e);
+								break;
+							}
+							case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
+								changeOneOption(option_mask.is_moving_by_mouse, false);
+								// Не обнуляем событие
 								break;
 							}
 						}
 					}
 					break;
 				}
-				case e.types.Mouse: {
+				case tEvent::types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 				}
@@ -1309,19 +1315,25 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			text->handleEvent(e);
 			switch (e.type) {
-				case e.types.Broadcast: {
+				case tEvent::types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этой кнопки
 						switch (e.code) {
-							case e.codes.UpdateTexture: {	// Обновить текстуру
-								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								need_rerender = true;
 								clearEvent(e);
+								break;
+							}
+							case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
+								message(text, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								changeOneOption(option_mask.is_moving_by_mouse, false);
+								// Не обнуляем событие
 								break;
 							}
 						}
 					}
 					switch (e.code) {			// Для всех остальных
-						case e.codes.ResetButtons: {
+						case tEvent::codes.ResetButtons: {
 							if (e.from != this && e.from != getOwner()) {
 								mouse_inside[0] = false;
 								mouse_inside[1] = false;
@@ -1332,23 +1344,23 @@ namespace edt {
 					}
 					break;
 				}
-				case e.types.Mouse: {
+				case tEvent::types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case e.codes.MouseMoved: {
+						case tEvent::codes.MouseMoved: {
 							if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
-								message(nullptr, e.types.Button, e.codes.ResetButtons, this);
-								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
+								message(nullptr, tEvent::types.Button, tEvent::codes.ResetButtons, this);
+								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								clearEvent(e);
 							}
 							break;
 						}
-						case e.codes.MouseButton: {
+						case tEvent::codes.MouseButton: {
 							if (mouse_inside[0]) {
 								if (e.mouse.button == sf::Mouse::Left) {
 									if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
-										message(getOwner(), e.types.Button, self_code, this);
+										message(getOwner(), tEvent::types.Button, self_code, this);
 									}
 								}
 								clearEvent(e);
@@ -1652,42 +1664,52 @@ namespace edt {
 			}
 
 			switch (e.type) {
-				case e.types.Broadcast: {
+				case tEvent::types.Broadcast: {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case e.codes.Activate: {		// Установить фокус на объект
+							case tEvent::codes.Activate: {		// Установить фокус на объект
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
-								message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.Deactivate: {	// Снять фокус с объекта
+							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.Show: {			// Показать объект (если он скрыт)
+							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
+							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.UpdateTexture: {	// Обновить текстуру
-								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								need_rerender = true;
 								clearEvent(e);
 								break;
 							}
-							case e.codes.FontAnswer: {	// Забрать выданный системой шрифт
+							case tEvent::codes.FontAnswer: {	// Забрать выданный системой шрифт
 								font_loaded = true;
 								setFont(*e.font.font);
-								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
-								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
+								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								clearEvent(e);
+								break;
+							}
+							case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью	// Сбросить флаг перетаскивания мышью
+								message(button_close, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								message(heap_shape, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								message((tRenderRect*)display, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								message(scrollbar_v, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								message(scrollbar_h, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								changeOneOption(option_mask.is_moving_by_mouse, false);
+								// Не обнуляем событие
 								break;
 							}
 							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
@@ -1700,12 +1722,12 @@ namespace edt {
 					}
 					break;
 				}
-				case e.types.Button: {
+				case tEvent::types.Button: {
 					if (e.address == this) {	// Для конкретно этого окна
 						switch (e.code) {
-							case e.codes.Close: {			// Закрыть окно
-								e.type = e.types.Broadcast;
-								e.code = e.codes.Delete;
+							case tEvent::codes.Close: {			// Закрыть окно
+								e.type = tEvent::types.Broadcast;
+								e.code = tEvent::codes.Delete;
 								e.address = getOwner();
 								e.from = this;
 								putEvent(e);
@@ -1721,21 +1743,21 @@ namespace edt {
 					}
 					break;
 				}
-				case e.types.Mouse: {
+				case tEvent::types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case e.codes.MouseButton: {
+						case tEvent::codes.MouseButton: {
 							if (mouse_inside[0]) {	// Если мышь внутри, ...
 								if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
-									changeOneOption(option_mask.is_moving, false);
+									changeOneOption(option_mask.is_moving_by_mouse, false);
 								}
 								else if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
 									if (e.mouse.button == sf::Mouse::Left) {	// Если в окно тыкнули левой кнопкой мыши
 										if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
-											changeOneOption(option_mask.is_moving, true);
+											changeOneOption(option_mask.is_moving_by_mouse, true);
 										}
-										message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
+										message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
 										need_rerender = true;
 									}
 								}
@@ -1743,16 +1765,16 @@ namespace edt {
 							}
 							break;
 						}
-						case e.codes.MouseMoved: {
+						case tEvent::codes.MouseMoved: {
 							if (mouse_inside[0] != mouse_inside[1]) {
-								message(nullptr, e.types.Broadcast, e.codes.ResetButtons, this);
+								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
 								clearEvent(e);
 							}
 							if (mouse_inside[0]) {
-								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
+								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								clearEvent(e);
 							}
-							if (checkOption(option_mask.is_moving)) {
+							if (checkOption(option_mask.is_moving_by_mouse)) {
 								move({ (float)e.mouse.dX, (float)e.mouse.dY });
 							}
 							break;
@@ -1806,33 +1828,39 @@ namespace edt {
 		if (checkOption(option_mask.can_be_drawn)) {
 			tGroup::handleEvent(e);
 			switch (e.type) {
-				case e.types.Broadcast: {
+				case tEvent::types.Broadcast: {
 					if (e.address == (tRenderRect*)this) {
 						switch (e.code) {
-							case e.codes.Deactivate: {	// Снять фокус с объекта
+							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case e.codes.Show: {			// Показать объект (если он скрыт)
+							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
+							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case e.codes.Adopt: {			// Стать владельцем объекта
+							case tEvent::codes.Adopt: {			// Стать владельцем объекта
 								e.from->setOwner((tRenderRect*)this);
 								tAbstractBasicClass::clearEvent(e);
 								break;
 							}
-							case e.codes.UpdateTexture: {	// Обновить текстуру
-								tAbstractBasicClass::message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, (tRenderRect*)this);
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
+								tAbstractBasicClass::message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, (tRenderRect*)this);
 								need_rerender = true;
 								tAbstractBasicClass::clearEvent(e);
+								break;
+							}
+							case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
+								forEach(tEvent::codes.StopAndDoNotMove);
+								changeOneOption(option_mask.is_moving_by_mouse, false);
+								// Не обнуляем событие
 								break;
 							}
 							default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
@@ -1845,7 +1873,7 @@ namespace edt {
 					}
 					break;
 				}
-				case e.types.Button: {
+				case tEvent::types.Button: {
 					if (e.address == (tRenderRect*)this) {
 						e.address = getOwner();
 						tAbstractBasicClass::putEvent(e);
@@ -1853,7 +1881,7 @@ namespace edt {
 					}
 					break;
 				}
-				case e.types.Mouse: {
+				case tEvent::types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 				}
@@ -2073,34 +2101,42 @@ namespace edt {
 			slider->handleEvent(e);
 			
 			switch (e.type) {
-				case e.types.Broadcast: {
+				case tEvent::types.Broadcast: {
 					if (e.address == this) {
 						switch (e.code) {
-							case e.codes.Activate: {		// Установить фокус на объект
+							case tEvent::codes.Activate: {		// Установить фокус на объект
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, true);
-								message(getOwner(), e.types.Broadcast, e.codes.Activate, this);
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.Deactivate: {	// Снять фокус с объекта
+							case tEvent::codes.Deactivate: {	// Снять фокус с объекта
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.is_active, false);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.Show: {			// Показать объект (если он скрыт)
+							case tEvent::codes.Show: {			// Показать объект (если он скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, true);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.Hide: {			// Спрятать объект (если он не скрыт)
+							case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
 								((tObject*)e.from)->changeOneOption(tObject::option_mask.can_be_drawn, false);
 								clearEvent(e);
 								break;
 							}
-							case e.codes.UpdateTexture: {	// Обновить текстуру
-								message(getOwner(), e.types.Broadcast, e.codes.UpdateTexture, this);
+							case tEvent::codes.UpdateTexture: {	// Обновить текстуру
+								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								need_rerender = true;
 								clearEvent(e);
+								break;
+							}
+							case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
+								message(arrow_first, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								message(arrow_second, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								message(slider, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+								changeOneOption(option_mask.is_moving_by_mouse, false);
+								// Не обнуляем событие
 								break;
 							}
 							default: {		// Если не обработалось, то "проталкиваем" на уровень ниже
@@ -2113,7 +2149,7 @@ namespace edt {
 					}
 					break;
 				}
-				case e.types.Button: {
+				case tEvent::types.Button: {
 					if (e.address == this) {
 						if (e.from == arrow_first || e.from == arrow_second) {
 							if (e.from == arrow_first) {
@@ -2122,23 +2158,23 @@ namespace edt {
 							else {
 								moveSlider(default_step);
 							}
-							message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
+							message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						}
 					}
 					break;
 				}
-				case e.types.Mouse: {
+				case tEvent::types.Mouse: {
 					mouse_inside[1] = mouse_inside[0];
 					mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 					switch (e.code) {
-						case e.codes.MouseMoved: {
+						case tEvent::codes.MouseMoved: {
 							if (mouse_inside[0] != mouse_inside[1]) {
-								message(nullptr, e.types.Broadcast, e.codes.ResetButtons, this);
+								message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
 								clearEvent(e);
 							}
 							if (mouse_inside[0]) {
 								
-								message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
+								message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 								clearEvent(e);
 							}
 							break;
@@ -2163,7 +2199,7 @@ namespace edt {
 				}
 				slider->setPosition({ slider_rect.left, slider_rect.top });
 				old_position = { slider_rect.left, slider_rect.top };
-				message(this, e.types.Broadcast, e.codes.UpdateTexture, this);
+				message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 			}
 		}
 	}
