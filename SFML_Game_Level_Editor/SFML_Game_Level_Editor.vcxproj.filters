@@ -13,13 +13,16 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Файлы заголовков\InterfaceEngine">
+      <UniqueIdentifier>{fb50d01a-8e38-449f-a10c-cc776d3fe197}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы ресурсов\InterfaceEngine">
+      <UniqueIdentifier>{42ed1612-7146-491e-9043-5994e8266377}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SFML_Game_Level_Editor.cpp">
       <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="editor.cpp">
-      <Filter>Файлы ресурсов</Filter>
     </ClCompile>
     <ClCompile Include="other.cpp">
       <Filter>Файлы ресурсов</Filter>
@@ -33,11 +36,47 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceAbstractBasicClass.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceButton.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceDesktop.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceDisplay.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceEngine.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceEvent.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceGroup.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceObject.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceRectShape.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceRenderRect.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceScrollbar.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceText.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="InterfaceEngine\interfaceWindow.cpp">
+      <Filter>Файлы ресурсов\InterfaceEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="editor.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="json.hpp">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -52,6 +91,45 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceEngine.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceAbstractBasicClass.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceButton.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceDesktop.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceDisplay.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceEvent.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceGroup.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceObject.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceRectShape.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceRenderRect.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceScrollbar.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceText.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="InterfaceEngine\interfaceWindow.h">
+      <Filter>Файлы заголовков\InterfaceEngine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

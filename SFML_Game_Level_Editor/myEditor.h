@@ -1,6 +1,6 @@
 #pragma once
 
-#include "editor.h"
+#include "InterfaceEngine/interfaceEngine.h"
 
 static const struct sScreenCodes {	// Коды кнопок
 	static const unsigned char about_program = 100;

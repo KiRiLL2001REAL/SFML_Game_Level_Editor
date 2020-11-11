@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SFML_DYNAMIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Visual Studio\Repository\SFML_Game_Level_Editor\libs\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);C:\Program Files (x86)\Visual Studio\Repository\SFML_Game_Level_Editor\libs\SFML-2.5.1\include</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName)_$(Platform)_$(PlatformTarget).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
@@ -107,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SFML_DYNAMIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Visual Studio\Repository\SFML_Game_Level_Editor\libs\SFML-2.5.1\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);C:\Program Files (x86)\Visual Studio\Repository\SFML_Game_Level_Editor\libs\SFML-2.5.1\include</AdditionalIncludeDirectories>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName)_$(Platform)_$(PlatformTarget).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
@@ -153,8 +153,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="editor.cpp" />
     <ClCompile Include="huffman.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceAbstractBasicClass.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceButton.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceDesktop.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceDisplay.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceEngine.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceEvent.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceGroup.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceObject.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceRectShape.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceRenderRect.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceScrollbar.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceText.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceWindow.cpp" />
     <ClCompile Include="myEditor.cpp" />
     <ClCompile Include="other.cpp" />
     <ClCompile Include="SFML_Game_Level_Editor.cpp" />
@@ -166,8 +178,20 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="editor.h" />
     <ClInclude Include="huffman.h" />
+    <ClInclude Include="InterfaceEngine\interfaceAbstractBasicClass.h" />
+    <ClInclude Include="InterfaceEngine\interfaceButton.h" />
+    <ClInclude Include="InterfaceEngine\interfaceDesktop.h" />
+    <ClInclude Include="InterfaceEngine\interfaceDisplay.h" />
+    <ClInclude Include="InterfaceEngine\interfaceEngine.h" />
+    <ClInclude Include="InterfaceEngine\interfaceEvent.h" />
+    <ClInclude Include="InterfaceEngine\interfaceGroup.h" />
+    <ClInclude Include="InterfaceEngine\interfaceObject.h" />
+    <ClInclude Include="InterfaceEngine\interfaceRectShape.h" />
+    <ClInclude Include="InterfaceEngine\interfaceRenderRect.h" />
+    <ClInclude Include="InterfaceEngine\interfaceScrollbar.h" />
+    <ClInclude Include="InterfaceEngine\interfaceText.h" />
+    <ClInclude Include="InterfaceEngine\interfaceWindow.h" />
     <ClInclude Include="json.hpp" />
     <ClInclude Include="myEditor.h" />
     <ClInclude Include="other.h" />
