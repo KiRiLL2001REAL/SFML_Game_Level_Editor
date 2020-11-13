@@ -95,10 +95,10 @@ namespace edt {
 	void tRenderRect::setPosition(const sf::Vector2f& new_position) {
 		tObject::setPosition(new_position);
 		sf::Vector2f offset = getRelativeStartPosition();
-
-		render_squad[1].position = { x + render_squad[1].position.x - render_squad[0].position.x, y + render_squad[1].position.y - render_squad[0].position.y };
-		render_squad[2].position = { x + render_squad[2].position.x - render_squad[0].position.x, y + render_squad[2].position.y - render_squad[0].position.y };
-		render_squad[3].position = { x + render_squad[3].position.x - render_squad[0].position.x, y + render_squad[3].position.y - render_squad[0].position.y };
+		
+		for (unsigned int i = 1; i <= 3; i++) {
+			render_squad[i].position = { x + render_squad[i].position.x - render_squad[0].position.x, y + render_squad[i].position.y - render_squad[0].position.y };
+		}
 		render_squad[0].position = { x, y };
 
 		for (unsigned int i = 0; i < 4; i++) {
