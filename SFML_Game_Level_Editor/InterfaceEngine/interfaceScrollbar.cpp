@@ -97,10 +97,10 @@ namespace edt {
 			// Отношение лежит в диапазоне от 0 до 1. Домножаем его на максимальный размер ползунка
 			// с учётом "стрелок" на скроллбаре и получаем текущий размер ползунка.
 			scroller_size.x = thickness - 3;
-			scroller_size.y = (target_size.y / target_texture_size.y) * (scrollbar_rect.height - 2 * thickness) - 2;
+			scroller_size.y = MIN((target_size.y / target_texture_size.y) * (scrollbar_rect.height - 2 * thickness) - 2, scrollbar_rect.height - 2 * thickness);
 		}
 		else {
-			scroller_size.x = (target_size.x / target_texture_size.x) * (scrollbar_rect.width - 2 * thickness) - 2;
+			scroller_size.x = MIN((target_size.x / target_texture_size.x) * (scrollbar_rect.width - 2 * thickness) - 2, scrollbar_rect.width - 2 * thickness);
 			scroller_size.y = thickness - 3;
 		}
 		slider->setSize(scroller_size);
