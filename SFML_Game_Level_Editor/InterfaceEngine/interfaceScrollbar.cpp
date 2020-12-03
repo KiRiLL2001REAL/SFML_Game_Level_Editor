@@ -3,7 +3,7 @@
 
 namespace edt {
 	void tScrollbar::initScrollbar(const bool vertical) {
-		slider->setOneOption(option_mask.can_be_moved, true);
+		slider->setOneOption(tRectShape::option_mask.can_be_moved, true);
 		slider->setColor({ 60, 60, 60, 255 });
 		if (vertical) {
 			arrow_first->setString(L"^");
@@ -34,8 +34,6 @@ namespace edt {
 		target_size({ 1.f, 1.f }),
 		target_texture_size({ 1, 1 })
 	{
-		setOneOption(option_mask.can_be_moved, false);
-		setOneOption(option_mask.can_be_resized, false);
 		setOneOption(option_mask.vectically_orientated, vertical);
 
 		clear_color = color_scroller_area;
@@ -154,10 +152,7 @@ namespace edt {
 						break;
 					}
 					case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
-						message(arrow_first, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
-						message(arrow_second, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
 						message(slider, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
-						setOneOption(option_mask.is_moving_by_mouse, false);
 						// Не обнуляем событие
 						break;
 					}

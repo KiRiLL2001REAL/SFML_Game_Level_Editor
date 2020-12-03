@@ -6,15 +6,15 @@ namespace edt {
 		static const int thickness = 24;	// Ширина скролбара
 		static const int default_step = 32;	// Шаг прокрутки стрелочками в пикселях
 
-		static const struct sOptionMask {	// Маски операций (переопределено для scrollbar)
-			static const unsigned char is_moving_by_mouse = 1;				// Объект перемещается при помощи мыши
-			static const unsigned char is_resizing_by_mouse = 2;				// Объект меняет размер при помощи мыши
-			static const unsigned char can_be_drawn = 4;			// Можно ли выводить этот объект на экран
-			static const unsigned char is_active = 8;				// Активен ли объект
-			static const unsigned char vectically_orientated = 16;	// Вертикальный ли scrollbar
-			static const unsigned char dummy_2 = 32;				// Бит не задействован
-			static const unsigned char can_be_resized = 64;			// Можно ли менять размер объекта при помощи мыши
-			static const unsigned char can_be_moved = 128;			// Можно ли перемещать объект при помощи мыши
+		static const struct sOptionMask {	// Маски флагов (переопределено для tScrollbar)
+			static const unsigned char can_be_drawn = 1;			// Можно ли выводить этот объект на экран
+			static const unsigned char is_active = 2;				// Активен ли объект
+			static const unsigned char vectically_orientated = 4;	// Вертикальный ли scrollbar
+			static const unsigned char dummy_3 = 8;					// Бит не задействован
+			static const unsigned char dummy_4 = 16;				// Бит не задействован
+			static const unsigned char dummy_5 = 32;				// Бит не задействован
+			static const unsigned char dummy_6 = 64;				// Бит не задействован
+			static const unsigned char dummy_7 = 128;				// Бит не задействован
 		} option_mask;
 
 	private:

@@ -2,6 +2,18 @@
 
 namespace edt {
 	class tRectShape : public tObject {
+	public:
+		static const struct sOptionMask {	// Маски флагов (переопределено для tRectShape)
+			static const unsigned char can_be_drawn = 1;		// Можно ли выводить этот объект на экран
+			static const unsigned char is_active = 2;			// Активен ли объект
+			static const unsigned char can_be_moved = 4;		// Можно ли перемещать объект при помощи мыши
+			static const unsigned char is_moving_by_mouse = 8;	// Объект перемещается при помощи мыши
+			static const unsigned char dummy_4 = 16;			// Бит не задействован
+			static const unsigned char dummy_5 = 32;			// Бит не задействован
+			static const unsigned char dummy_6 = 64;			// Бит не задействован
+			static const unsigned char dummy_7 = 128;			// Бит не задействован
+		} option_mask;
+
 	protected:
 		sf::RectangleShape shape;
 

@@ -80,7 +80,7 @@ namespace edt {
 
 			sf::sleep(sf::milliseconds(5));
 		};
-		/*sf::Vector2u size = window.getSize();
+		sf::Vector2u size = window.getSize();
 		nlohmann::json js;
 		js["menu"] = getParamsInJson();
 		js["sfml_window"]["caption"] = "SFML_Game environment editor";

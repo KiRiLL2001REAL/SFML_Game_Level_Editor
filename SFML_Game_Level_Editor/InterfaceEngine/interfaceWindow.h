@@ -8,6 +8,16 @@ namespace edt {
 	class tWindow : public tRenderRect {
 	public:
 		static const int heap_height = 32;
+		static const struct sOptionMask {	// Маски флагов (переопределено для tWindow)
+			static const unsigned char can_be_drawn = 1;			// Можно ли выводить этот объект на экран
+			static const unsigned char is_active = 2;				// Активен ли объект
+			static const unsigned char can_be_moved = 4;			// Можно ли перемещать объект при помощи мыши
+			static const unsigned char is_moving_by_mouse = 8;		// Объект перемещается при помощи мыши
+			static const unsigned char can_be_resized = 16;			// Можно ли менять размер объекта при помощи мыши
+			static const unsigned char is_resizing_by_mouse = 32;	// Объект меняет размер при помощи мыши
+			static const unsigned char dummy_6 = 64;				// Бит не задействован
+			static const unsigned char dummy_7 = 128;				// Бит не задействован
+		} option_mask;
 
 	private:
 		static const unsigned char caption_char_size = 24;

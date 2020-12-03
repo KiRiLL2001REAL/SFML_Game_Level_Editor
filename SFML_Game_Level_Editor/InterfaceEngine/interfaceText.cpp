@@ -3,10 +3,10 @@
 
 namespace edt {
 	tText::tText(tAbstractBasicClass* _owner, sf::Vector2f position, std::wstring string) :
-		tObject(_owner),
-		font_loaded(false)
+		tObject(_owner)
 	{
 		tObject::setPosition(position);
+		setOneOption(option_mask.is_font_loaded, false);
 		setString(string);
 		setTextColor({ 255, 255, 255, 255 });
 		setCharSize(24);
@@ -15,9 +15,9 @@ namespace edt {
 	}
 
 	tText::tText(tAbstractBasicClass* _owner, nlohmann::json& js) :
-		tObject(_owner, js),
-		font_loaded(false)
+		tObject(_owner, js)
 	{
+		setOneOption(option_mask.is_font_loaded, false);
 		vec<int> vi = js["text"].get<vec<int>>();
 		setString(convertIntVectorToWstring(vi));
 
@@ -34,8 +34,7 @@ namespace edt {
 	tText::tText(const tText& t) :
 		tObject(t),
 		text_object(t.text_object),
-		font(t.font),
-		font_loaded(t.font_loaded)
+		font(t.font)
 	{
 	}
 
@@ -44,7 +43,7 @@ namespace edt {
 
 	void tText::draw(sf::RenderTarget& target) {
 		if (checkOption(option_mask.can_be_drawn)) {
-			if (font_loaded) {
+			if (checkOption(option_mask.is_font_loaded)) {
 				target.draw(text_object);
 				return;
 			}
@@ -66,14 +65,13 @@ namespace edt {
 				if (e.address == this) {
 					switch (e.code) {
 					case tEvent::codes.FontAnswer: {
-						font_loaded = true;
+						setOneOption(option_mask.is_font_loaded, true);
 						text_object.setFont(*e.font.font);
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
 						break;
 					}
 					case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
-						setOneOption(option_mask.is_moving_by_mouse, false);
 						// Не обнуляем событие
 						break;
 					}
@@ -107,7 +105,7 @@ namespace edt {
 	}
 
 	void tText::setFont(const sf::Font& new_font) {
-		font_loaded = true;
+		setOneOption(option_mask.is_font_loaded, true);
 		font = new_font;
 		text_object.setFont(font);
 	}
@@ -126,7 +124,7 @@ namespace edt {
 	}
 
 	bool tText::getFontState() const {
-		return font_loaded;
+		return checkOption(option_mask.is_font_loaded);
 	}
 
 	sf::Text& tText::getTextObject() const {

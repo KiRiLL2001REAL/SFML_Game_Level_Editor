@@ -5,6 +5,7 @@ namespace edt {
 	tRectShape::tRectShape(tAbstractBasicClass* _owner, sf::FloatRect rect, sf::Color fill_color) :
 		tObject(_owner)
 	{
+		setOneOption(option_mask.can_be_moved, true);
 		setPosition({ rect.left, rect.top });
 		setSize({ rect.width, rect.height });
 		setColor(fill_color);
