@@ -7,8 +7,9 @@ namespace edt {
 		anchor(anchors.upper_left_corner),
 		x(0),
 		y(0),
-		options(option_mask.can_be_drawn)
+		options(0)
 	{
+		setOneOption(option_mask.can_be_drawn, true);
 		mouse_inside[0] = false;
 		mouse_inside[1] = false;
 	}

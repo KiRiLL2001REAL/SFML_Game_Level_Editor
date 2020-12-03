@@ -3,7 +3,7 @@
 namespace edt {
 	class tRectShape : public tObject {
 	public:
-		static const struct sOptionMask {	// Маски операций (переопределено для tRectShape)
+		static const struct sOptionMask {	// Маски флагов (переопределено для tRectShape)
 			static const unsigned char can_be_drawn = 1;		// Можно ли выводить этот объект на экран
 			static const unsigned char is_active = 2;			// Активен ли объект
 			static const unsigned char can_be_moved = 4;		// Можно ли перемещать объект при помощи мыши

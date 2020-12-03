@@ -3,7 +3,7 @@
 namespace edt {
 	class tObject : public tAbstractBasicClass { // Класс объекта
 	public:
-		static const struct sOptionMask {	// Маски операций
+		static const struct sOptionMask {	// Маски флагов
 			static const unsigned char can_be_drawn = 1;	// Можно ли выводить этот объект на экран
 			static const unsigned char is_active = 2;		// Активен ли объект
 			static const unsigned char dummy_2 = 4;			// Бит не задействован

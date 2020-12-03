@@ -2,10 +2,21 @@
 
 namespace edt {
 	class tText : public tObject {
+	public:
+		static const struct sOptionMask {	// Маски флагов (переопределено для tText)
+			static const unsigned char can_be_drawn = 1;	// Можно ли выводить этот объект на экран
+			static const unsigned char is_active = 2;		// Активен ли объект
+			static const unsigned char is_font_loaded = 4;	// Загружен ли шрифт?
+			static const unsigned char dummy_3 = 8;			// Бит не задействован
+			static const unsigned char dummy_4 = 16;		// Бит не задействован
+			static const unsigned char dummy_5 = 32;		// Бит не задействован
+			static const unsigned char dummy_6 = 64;		// Бит не задействован
+			static const unsigned char dummy_7 = 128;		// Бит не задействован
+		} option_mask;
+
 	protected:
 		sf::Text text_object;				// SFML текст
 		sf::Font font;						// Шрифт текста
-		bool font_loaded;					// Флаг. Загружен ли шрифт?
 
 	public:
 		tText(tAbstractBasicClass* _owner, sf::Vector2f position = { 0, 0 }, std::wstring string = L"Some text");
