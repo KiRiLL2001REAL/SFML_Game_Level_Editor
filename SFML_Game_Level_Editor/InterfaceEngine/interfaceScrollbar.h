@@ -6,7 +6,7 @@ namespace edt {
 		static const int thickness = 24;	// Ширина скролбара
 		static const int default_step = 32;	// Шаг прокрутки стрелочками в пикселях
 
-		static const struct sOptionMask {	// Маски операций (переопределено для scrollbar)
+		static const struct sOptionMask {	// Маски операций (переопределено для tScrollbar)
 			static const unsigned char is_moving_by_mouse = 1;				// Объект перемещается при помощи мыши
 			static const unsigned char is_resizing_by_mouse = 2;				// Объект меняет размер при помощи мыши
 			static const unsigned char can_be_drawn = 4;			// Можно ли выводить этот объект на экран

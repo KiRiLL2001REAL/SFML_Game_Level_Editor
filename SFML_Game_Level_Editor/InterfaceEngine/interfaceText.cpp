@@ -73,7 +73,6 @@ namespace edt {
 						break;
 					}
 					case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
-						setOneOption(option_mask.is_moving_by_mouse, false);
 						// Не обнуляем событие
 						break;
 					}

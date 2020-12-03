@@ -4,7 +4,7 @@
 namespace edt {
 	tObject::tObject(tAbstractBasicClass* _owner) :
 		tAbstractBasicClass(_owner),
-		anchor(0b00001001),
+		anchor(anchors.upper_left_corner),
 		x(0),
 		y(0),
 		options(option_mask.can_be_drawn)
