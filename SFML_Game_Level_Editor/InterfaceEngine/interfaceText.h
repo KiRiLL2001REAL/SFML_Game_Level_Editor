@@ -30,6 +30,8 @@ namespace edt {
 		virtual void updateTexture();
 
 		// Setters
+		void setStyle(const sf::Text::Style& new_style);
+		void setAnchor(const unsigned char& new_anchor);
 		void setString(const std::wstring& new_string);
 		void setTextColor(const sf::Color& new_color);
 		void setFont(const sf::Font& new_font);

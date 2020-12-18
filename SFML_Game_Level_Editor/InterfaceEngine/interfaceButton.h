@@ -17,19 +17,19 @@ namespace edt {
 			static const unsigned char dummy_7 = 128;			// Бит не задействован
 		} option_mask;
 
-		static const struct sTextAlignmentType {	// Тип привязки текста к кнопке (по сути, якорь)
+		static const struct sTextOriginType {	// Тип привязки текста к кнопке (по сути, якорь)
 			static const int Left = 0;		// По левому краю
 			static const int Middle = 1;	// По центру
 			static const int Right = 2;		// По правому краю
-		} text_alignment_type;
+		} text_origin_type;
 
 	protected:
-		const unsigned char side_offset;
+		const unsigned char side_offset;	// Отступ текста от края кнопки
 
 		int self_code;					// Код, который посылает кнопка при нажатии на неё
-		char alignment;					// Тип выравнивания
+		char text_origin;				// Выравнивание текста
 		sf::Texture custom_skin[2];		// Пользовательский скин кпопки (обычный и выделенный)
-		sf::Vector2i text_offset;		// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
+		sf::Vector2f text_offset;		// Настройка смещения текста, в случае, если он криво выводится (это всё из-за шрифтов)
 		std::string path_to_skin[2];	// Путь до частей кастомного скина
 		tText* text;					// Текст внутри кнопки
 
@@ -45,8 +45,8 @@ namespace edt {
 
 		// Setters
 		void loadCustomSkin(const std::string& path_to_skin, const int& cell);
-		void setTextAlignment(const char& new_alignment);
-		void setTextOffset(const sf::Vector2i& new_offset);
+		void setTextOrigin(const char& new_origin);
+		void setTextOffset(const sf::Vector2f& new_offset);
 		void setCode(const int& new_code);
 		void setFont(const sf::Font& new_font);
 		void setString(const std::wstring& new_string);

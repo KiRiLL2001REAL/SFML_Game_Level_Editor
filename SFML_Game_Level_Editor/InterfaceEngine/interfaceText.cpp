@@ -96,6 +96,56 @@ namespace edt {
 		return;
 	}
 	
+	void tText::setStyle(const sf::Text::Style& new_style) {
+		text_object.setStyle(new_style);
+	}
+
+	void tText::setAnchor(const unsigned char& new_anchor) {
+		tObject::setAnchor(new_anchor);
+		/*
+		0b00001001;		// якорь на верхний левый угол родител€
+		0b00001010;		// якорь на верхнюю сторону родител€
+		0b00001100;		// якорь на верхний правый угол	родител€
+		0b00010001;		// якорь на левую сторону родител€
+		0b00010010;		// якорь на центр родител€
+		0b00010100;		// якорь на правую сторону родител€
+		0b00100001;		// якорь на нижний левый угол родител€
+		0b00100010;		// якорь на нижнюю сторону родител€
+		0b00100100;		// якорь на нижний правый угол родител€
+		*/
+		sf::Vector2f origin = { 0.f, 0.f };
+		sf::FloatRect text_bounds = text_object.getLocalBounds();
+		switch (new_anchor & 0b111) {
+			case 0b001: {	// Ћево
+				origin.x = 0;
+				break;
+			}
+			case 0b010: {	// —ередина
+				origin.x = text_bounds.width / 2;
+				break;
+			}
+			case 0b100: {	// ѕраво
+				origin.x = text_bounds.width;
+				break;
+			}
+		}
+		switch ((new_anchor >> 3) & 0b111) {
+			case 0b001: {	// ¬ерх
+				origin.y = 0;
+				break;
+			}
+			case 0b010: {	// —ередина
+				origin.y = text_bounds.height / 2;
+				break;
+			}
+			case 0b100: {	// Ќиз
+				origin.y = text_bounds.height;
+				break;
+			}
+		}
+		text_object.setOrigin(origin);
+	}
+
 	void tText::setString(const std::wstring& new_string) {
 		text_object.setString(new_string);
 	}
@@ -120,7 +170,7 @@ namespace edt {
 
 	void tText::setPosition(const sf::Vector2f& new_position) {
 		tObject::setPosition(new_position);
-		text_object.setPosition(new_position + getRelativeStartPosition());
+		text_object.setPosition(new_position);
 	}
 
 	bool tText::getFontState() const {
