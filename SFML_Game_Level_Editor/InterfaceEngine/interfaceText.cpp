@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "interfaceEngine.h"
 
-namespace edt {
+namespace edt
+{
 	tText::tText(tAbstractBasicClass* _owner, sf::Vector2f position, std::wstring string) :
 		tObject(_owner)
 	{
@@ -38,16 +39,20 @@ namespace edt {
 	{
 	}
 
-	tText::~tText() {
+	tText::~tText()
+	{
 	}
 
-	void tText::draw(sf::RenderTarget& target) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			if (checkOption(option_mask.is_font_loaded)) {
+	void tText::draw(sf::RenderTarget& target)
+	{
+		if (checkOption(option_mask.can_be_drawn))
+		{
+			if (checkOption(option_mask.is_font_loaded))
+			{	// Eсли шрифт загружен, то выводим элемент на экран
 				target.draw(text_object);
 				return;
 			}
-			// если код в предыдущем блоке выполнился, то код ниже не выполняется
+			// В противном случае запрашиваем его у Desktop
 			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, this);
 			tEvent e;
 			e.address = getOwner();
@@ -58,28 +63,32 @@ namespace edt {
 		}
 	}
 
-	void tText::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			switch (e.type) {
-			case tEvent::types.Broadcast: {
-				if (e.address == this) {
-					switch (e.code) {
-					case tEvent::codes.FontAnswer: {
+	void tText::handleEvent(tEvent& e)
+	{
+		if (checkOption(option_mask.can_be_drawn))
+		{
+			switch (e.type)
+			{
+			case tEvent::types.Broadcast:
+			{
+				if (e.address == this)
+				{
+					switch (e.code)
+					{
+					case tEvent::codes.FontAnswer:
+					{
 						setOneOption(option_mask.is_font_loaded, true);
 						text_object.setFont(*e.font.font);
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
-						// Не обнуляем событие
-						break;
-					}
 					}
 				}
 				break;
 			}
-			case tEvent::types.Mouse: {
+			case tEvent::types.Mouse:
+			{
 				mouse_inside[1] = mouse_inside[0];
 				mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 			}
@@ -87,64 +96,83 @@ namespace edt {
 		}
 	}
 
-	void tText::move(sf::Vector2f delta) {
+	void tText::move(sf::Vector2f delta)
+	{
 		tObject::move(delta);
 		text_object.move(delta);
 	}
 
-	void tText::updateTexture() {
+	void tText::updateTexture()
+	{
 		return;
 	}
 	
-	void tText::setString(const std::wstring& new_string) {
+	void tText::setString(const std::wstring& new_string)
+	{
 		text_object.setString(new_string);
 	}
 
-	void tText::setTextColor(const sf::Color& new_color) {
+	void tText::setTextColor(const sf::Color& new_color)
+	{
 		text_object.setFillColor(new_color);
 	}
 
-	void tText::setFont(const sf::Font& new_font) {
+	void tText::setFont(const sf::Font& new_font)
+	{
 		setOneOption(option_mask.is_font_loaded, true);
 		font = new_font;
 		text_object.setFont(font);
 	}
 
-	void tText::setCharSize(const unsigned int& new_char_size) {
+	void tText::setCharSize(const unsigned int& new_char_size)
+	{
 		text_object.setCharacterSize(new_char_size);
 	}
 
-	void tText::setOutlineThickness(const unsigned char& new_thickness) {
+	void tText::setOutlineThickness(const unsigned char& new_thickness)
+	{
 		text_object.setOutlineThickness(new_thickness);
 	}
 
-	void tText::setPosition(const sf::Vector2f& new_position) {
+	void tText::setPosition(const sf::Vector2f& new_position)
+	{
 		tObject::setPosition(new_position);
 		text_object.setPosition(new_position + getRelativeStartPosition());
 	}
 
-	bool tText::getFontState() const {
+	bool tText::getFontState() const
+	{
 		return checkOption(option_mask.is_font_loaded);
 	}
 
-	sf::Text& tText::getTextObject() const {
+	sf::Text& tText::getTextObject() const
+	{
 		return (sf::Text&)text_object;
 	}
 
-	sf::Color tText::getFillColor() const {
+	sf::Color tText::getFillColor() const
+	{
 		return text_object.getFillColor();
 	}
 
-	sf::FloatRect tText::getLocalBounds() const {
+	sf::FloatRect tText::getLocalBounds() const
+	{
 		return text_object.getLocalBounds();
 	}
 
-	bool tText::pointIsInsideMe(sf::Vector2i point) const {
+	bool tText::pointIsInsideMe(sf::Vector2i point) const
+	{
 		sf::FloatRect rect = getGlobalBounds();
-		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
+		return (
+			point.x >= rect.left && 
+			point.x <= rect.left + rect.width && 
+			point.y >= rect.top && 
+			point.y <= rect.top + rect.height
+		);
 	}
 
-	nlohmann::json tText::getParamsInJson() const {
+	nlohmann::json tText::getParamsInJson() const
+	{
 		nlohmann::json js = tObject::getParamsInJson();
 
 		sf::Color color = text_object.getFillColor();

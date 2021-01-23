@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "interfaceEngine.h"
 
-namespace edt {
+namespace edt
+{
 	tDesktop::tDesktop(std::string path_to_folder, unsigned char _screen_code) :
 		tGroup(nullptr),
 		custom_font_loaded(false),
@@ -18,11 +19,14 @@ namespace edt {
 		std::string config_file_name = "\\Content\\Config\\forms.conf";
 
 		std::ifstream file(path_to_folder + config_file_name);
-		try {
-			if (!file.is_open()) {
+		try
+		{
+			if (!file.is_open())
+			{
 				throw(-1);
 			}
-			else {
+			else
+			{
 				file >> json_configuration;
 				file.close();
 
@@ -55,9 +59,12 @@ namespace edt {
 				window.setKeyRepeatEnabled(false);
 			}
 		}
-		catch (int error) {
-			switch (error) {
-			case -1: {
+		catch (int error)
+		{
+			switch (error)
+			{
+			case -1:
+			{
 				std::cout << "Can't open file '" << path_to_folder << config_file_name << "'\n";
 				break;
 			}
@@ -65,13 +72,16 @@ namespace edt {
 		}
 	}
 
-	tDesktop::~tDesktop() {
+	tDesktop::~tDesktop()
+	{
 	}
 
-	void tDesktop::run() {
+	void tDesktop::run()
+	{
 		changeScreen(screen_code);
 
-		while (window.isOpen()) {
+		while (window.isOpen())
+		{
 			completeEvents();
 
 			window.clear();
@@ -93,71 +103,92 @@ namespace edt {
 		file.close();*/
 	}
 
-	void tDesktop::saveData() const {
+	void tDesktop::saveData() const
+	{
 	}
 
-	void tDesktop::loadCustomFont(std::string path_to_font) {
-		if (custom_font.loadFromFile(path_to_font)) {
+	void tDesktop::loadCustomFont(std::string path_to_font)
+	{
+		if (custom_font.loadFromFile(path_to_font))
+		{
 			custom_font_loaded = true;
 		}
-		else {
+		else
+		{
 			std::cout << "tDesktop.loadcustomFont error: Invalid path_to_font.\n";
 		};
 	}
 
-	void tDesktop::completeEvents() {
+	void tDesktop::completeEvents()
+	{
 		tEvent e;
 		getEvent(e);
-		while (e.type != tEvent::types.Nothing) {
+		while (e.type != tEvent::types.Nothing)
+		{
 			handleEvent(e);
 			getEvent(e);
 		}
 	}
 
-	bool tDesktop::windowIsOpen() const {
+	bool tDesktop::windowIsOpen() const
+	{
 		return window.isOpen();
 	}
 
-	void tDesktop::changeScreen(char new_screen_code) {
+	void tDesktop::changeScreen(char new_screen_code)
+	{
 		screen_code = new_screen_code;
 
 		saveData();
 
-		int i = elem.size();	// Очистить все подэлементы
-		while (i > 0) {
+		// Очистить все подэлементы
+		int i = elem.size();
+		while (i > 0)
+		{
 			_delete(elem.back());
 			elem.pop_back();
 			i--;
 		};
-		i = events.size();	// Очистить список событий
-		while (i > 0) {
+		// Очистить список событий
+		i = events.size();
+		while (i > 0)
+		{
 			events.pop_back();
 			i--;
 		};
 	}
 
-	void tDesktop::putEvent(tEvent e) {
+	void tDesktop::putEvent(tEvent e)
+	{
 		events.push_back(e);
 	}
 
-	void tDesktop::getEvent(tEvent& e) {
-		if (events.size() != 0) {
+	void tDesktop::getEvent(tEvent& e)
+	{
+		if (events.size() != 0)
+		{
 			e = events.back();
 			events.pop_back();
 		}
-		else {
-			if (windowIsOpen()) {
+		else
+		{
+			if (windowIsOpen())
+			{
 				sf::Event event;
-				if (window.pollEvent(event)) {
-					switch (event.type) {
-					case sf::Event::Closed: {				// Окно просит закрыться
+				if (window.pollEvent(event))
+				{
+					switch (event.type)
+					{
+					case sf::Event::Closed:
+					{	// Окно просит закрыться
 						e.type = tEvent::types.Button;
 						e.code = tEvent::codes.CloseApplication;
 						e.address = this;
 						break;
 					}
-					case sf::Event::KeyPressed:			// Нажата или отпущена какая-либо кнопка на клавиатуре
-					case sf::Event::KeyReleased: {
+					case sf::Event::KeyPressed:
+					case sf::Event::KeyReleased:
+					{	// Нажата или отпущена какая-либо кнопка на клавиатуре
 						e.type = tEvent::types.Keyboard;
 						event.type == sf::Event::KeyPressed ?
 							e.key.what_happened = sf::Event::KeyPressed : e.key.what_happened = sf::Event::KeyReleased;
@@ -168,8 +199,9 @@ namespace edt {
 						e.address = this;
 						break;
 					}
-					case sf::Event::MouseButtonPressed:	// Нажата или отпущена какая-либо кнопка мыши
-					case sf::Event::MouseButtonReleased: {
+					case sf::Event::MouseButtonPressed:
+					case sf::Event::MouseButtonReleased:
+					{	// Нажата или отпущена какая-либо кнопка мыши
 						e.type = tEvent::types.Mouse;
 						e.code = tEvent::codes.MouseButton;
 						event.type == sf::Event::MouseButtonPressed ?
@@ -180,7 +212,8 @@ namespace edt {
 						e.address = this;
 						break;
 					}
-					case sf::Event::MouseMoved: {			// Мышь двинулась куда-то
+					case sf::Event::MouseMoved:
+					{	// Мышь двинулась куда-то
 						e.type = tEvent::types.Mouse;
 						e.code = tEvent::codes.MouseMoved;
 						e.mouse.x = event.mouseMove.x;
@@ -191,59 +224,71 @@ namespace edt {
 						e.address = this;
 						break;
 					}
-					default: {
+					default:
+					{
 						e.type = tEvent::types.Nothing;
 						break;
 					}
 					}
 				}
-				else {
+				else
+				{
 					e.type = tEvent::types.Nothing;
 				}
 			}
 		}
 	}
 
-	void tDesktop::handleEvent(tEvent& e) {
+	void tDesktop::handleEvent(tEvent& e)
+	{
 		if (e.type == tEvent::types.Mouse &&
 			e.code == tEvent::codes.MouseButton &&
 			e.mouse.what_happened == sf::Event::MouseButtonReleased &&
-			e.mouse.button == sf::Mouse::Left) {	// Если отжата левая кнопка мыши, то останавливаем движение всех элементов
-
+			e.mouse.button == sf::Mouse::Left)
+		{	// Если отжата левая кнопка мыши, то останавливаем движение всех элементов
 			forEach(tEvent::codes.StopAndDoNotMove);
 		}
 		tGroup::handleEvent(e);
-		switch (e.type) {
-		case tEvent::types.Broadcast: {	// Общего типа
-			if (e.address == this) {			// Обработка событий для этого объекта
+		switch (e.type)
+		{
+		case tEvent::types.Broadcast:
+		{	// Общего типа
+			if (e.address == this)
+			{	// Обработка событий для этого объекта
 				switch (e.code) {
-				case tEvent::codes.Delete: {		// Удалить объект
+				case tEvent::codes.Delete:
+				{	// Удалить объект
 					_delete(e.from);
 					clearEvent(e);
 					break;
 				}
-				case tEvent::codes.Activate: {		// Установить фокус на объект
+				case tEvent::codes.Activate:
+				{	// Установить фокус на объект
 					select(e.from);
 					((tObject*)e.from)->setOneOption(tObject::option_mask.is_active, true);
 					clearEvent(e);
 					break;
 				}
-				case tEvent::codes.Deactivate: {	// Снять фокус с объекта
+				case tEvent::codes.Deactivate:
+				{	// Снять фокус с объекта
 					((tObject*)e.from)->setOneOption(tObject::option_mask.is_active, false);
 					clearEvent(e);
 					break;
 				}
-				case tEvent::codes.Show: {			// Показать объект (если он скрыт)
+				case tEvent::codes.Show:
+				{	// Показать объект (если он скрыт)
 					((tObject*)e.from)->setOneOption(tObject::option_mask.can_be_drawn, true);
 					clearEvent(e);
 					break;
 				}
-				case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
+				case tEvent::codes.Hide:
+				{	// Спрятать объект (если он не скрыт)
 					((tObject*)e.from)->setOneOption(tObject::option_mask.can_be_drawn, false);
 					clearEvent(e);
 					break;
 				}
-				case tEvent::codes.Adopt: {			// Стать владельцем объекта
+				case tEvent::codes.Adopt:
+				{	// Стать владельцем объекта
 					e.from->setOwner(this);
 					_insert(e.from);
 					clearEvent(e);
@@ -251,14 +296,18 @@ namespace edt {
 				}
 				}
 			}
-			switch (e.code) {	// Обработка событий от "дальних" объектов
-			case tEvent::codes.FontRequest: {
+			switch (e.code)
+			{	// Обработка событий от "дальних" объектов
+			case tEvent::codes.FontRequest:
+			{
 				e.type = tEvent::types.Broadcast;
 				e.code = tEvent::codes.FontAnswer;
-				if (!custom_font_loaded) {
+				if (!custom_font_loaded)
+				{
 					e.font.font = &font_default;
 				}
-				else {
+				else
+				{
 					e.font.font = &custom_font;
 				}
 				e.address = e.from;
@@ -269,14 +318,18 @@ namespace edt {
 			}
 			break;
 		}
-		case tEvent::types.Button: {	// От кнопки
-			switch (e.code) {
-			case tEvent::codes.ResetButtons: {
+		case tEvent::types.Button:
+		{	// От кнопки
+			switch (e.code)
+			{
+			case tEvent::codes.ResetButtons:
+			{	// Сбросить состояние кнопок (выделение текста)
 				forEach(tEvent::codes.ResetButtons, e.from);
 				clearEvent(e);
 				break;
 			}
-			case tEvent::codes.CloseApplication: {	// Закрыть приложение
+			case tEvent::codes.CloseApplication:
+			{	// Закрыть приложение
 				window.close();
 				clearEvent(e);
 				break;
@@ -287,23 +340,31 @@ namespace edt {
 		}
 	}
 
-	void tDesktop::updateTexture() {
+	void tDesktop::updateTexture()
+	{
 		return;
 	}
 
-	void tDesktop::draw(sf::RenderTarget& target) {
+	void tDesktop::draw(sf::RenderTarget& target)
+	{
 		target.draw(background);
 		tGroup::draw(target);
 	}
 
-	sf::Font& tDesktop::getFont() const {
+	sf::Font& tDesktop::getFont() const
+	{
 		if (custom_font_loaded)
+		{
 			return (sf::Font&)custom_font;
+		}
 		else
+		{
 			return (sf::Font&)font_default;
+		}
 	}
 
-	sf::FloatRect tDesktop::getLocalBounds() const {
+	sf::FloatRect tDesktop::getLocalBounds() const
+	{
 		return {
 			0,
 			0,
@@ -312,12 +373,19 @@ namespace edt {
 		};
 	}
 
-	bool tDesktop::pointIsInsideMe(sf::Vector2i point) const {
+	bool tDesktop::pointIsInsideMe(sf::Vector2i point) const
+	{
 		sf::Vector2i size = (sf::Vector2i)window.getSize();
-		return (point.x >= 0 && point.x <= size.x && point.y >= 0 && point.y <= size.y);
+		return (
+			point.x >= 0 && 
+			point.x <= size.x && 
+			point.y >= 0 && 
+			point.y <= size.y
+		);
 	}
 
-	nlohmann::json tDesktop::getParamsInJson() const {
+	nlohmann::json tDesktop::getParamsInJson() const
+	{
 		nlohmann::json js;
 
 		js = tGroup::getParamsInJson();
