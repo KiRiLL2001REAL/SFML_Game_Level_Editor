@@ -288,7 +288,7 @@ namespace edt
 	}
 
 
-	void tButton::setTextOffset(const sf::Vector2i& new_offset)
+	void tButton::setTextOffset(const sf::Vector2f& new_offset)
 	{
 		text_offset = new_offset;
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
