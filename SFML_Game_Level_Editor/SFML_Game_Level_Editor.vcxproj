@@ -158,7 +158,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="huffman.cpp" />
-    <ClCompile Include="interfaceDropDownList.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceAbstractBasicClass.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceButton.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceDesktop.cpp" />
@@ -184,7 +183,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="huffman.h" />
-    <ClInclude Include="interfaceDropDownList.h" />
     <ClInclude Include="InterfaceEngine\interfaceAbstractBasicClass.h" />
     <ClInclude Include="InterfaceEngine\interfaceButton.h" />
     <ClInclude Include="InterfaceEngine\interfaceDesktop.h" />
