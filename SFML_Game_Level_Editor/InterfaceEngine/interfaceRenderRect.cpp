@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "interfaceEngine.h"
 
-namespace edt {
+namespace edt
+{
 	tRenderRect::tRenderRect(tAbstractBasicClass* _owner, sf::FloatRect rect) :
 		tObject(_owner),
 		render_squad(sf::VertexArray(sf::Quads, 4)),
@@ -49,70 +50,89 @@ namespace edt {
 		render_texture.display();
 	}
 
-	tRenderRect::~tRenderRect() {
+	tRenderRect::~tRenderRect()
+	{
 	}
 
-	void tRenderRect::draw(sf::RenderTarget& target) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			if (need_rerender) {
+	void tRenderRect::draw(sf::RenderTarget& target)
+	{
+		if (checkOption(option_mask.can_be_drawn))
+		{
+			if (need_rerender)
+			{
 				need_rerender = false;
 				updateTexture();
 			}
-			target.draw(render_squad, &render_texture.getTexture());	// Отобразиться
+			// Отобразиться
+			target.draw(render_squad, &render_texture.getTexture());
 		}
 	}
 
-	void tRenderRect::move(sf::Vector2f delta) {
+	void tRenderRect::move(sf::Vector2f delta)
+	{
 		tObject::move(delta);
 		sf::Vector2f pos;
-		for (char i = 0; i < 4; i++) {
+		for (char i = 0; i < 4; i++)
+		{
 			pos = render_squad[i].position;
 			render_squad[i].position = pos + delta;
 		}
 	}
 
-	void tRenderRect::setClearColor(const sf::Color& color) {
+	void tRenderRect::setClearColor(const sf::Color& color)
+	{
 		clear_color = color;
 	}
 
-	void tRenderRect::setTextureSize(const sf::Vector2u& new_size) {
+	void tRenderRect::setTextureSize(const sf::Vector2u& new_size)
+	{
 		render_texture.create(new_size.x, new_size.y);
 		need_rerender = true;
 	}
 
-	void tRenderRect::setTextureRect(const sf::FloatRect& rect) {
+	void tRenderRect::setTextureRect(const sf::FloatRect& rect)
+	{
 		render_squad[0].texCoords = { rect.left, rect.top };
 		render_squad[1].texCoords = { rect.left + rect.width, rect.top };
 		render_squad[2].texCoords = { rect.left + rect.width, rect.top + rect.height };
 		render_squad[3].texCoords = { rect.left, rect.top + rect.height };
 	}
 
-	void tRenderRect::setSize(const sf::Vector2f& new_size) {
+	void tRenderRect::setSize(const sf::Vector2f& new_size)
+	{
 		render_squad[0].position = { x, y };
 		render_squad[1].position = { x + new_size.x, y };
 		render_squad[2].position = { x + new_size.x, y + new_size.y };
 		render_squad[3].position = { x, y + new_size.y };
 	}
 
-	void tRenderRect::setPosition(const sf::Vector2f& new_position) {
+	void tRenderRect::setPosition(const sf::Vector2f& new_position)
+	{
 		tObject::setPosition(new_position);
 		sf::Vector2f offset = getRelativeStartPosition();
 		
-		for (unsigned int i = 1; i <= 3; i++) {
-			render_squad[i].position = { x + render_squad[i].position.x - render_squad[0].position.x, y + render_squad[i].position.y - render_squad[0].position.y };
+		for (unsigned int i = 1; i <= 3; i++)
+		{
+			render_squad[i].position = {
+				x + render_squad[i].position.x - render_squad[0].position.x,
+				y + render_squad[i].position.y - render_squad[0].position.y
+			};
 		}
 		render_squad[0].position = { x, y };
 
-		for (unsigned int i = 0; i < 4; i++) {
+		for (unsigned int i = 0; i < 4; i++)
+		{
 			render_squad[i].position += offset;
 		}
 	}
 
-	sf::Vector2u tRenderRect::getTextureSize() const {
+	sf::Vector2u tRenderRect::getTextureSize() const
+	{
 		return render_texture.getSize();
 	}
 
-	sf::FloatRect tRenderRect::getLocalBounds() const {
+	sf::FloatRect tRenderRect::getLocalBounds() const
+	{
 		return sf::FloatRect(
 			render_squad[0].position.x,
 			render_squad[0].position.y,
@@ -121,7 +141,8 @@ namespace edt {
 		);
 	}
 
-	nlohmann::json tRenderRect::getParamsInJson() const {
+	nlohmann::json tRenderRect::getParamsInJson() const
+	{
 		nlohmann::json js = tObject::getParamsInJson();
 
 		sf::Vector2f size = render_squad[2].position - render_squad[0].position;

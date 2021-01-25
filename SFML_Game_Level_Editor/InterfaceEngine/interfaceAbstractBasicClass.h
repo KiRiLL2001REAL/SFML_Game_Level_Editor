@@ -8,7 +8,7 @@ namespace edt {
 	public:
 		tAbstractBasicClass(tAbstractBasicClass* _owner);
 		tAbstractBasicClass(const tAbstractBasicClass& a);
-		~tAbstractBasicClass();
+		virtual ~tAbstractBasicClass();
 
 		void clearEvent(tEvent& e);
 		void message(tAbstractBasicClass* addr, unsigned int type, unsigned int code, tAbstractBasicClass* from);

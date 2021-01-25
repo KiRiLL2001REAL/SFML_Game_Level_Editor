@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "interfaceEngine.h"
 
-namespace edt {
+namespace edt
+{
 	tRectShape::tRectShape(tAbstractBasicClass* _owner, sf::FloatRect rect, sf::Color fill_color) :
 		tObject(_owner)
 	{
@@ -31,31 +32,43 @@ namespace edt {
 	{
 	}
 
-	tRectShape::~tRectShape() {
+	tRectShape::~tRectShape()
+	{
 	}
 
-	void tRectShape::draw(sf::RenderTarget& target) {
-		if (checkOption(option_mask.can_be_drawn)) {
+	void tRectShape::draw(sf::RenderTarget& target)
+	{
+		if (checkOption(option_mask.can_be_drawn))
+		{
 			target.draw(shape);
 		}
 	}
 
-	void tRectShape::move(sf::Vector2f delta) {
+	void tRectShape::move(sf::Vector2f delta)
+	{
 		tObject::move(delta);
 		shape.move(delta);
 	}
 
-	void tRectShape::updateTexture() {
+	void tRectShape::updateTexture()
+	{
 		return;
 	}
 
-	void tRectShape::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
-			switch (e.type) {
-			case tEvent::types.Broadcast: {
-				if (e.address == this) {
-					switch (e.code) {
-					case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
+	void tRectShape::handleEvent(tEvent& e)
+	{
+		if (checkOption(option_mask.can_be_drawn))
+		{
+			switch (e.type)
+			{
+			case tEvent::types.Broadcast:
+			{
+				if (e.address == this)
+				{
+					switch (e.code)
+					{
+					case tEvent::codes.StopAndDoNotMove:
+					{	// Сбросить флаг перетаскивания мышью
 						setOneOption(option_mask.is_moving_by_mouse, false);
 						// Не обнуляем событие
 						break;
@@ -64,18 +77,26 @@ namespace edt {
 				}
 				break;
 			}
-			case tEvent::types.Mouse: {
+			case tEvent::types.Mouse:
+			{
 				mouse_inside[1] = mouse_inside[0];
 				mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
-				switch (e.code) {
-				case tEvent::codes.MouseButton: {
-					if (mouse_inside[0]) {	// Если мышь внутри, ...
-						if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
+				switch (e.code)
+				{
+				case tEvent::codes.MouseButton:
+				{
+					if (mouse_inside[0])
+					{	// Если мышь внутри, ...
+						if (e.mouse.what_happened == sf::Event::MouseButtonReleased)
+						{	// Если отпустили кнопку
 							setOneOption(option_mask.is_moving_by_mouse, false);
 						}
-						else if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
-							if (e.mouse.button == sf::Mouse::Left) {	// Если тыкнули левой кнопкой мыши
-								if (checkOption(option_mask.can_be_moved)) {
+						else if (e.mouse.what_happened == sf::Event::MouseButtonPressed)
+						{	// Если нажали кнопку
+							if (e.mouse.button == sf::Mouse::Left)
+							{	// Если тыкнули левой кнопкой мыши
+								if (checkOption(option_mask.can_be_moved))
+								{
 									setOneOption(option_mask.is_moving_by_mouse, true);
 								}
 								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
@@ -85,12 +106,15 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::codes.MouseMoved: {
-					if (checkOption(option_mask.is_moving_by_mouse)) {
+				case tEvent::codes.MouseMoved:
+				{
+					if (checkOption(option_mask.is_moving_by_mouse))
+					{
 						move({ (float)e.mouse.dX, (float)e.mouse.dY });
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 					}
-					if (mouse_inside[0] != mouse_inside[1]) {
+					if (mouse_inside[0] != mouse_inside[1])
+					{
 						message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
 						clearEvent(e);
 					}
@@ -103,25 +127,35 @@ namespace edt {
 		}
 	}
 
-	bool tRectShape::pointIsInsideMe(sf::Vector2i point) const {
+	bool tRectShape::pointIsInsideMe(sf::Vector2i point) const
+	{
 		sf::FloatRect rect = getGlobalBounds();
-		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
+		return (
+			point.x >= rect.left && 
+			point.x <= rect.left + rect.width && 
+			point.y >= rect.top && 
+			point.y <= rect.top + rect.height
+		);
 	}
 
-	void tRectShape::setColor(const sf::Color& new_color) {
+	void tRectShape::setColor(const sf::Color& new_color)
+	{
 		shape.setFillColor(new_color);
 	}
 
-	void tRectShape::setPosition(const sf::Vector2f& new_position) {
+	void tRectShape::setPosition(const sf::Vector2f& new_position)
+	{
 		tObject::setPosition(new_position);
 		shape.setPosition(new_position + getRelativeStartPosition());
 	}
 
-	void tRectShape::setSize(const sf::Vector2f& new_size) {
+	void tRectShape::setSize(const sf::Vector2f& new_size)
+	{
 		shape.setSize(new_size);
 	}
 
-	sf::FloatRect tRectShape::getLocalBounds() const {
+	sf::FloatRect tRectShape::getLocalBounds() const
+	{
 		return sf::FloatRect(
 			shape.getPosition().x,
 			shape.getPosition().y,
@@ -130,7 +164,8 @@ namespace edt {
 		);
 	}
 
-	nlohmann::json tRectShape::getParamsInJson() const {
+	nlohmann::json tRectShape::getParamsInJson() const
+	{
 		nlohmann::json js = tObject::getParamsInJson();
 
 		sf::Vector2f size = shape.getSize();

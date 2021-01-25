@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "interfaceEngine.h"
 
-namespace edt {
+namespace edt
+{
 	tButton::tButton(tAbstractBasicClass* _owner, sf::FloatRect rect) :
 		tRenderRect(_owner, rect),
 		self_code(tEvent::codes.Nothing),
@@ -47,34 +48,44 @@ namespace edt {
 		custom_skin[1] = b.custom_skin[1];
 	}
 
-	tButton::~tButton() {
+	tButton::~tButton()
+	{
 		delete text;
 	}
 
-	void tButton::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
+	void tButton::handleEvent(tEvent& e)
+	{
+		if (checkOption(option_mask.can_be_drawn))
+		{
 			text->handleEvent(e);
-			switch (e.type) {
-			case tEvent::types.Broadcast: {
-				if (e.address == this) {	// Для конкретно этой кнопки
+			switch (e.type)
+			{
+			case tEvent::types.Broadcast:
+			{
+				if (e.address == this)
+				{	// Г„Г«Гї ГЄГ®Г­ГЄГ°ГҐГІГ­Г® ГЅГІГ®Г© ГЄГ­Г®ГЇГЄГЁ
 					switch (e.code) {
-					case tEvent::codes.UpdateTexture: {	// Обновить текстуру
+					case tEvent::codes.UpdateTexture:
+					{	// ГЋГЎГ­Г®ГўГЁГІГј ГІГҐГЄГ±ГІГіГ°Гі
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						need_rerender = true;
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью
-						message(text, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
+					case tEvent::codes.StopAndDoNotMove:
+					{	// Г‘ГЎГ°Г®Г±ГЁГІГј ГґГ«Г ГЈ ГЇГҐГ°ГҐГІГ Г±ГЄГЁГўГ Г­ГЁГї Г¬Г»ГёГјГѕ
 						setOneOption(option_mask.is_moving_by_mouse, false);
-						// Не обнуляем событие
+						// ГЌГҐ Г®ГЎГ­ГіГ«ГїГҐГ¬ Г±Г®ГЎГ»ГІГЁГҐ
 						break;
 					}
 					}
 				}
-				switch (e.code) {			// Для всех остальных
-				case tEvent::codes.ResetButtons: {
-					if (e.from != this && e.from != getOwner()) {
+				switch (e.code)
+				{	// Г„Г«Гї ГўГ±ГҐГµ Г®Г±ГІГ Г«ГјГ­Г»Гµ
+				case tEvent::codes.ResetButtons:
+				{
+					if (e.from != this && e.from != getOwner())
+					{
 						mouse_inside[0] = false;
 						mouse_inside[1] = false;
 						need_rerender = true;
@@ -84,22 +95,30 @@ namespace edt {
 				}
 				break;
 			}
-			case tEvent::types.Mouse: {
+			case tEvent::types.Mouse:
+			{
 				mouse_inside[1] = mouse_inside[0];
 				mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
-				switch (e.code) {
-				case tEvent::codes.MouseMoved: {
-					if (mouse_inside[0] != mouse_inside[1]) {	// Если произошло изменение, то генерируем текстуру заново с подчёркнутым текстом
+				switch (e.code)
+				{
+				case tEvent::codes.MouseMoved:
+				{
+					if (mouse_inside[0] != mouse_inside[1])
+					{	// Г…Г±Г«ГЁ ГЇГ°Г®ГЁГ§Г®ГёГ«Г® ГЁГ§Г¬ГҐГ­ГҐГ­ГЁГҐ, ГІГ® ГЈГҐГ­ГҐГ°ГЁГ°ГіГҐГ¬ ГІГҐГЄГ±ГІГіГ°Гі Г§Г Г­Г®ГўГ® Г± ГўГ»Г¤ГҐГ«ГҐГ­Г­Г»Г¬ ГІГҐГЄГ±ГІГ®Г¬
 						message(nullptr, tEvent::types.Button, tEvent::codes.ResetButtons, this);
 						message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
 					}
 					break;
 				}
-				case tEvent::codes.MouseButton: {
-					if (mouse_inside[0]) {
-						if (e.mouse.button == sf::Mouse::Left) {
-							if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём послание
+				case tEvent::codes.MouseButton:
+				{
+					if (mouse_inside[0])
+					{
+						if (e.mouse.button == sf::Mouse::Left)
+						{
+							if (e.mouse.what_happened == sf::Event::MouseButtonReleased)
+							{	// Г…Г±Г«ГЁ Г«ГҐГўГ Гї ГЄГ­Г®ГЇГЄГ  Г¬Г»ГёГЁ Г®ГІГЇГіГ№ГҐГ­Г , ГЁ Г¬Г»ГёГј Г­Г ГµГ®Г¤ГЁГІГ±Гї ГўГ­ГіГІГ°ГЁ ГЄГ­Г®ГЇГЄГЁ, ГІГ® ГЇГҐГ°ГҐГ¤Г ВёГ¬ ГўГ«Г Г¤ГҐГ«ГјГ¶Гі Г±ГўГ®Г© ГЄГ®Г¤
 								message(getOwner(), tEvent::types.Button, self_code, this);
 							}
 						}
@@ -115,23 +134,27 @@ namespace edt {
 		}
 	}
 	
-	void tButton::updateTexture() {
+	void tButton::updateTexture()
+	{
 		render_texture.clear(clear_color);
-		if (checkOption(option_mask.custom_skin_loaded)) {	// Если загружен пользовательский скин кнопки, то выводим его
+		if (checkOption(option_mask.custom_skin_loaded))
+		{	// Г…Г±Г«ГЁ Г§Г ГЈГ°ГіГ¦ГҐГ­ ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«ГјГ±ГЄГЁГ© Г±ГЄГЁГ­ ГЄГ­Г®ГЇГЄГЁ, ГІГ® ГўГ»ГўГ®Г¤ГЁГ¬ ГҐГЈГ®
 			sf::Sprite spr;
 			int index = 0;
-			if (mouse_inside[0]) {
+			if (mouse_inside[0])
+			{
 				index = 1;
 			}
 			spr.setTexture(custom_skin[index]);
 			spr.setScale({
 				(float)render_texture.getSize().x / custom_skin[index].getSize().x,
 				(float)render_texture.getSize().y / custom_skin[index].getSize().y
-				});
+			});
 			spr.setPosition({ 0.f, 0.f });
 			render_texture.draw(spr);
 		}
-		else {						// Иначе - рисуем стандартную кнопку
+		else
+		{	// Г€Г­Г Г·ГҐ - Г°ГЁГ±ГіГҐГ¬ Г±ГІГ Г­Г¤Г Г°ГІГ­ГіГѕ ГЄГ­Г®ГЇГЄГі
 			sf::Vector2f tex_size = (sf::Vector2f)render_texture.getSize();
 			float offset = (float)side_offset / 2;
 			sf::VertexArray arr(sf::Quads, 4);
@@ -152,20 +175,25 @@ namespace edt {
 				{offset, tex_size.y - offset}
 			};
 
-			for (int i = 0; i < 4; i++) {					// Лицевая сторона
+			for (int i = 0; i < 4; i++)
+			{	// Г‹ГЁГ¶ГҐГўГ Гї Г±ГІГ®Г°Г®Г­Г 
 				arr[i].color = front_color;
 				arr[i].position = point[4 + i];
 			}
 			render_texture.draw(arr);
-			for (int i = 0; i < 4; i++)						// Верхняя сторона
+			for (int i = 0; i < 4; i++)
+			{	// Г‚ГҐГ°ГµГ­ГїГї Г±ГІГ®Г°Г®Г­Г 
 				arr[i].color = top_color;
+			}
 			arr[0].position = point[0];
 			arr[1].position = point[1];
 			arr[2].position = point[5];
 			arr[3].position = point[4];
 			render_texture.draw(arr);
-			for (int i = 0; i < 4; i++)						// Боковые стороны
+			for (int i = 0; i < 4; i++)
+			{	// ГЃГ®ГЄГ®ГўГ»ГҐ Г±ГІГ®Г°Г®Г­Г»
 				arr[i].color = side_color;
+			}
 			arr[0].position = point[0];
 			arr[1].position = point[4];
 			arr[2].position = point[7];
@@ -176,60 +204,79 @@ namespace edt {
 			arr[2].position = point[2];
 			arr[3].position = point[6];
 			render_texture.draw(arr);
-			for (int i = 0; i < 4; i++)						// Нижжняя сторона
+			for (int i = 0; i < 4; i++)
+			{	// ГЌГЁГ¦Г¦Г­ГїГї Г±ГІГ®Г°Г®Г­Г 
 				arr[i].color = bottom_color;
+			}
 			arr[0].position = point[7];
 			arr[1].position = point[6];
 			arr[2].position = point[2];
 			arr[3].position = point[3];
 			render_texture.draw(arr);
 		}
-		if (checkOption(option_mask.text_can_be_showed)) {
-			if (text->getFontState()) {				// Если подгружен шрифт, то выводим текст
-				mouse_inside[0] ? text->setStyle(sf::Text::Style::Bold) : text->setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст выделяется
+		if (checkOption(option_mask.text_can_be_showed))
+    {
+			if (text->getFontState())
+      {	// Г…Г±Г«ГЁ ГЇГ®Г¤ГЈГ°ГіГ¦ГҐГ­ ГёГ°ГЁГґГІ, ГІГ® ГўГ»ГўГ®Г¤ГЁГ¬ ГІГҐГЄГ±ГІ
+				mouse_inside[0] ? text->setStyle(sf::Text::Style::Bold) : text->setStyle(sf::Text::Style::Regular);	// ГЏГ°ГЁ Г­Г ГўГҐГ¤ГҐГ­ГЁГЁ Г­Г  ГЄГ­Г®ГЇГЄГі Г¬Г»ГёГјГѕ, ГІГҐГЄГ±ГІ ГўГ»Г¤ГҐГ«ГїГҐГІГ±Гї
 				text->setAnchor(text->getAnchor());
 				text->draw(render_texture);
 			}
-			else {
+			else
+			{
 				message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, text);
 			}
 		}
 		render_texture.display();
 	}
 
-	bool tButton::pointIsInsideMe(sf::Vector2i point) const {
+	bool tButton::pointIsInsideMe(sf::Vector2i point) const
+	{
 		sf::FloatRect rect = getGlobalBounds();
-		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
+		return (
+			point.x >= rect.left && 
+			point.x <= rect.left + rect.width && 
+			point.y >= rect.top && 
+			point.y <= rect.top + rect.height
+		);
 	}
 
-	void tButton::loadCustomSkin(const std::string& path_to_skin, const int& cell) {
-		if (custom_skin[cell].loadFromFile(path_to_skin)) {
-			this->path_to_skin[cell] = path_to_skin;
+	void tButton::loadCustomSkin(const std::string& path_to_skin, const int& index)
+	{
+		if (custom_skin[index].loadFromFile(path_to_skin))
+		{
+			this->path_to_skin[index] = path_to_skin;
 			setOneOption(option_mask.custom_skin_loaded, true);
-			setTextureSize({ custom_skin[cell].getSize().x, custom_skin[cell].getSize().y });
+			setTextureSize({ custom_skin[index].getSize().x, custom_skin[index].getSize().y });
 			message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 		}
-		else {
+		else
+		{
 			std::cout << "tButton.loadCustomSkin error: Invalid path_to_skin.\n";
 		}
 	}
 
-	void tButton::setTextOrigin(const char& new_origin) {
-		switch (new_origin) {
-			case text_origin_type.Right: {
+	void tButton::setTextOrigin(const char& new_origin)
+  {
+		switch (new_origin)
+    {
+			case text_origin_type.Right:
+      {
 				text_origin = new_origin;
 				text->setAnchor(anchors.upper_right_corner);
 				text->setPosition({ getLocalBounds().width - side_offset, 0 });
 				break;
 			}
-			case text_origin_type.Middle: {
+			case text_origin_type.Middle:
+      {
 				text_origin = new_origin;
 				text->setAnchor(anchors.upper_side);
 				text->setPosition({ getLocalBounds().width / 2, 0 });
 				break;
 			}
 			case text_origin_type.Left:
-			default: {
+			default:
+      {
 				text_origin = new_origin;
 				text->setAnchor(anchors.upper_left_corner);
 				text->setPosition({ (float)side_offset, 0 });
@@ -240,36 +287,45 @@ namespace edt {
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	void tButton::setTextOffset(const sf::Vector2f& new_offset) {
+
+	void tButton::setTextOffset(const sf::Vector2i& new_offset)
+	{
 		text_offset = new_offset;
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	void tButton::setCode(const int& new_code) {
+	void tButton::setCode(const int& new_code)
+	{
 		self_code = new_code;
 	}
 
-	void tButton::setFont(const sf::Font& new_font) {
+	void tButton::setFont(const sf::Font& new_font)
+	{
 		text->setFont(new_font);
 	}
 
-	void tButton::setString(const std::wstring& new_string) {
+	void tButton::setString(const std::wstring& new_string)
+	{
 		text->setString(new_string);
 	}
 
-	void tButton::setTextColor(const sf::Color& new_color) {
+	void tButton::setTextColor(const sf::Color& new_color)
+	{
 		text->setTextColor(new_color);
 	}
 
-	void tButton::setCharSize(const unsigned int& new_char_size) {
+	void tButton::setCharSize(const unsigned int& new_char_size)
+	{
 		text->setCharSize(new_char_size);
 	}
 
-	void tButton::setOutlineThickness(const unsigned char& new_thickness) {
+	void tButton::setOutlineThickness(const unsigned char& new_thickness)
+	{
 		text->setOutlineThickness(new_thickness);
 	}
 
-	nlohmann::json tButton::getParamsInJson() const {
+	nlohmann::json tButton::getParamsInJson() const
+	{
 		nlohmann::json js = tRenderRect::getParamsInJson();
 
 		js["what_is_it"] = objects_json_ids.tButton;

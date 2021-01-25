@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "interfaceEngine.h"
 
-namespace edt {
-	void tWindow::initWindow() {
+namespace edt
+{
+	void tWindow::initWindow()
+	{
 		sf::FloatRect rect = getLocalBounds();
 
 		button_close->setAnchor(anchors.upper_right_corner);
@@ -106,17 +108,30 @@ namespace edt {
 	{
 	}
 
-	tWindow::~tWindow() {
-		delete button_close, heap_shape, display, scrollbar_v, scrollbar_h;
+	tWindow::~tWindow()
+	{
+		delete button_close;
+		delete heap_shape;
+		delete display;
+		delete scrollbar_v;
+		delete scrollbar_h;
 	}
 
-	bool tWindow::pointIsInHeap(sf::Vector2i point) const {
+	bool tWindow::pointIsInHeap(sf::Vector2i point) const
+	{
 		sf::FloatRect rect = getGlobalBounds();
-		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + heap_height);
+		return (
+			point.x >= rect.left && 
+			point.x <= rect.left + rect.width && 
+			point.y >= rect.top && 
+			point.y <= rect.top + heap_height
+		);
 	}
 
-	void tWindow::handleEvent(tEvent& e) {
-		if (checkOption(option_mask.can_be_drawn)) {
+	void tWindow::handleEvent(tEvent& e)
+	{
+		if (checkOption(option_mask.can_be_drawn))
+		{
 
 			button_close->handleEvent(e);
 			display->handleEvent(e);
@@ -124,62 +139,89 @@ namespace edt {
 			scrollbar_h->handleEvent(e);
 
 			/*
+			=================================================================================================================
 			>>>>>>>>>> Временная штука. Это нужно будет переместить в блок изменения размеров окна (сделать ивент) <<<<<<<<<<
+			=================================================================================================================
 			*/
 
 			auto dispTexSize = display->getTextureSize();
 
-			if (scrollbar_v->checkOption(option_mask.can_be_drawn) && dispTexSize.y <= getTextureSize().y - heap_height) {
-				// Если скроллбар активен и размер текстуры дисплея влезают в зону отрисовки окна, тогда выключаем скроллбар
-				display->setSize({ getLocalBounds().width, display->getLocalBounds().height });
+			if (scrollbar_v->checkOption(option_mask.can_be_drawn) && dispTexSize.y <= getTextureSize().y - heap_height)
+			{	// Если скроллбар активен и размер текстуры дисплея влезают в зону отрисовки окна, тогда выключаем скроллбар
+				display->setSize({ 
+					getLocalBounds().width, 
+					display->getLocalBounds().height 
+				});
 				scrollbar_v->setOneOption(option_mask.can_be_drawn, false);
 			}
-			else if (!scrollbar_v->checkOption(option_mask.can_be_drawn) && dispTexSize.y > getTextureSize().y - heap_height) {
-				display->setSize({ getLocalBounds().width - tScrollbar::thickness - 2, display->getLocalBounds().height });
+			else if (!scrollbar_v->checkOption(option_mask.can_be_drawn) && dispTexSize.y > getTextureSize().y - heap_height)
+			{
+				display->setSize({ 
+					getLocalBounds().width - tScrollbar::thickness - 2, 
+					display->getLocalBounds().height 
+				});
 				scrollbar_v->setOneOption(option_mask.can_be_drawn, true);
 			}
 
-			if (scrollbar_h->checkOption(option_mask.can_be_drawn) && display->getTextureSize().x <= getTextureSize().x) {
-				// Если скроллбар активен и размер текстуры дисплея влезает в зону отрисовки окна, тогда выключаем скроллбар
-				display->setSize({ display->getLocalBounds().width, getLocalBounds().height - heap_height });
+			if (scrollbar_h->checkOption(option_mask.can_be_drawn) && display->getTextureSize().x <= getTextureSize().x)
+			{	// Если скроллбар активен и размер текстуры дисплея влезает в зону отрисовки окна, тогда выключаем скроллбар
+				display->setSize({ 
+					display->getLocalBounds().width, 
+					getLocalBounds().height - heap_height 
+				});
 				scrollbar_h->setOneOption(option_mask.can_be_drawn, false);
 			}
-			else if (!scrollbar_h->checkOption(option_mask.can_be_drawn) && display->getTextureSize().x > getTextureSize().x) {
-				display->setSize({ display->getLocalBounds().width, getLocalBounds().height - heap_height - tScrollbar::thickness - 2 });
+			else if (!scrollbar_h->checkOption(option_mask.can_be_drawn) && display->getTextureSize().x > getTextureSize().x)
+			{
+				display->setSize({ 
+					display->getLocalBounds().width, 
+					getLocalBounds().height - heap_height - tScrollbar::thickness - 2 
+				});
 				scrollbar_h->setOneOption(option_mask.can_be_drawn, true);
 			}
 
 			/*
+			=================================================================================================================
 			>>>>>>>>>> Временная штука. Это нужно будет переместить в блок изменения размеров окна (сделать ивент) <<<<<<<<<<
+			=================================================================================================================
 			*/
 
 			sf::Vector2f scrollbar_offset = { scrollbar_h->getPixelOffset(), scrollbar_v->getPixelOffset() };
-			if (scrollbar_offset != last_scrollbar_offset) {
+			if (scrollbar_offset != last_scrollbar_offset)
+			{
 				setCameraOffset(scrollbar_offset);
 				last_scrollbar_offset = scrollbar_offset;
 			}
 
-			switch (e.type) {
-			case tEvent::types.Broadcast: {
-				if (e.address == this) {	// Для конкретно этого окна
-					switch (e.code) {
-					case tEvent::codes.Activate: {		// Установить фокус на объект
+			switch (e.type)
+			{
+			case tEvent::types.Broadcast:
+			{
+				if (e.address == this)
+				{	// Для конкретно этого окна
+					switch (e.code)
+					{
+					case tEvent::codes.Activate:
+					{	// Установить фокус на объект
 						((tObject*)e.from)->setOneOption(tObject::option_mask.is_active, true);
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.Deactivate: {	// Снять фокус с объекта
+					case tEvent::codes.Deactivate:
+					{	// Снять фокус с объекта
 						((tObject*)e.from)->setOneOption(tObject::option_mask.is_active, false);
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.Show: {			// Показать объект (если он скрыт)
+					case tEvent::codes.Show:
+					{	// Показать объект (если он скрыт)
 						((tObject*)e.from)->setOneOption(tObject::option_mask.can_be_drawn, true);
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.Hide: {			// Спрятать объект (если он не скрыт)
+					case tEvent::codes.Hide:
+					{	// Спрятать объект (если он не скрыт)
 						((tObject*)e.from)->setOneOption(tObject::option_mask.can_be_drawn, false);
 						clearEvent(e);
 						break;
@@ -190,7 +232,8 @@ namespace edt {
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.FontAnswer: {	// Забрать выданный системой шрифт
+					case tEvent::codes.FontAnswer:
+					{	// Забрать выданный системой шрифт
 						font_loaded = true;
 						setFont(*e.font.font);
 						message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
@@ -198,7 +241,8 @@ namespace edt {
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.StopAndDoNotMove: {	// Сбросить флаг перетаскивания мышью	// Сбросить флаг перетаскивания мышью
+					case tEvent::codes.StopAndDoNotMove:
+					{	// Сбросить флаг перетаскивания мышью
 						message(button_close, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
 						message(heap_shape, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
 						message((tRenderRect*)display, tEvent::types.Broadcast, tEvent::codes.StopAndDoNotMove, this);
@@ -208,7 +252,8 @@ namespace edt {
 						// Не обнуляем событие
 						break;
 					}
-					default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+					default:
+					{	// Если не обработалось, то "проталкиваем" на уровень ниже
 						e.address = getOwner();
 						message(e);
 						clearEvent(e);
@@ -218,10 +263,14 @@ namespace edt {
 				}
 				break;
 			}
-			case tEvent::types.Button: {
-				if (e.address == this) {	// Для конкретно этого окна
-					switch (e.code) {
-					case tEvent::codes.Close: {			// Закрыть окно
+			case tEvent::types.Button:
+			{
+				if (e.address == this)
+				{	// Для конкретно этого окна
+					switch (e.code)
+					{
+					case tEvent::codes.Close:
+					{	// Закрыть окно
 						e.type = tEvent::types.Broadcast;
 						e.code = tEvent::codes.Delete;
 						e.address = getOwner();
@@ -230,7 +279,8 @@ namespace edt {
 						clearEvent(e);
 						break;
 					}
-					default: {				// Если не обработалось, то "проталкиваем" на уровень ниже
+					default:
+					{	// Если не обработалось, то "проталкиваем" на уровень ниже
 						e.address = getOwner();
 						putEvent(e);
 						clearEvent(e);
@@ -239,18 +289,25 @@ namespace edt {
 				}
 				break;
 			}
-			case tEvent::types.Mouse: {
+			case tEvent::types.Mouse:
+			{
 				mouse_inside[1] = mouse_inside[0];
 				mouse_inside[0] = pointIsInsideMe({ e.mouse.x, e.mouse.y });
 				switch (e.code) {
-				case tEvent::codes.MouseButton: {
-					if (mouse_inside[0]) {	// Если мышь внутри, ...
-						if (e.mouse.what_happened == sf::Event::MouseButtonReleased) {	// Если отпустили кнопку
+				case tEvent::codes.MouseButton:
+				{
+					if (mouse_inside[0])
+					{	// Если мышь внутри, ...
+						if (e.mouse.what_happened == sf::Event::MouseButtonReleased)
+						{	// Если отпустили кнопку
 							setOneOption(option_mask.is_moving_by_mouse, false);
 						}
-						else if (e.mouse.what_happened == sf::Event::MouseButtonPressed) {
-							if (e.mouse.button == sf::Mouse::Left) {	// Если в окно тыкнули левой кнопкой мыши
-								if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved)) {
+						else if (e.mouse.what_happened == sf::Event::MouseButtonPressed)
+						{
+							if (e.mouse.button == sf::Mouse::Left)
+							{	// Если в окно тыкнули левой кнопкой мыши
+								if (pointIsInHeap({ e.mouse.x, e.mouse.y }) && checkOption(option_mask.can_be_moved))
+								{
 									setOneOption(option_mask.is_moving_by_mouse, true);
 								}
 								message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
@@ -261,16 +318,20 @@ namespace edt {
 					}
 					break;
 				}
-				case tEvent::codes.MouseMoved: {
-					if (mouse_inside[0] != mouse_inside[1]) {
+				case tEvent::codes.MouseMoved:
+				{
+					if (mouse_inside[0] != mouse_inside[1])
+					{
 						message(nullptr, tEvent::types.Broadcast, tEvent::codes.ResetButtons, this);
 						clearEvent(e);
 					}
-					if (mouse_inside[0]) {
+					if (mouse_inside[0])
+					{
 						message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
 					}
-					if (checkOption(option_mask.is_moving_by_mouse)) {
+					if (checkOption(option_mask.is_moving_by_mouse))
+					{
 						move({ (float)e.mouse.dX, (float)e.mouse.dY });
 					}
 					break;
@@ -282,7 +343,8 @@ namespace edt {
 		}
 	}
 
-	void tWindow::updateTexture() {
+	void tWindow::updateTexture()
+	{
 		render_texture.clear(clear_color);
 
 		display->draw(render_texture);
@@ -291,7 +353,8 @@ namespace edt {
 		scrollbar_v->draw(render_texture);
 		scrollbar_h->draw(render_texture);
 
-		if (font_loaded) {
+		if (font_loaded)
+		{
 			sf::Text text;
 			text.setString(caption);
 			text.setCharacterSize(caption_char_size);
@@ -301,11 +364,12 @@ namespace edt {
 			text.setOutlineThickness(1);
 			render_texture.draw(text);
 		}
-		else {	// Если шрифта нет, мы должны запросить его, и после получения обновить текстуру
+		else
+		{	// Если шрифта нет, мы должны запросить его, и после получения обновить текстуру
 			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, this);
 		}
-
-		sf::VertexArray frame(sf::LineStrip, 5);	// Рисование обводки окна
+		// Рисование обводки окна
+		sf::VertexArray frame(sf::LineStrip, 5);
 		sf::FloatRect rect = getLocalBounds();
 		sf::Color color = { 140, 140, 140, 255 };
 		frame[0].position = { 1, 0 };
@@ -314,53 +378,72 @@ namespace edt {
 		frame[3].position = { 1, rect.height - 2 };
 		frame[4].position = { 1, 1 };
 		if (checkOption(tObject::option_mask.is_active))
+		{
 			color = { 0, 122, 204, 255 };
+		}
 		for (int i = 0; i < 5; i++)
+		{
 			frame[i].color = color;
+		}
 		render_texture.draw(frame);
 
 		render_texture.display();
 	}
 
-	bool tWindow::pointIsInsideMe(sf::Vector2i point) const {
+	bool tWindow::pointIsInsideMe(sf::Vector2i point) const
+	{
 		sf::FloatRect rect = getGlobalBounds();
-		return (point.x >= rect.left && point.x <= rect.left + rect.width && point.y >= rect.top && point.y <= rect.top + rect.height);
+		return (
+			point.x >= rect.left && 
+			point.x <= rect.left + rect.width && 
+			point.y >= rect.top && 
+			point.y <= rect.top + rect.height
+		);
 	}
 
-	void tWindow::setCaption(const std::wstring& new_caption) {
+	void tWindow::setCaption(const std::wstring& new_caption)
+	{
 		caption = new_caption;
 	}
 
-	void tWindow::setHeapColor(const sf::Color& new_color) {
+	void tWindow::setHeapColor(const sf::Color& new_color)
+	{
 		color_heap = new_color;
 	}
 
-	void tWindow::setAreaColor(const sf::Color& new_color) {
+	void tWindow::setAreaColor(const sf::Color& new_color)
+	{
 		color_area = new_color;
 	}
 
-	void tWindow::setActiveCaptionColor(const sf::Color& new_color) {
+	void tWindow::setActiveCaptionColor(const sf::Color& new_color)
+	{
 		color_caption_active = new_color;
 	}
 
-	void tWindow::setInactiveCaptionColor(const sf::Color& new_color) {
+	void tWindow::setInactiveCaptionColor(const sf::Color& new_color)
+	{
 		color_caption_inactive = new_color;
 	}
 
-	void tWindow::setFont(const sf::Font& new_font) {
+	void tWindow::setFont(const sf::Font& new_font)
+	{
 		font_loaded = true;
 		font = new_font;
 	}
 
-	void tWindow::setCaptionOffset(const sf::Vector2f& new_offset) {
+	void tWindow::setCaptionOffset(const sf::Vector2f& new_offset)
+	{
 		caption_offset = new_offset;
 	}
 
-	void tWindow::setCameraOffset(const sf::Vector2f& new_offset) {
+	void tWindow::setCameraOffset(const sf::Vector2f& new_offset)
+	{
 		display->setCameraOffset(new_offset);
 	}
 
-	void tWindow::setDisplaySize(const sf::Vector2f& new_size) {
+	void tWindow::setDisplaySize(const sf::Vector2f& new_size)
+	{
 		display->setSize(new_size);
 		scrollbar_v->setTargetSize(new_size);
 		scrollbar_h->setTargetSize(new_size);
@@ -370,7 +453,8 @@ namespace edt {
 		message(scrollbar_h, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	void tWindow::setDisplayTextureSize(const sf::Vector2u& new_size) {
+	void tWindow::setDisplayTextureSize(const sf::Vector2u& new_size)
+	{
 		display->setTextureSize(new_size);
 		scrollbar_v->setTargetTextureSize(new_size);
 		scrollbar_h->setTargetTextureSize(new_size);
@@ -380,19 +464,23 @@ namespace edt {
 		message(scrollbar_h, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
 
-	tDisplay* tWindow::getDisplayPointer() const {
+	tDisplay* tWindow::getDisplayPointer() const
+	{
 		return display;
 	}
 
-	std::wstring tWindow::getCaption() const {
+	std::wstring tWindow::getCaption() const
+	{
 		return caption;
 	}
 
-	const int tWindow::getHeapHeight() const {
+	const int tWindow::getHeapHeight() const
+	{
 		return heap_height;
 	}
 
-	nlohmann::json tWindow::getParamsInJson() const {
+	nlohmann::json tWindow::getParamsInJson() const
+	{
 		nlohmann::json js = tRenderRect::getParamsInJson();
 
 		js["what_is_it"] = objects_json_ids.tWindow;
