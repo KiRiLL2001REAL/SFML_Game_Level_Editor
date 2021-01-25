@@ -3,7 +3,8 @@
 
 namespace edt {
 	tText::tText(tAbstractBasicClass* _owner, sf::Vector2f position, std::wstring string) :
-		tObject(_owner)
+		tObject(_owner),
+		need_update_anchor(false)
 	{
 		tObject::setPosition(position);
 		setOneOption(option_mask.is_font_loaded, false);
@@ -15,7 +16,8 @@ namespace edt {
 	}
 
 	tText::tText(tAbstractBasicClass* _owner, nlohmann::json& js) :
-		tObject(_owner, js)
+		tObject(_owner, js),
+		need_update_anchor(true)
 	{
 		setOneOption(option_mask.is_font_loaded, false);
 		vec<int> vi = js["text"].get<vec<int>>();
@@ -29,10 +31,17 @@ namespace edt {
 		setOutlineThickness(js["outline_thickness"].get<unsigned int>());
 
 		setPosition({ x, y });
+
+		/*
+		—ейчас шрифт ещЄ не загружен, значит, не известны размеры текстового объекта
+		need_update_anchor = false
+		якорь обновитс€ тогда, когда будет получен шрифт
+		*/
 	}
 
 	tText::tText(const tText& t) :
 		tObject(t),
+		need_update_anchor(t.need_update_anchor),
 		text_object(t.text_object),
 		font(t.font)
 	{
@@ -67,6 +76,10 @@ namespace edt {
 					case tEvent::codes.FontAnswer: {
 						setOneOption(option_mask.is_font_loaded, true);
 						text_object.setFont(*e.font.font);
+						if (need_update_anchor)
+						{
+							setAnchor(anchor);
+						}
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
 						break;

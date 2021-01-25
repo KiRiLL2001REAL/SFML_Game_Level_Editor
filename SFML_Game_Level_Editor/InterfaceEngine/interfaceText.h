@@ -15,6 +15,7 @@ namespace edt {
 		} option_mask;
 
 	protected:
+		bool need_update_anchor;			// необходимо при загрузке из json (см. конструктор)
 		sf::Text text_object;				// SFML текст
 		sf::Font font;						// Шрифт текста
 

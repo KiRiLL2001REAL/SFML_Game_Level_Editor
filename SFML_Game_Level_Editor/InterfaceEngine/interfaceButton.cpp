@@ -31,6 +31,8 @@ namespace edt {
 			loadCustomSkin(path_to_skin[0], 0);
 			loadCustomSkin(path_to_skin[1], 1);
 		}
+
+		setAnchor(anchor);
 	}
 
 	tButton::tButton(const tButton& b) :

@@ -43,6 +43,8 @@ namespace edt {
 		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
 
 		initScrollbar(vertical);
+
+		setAnchor(anchor);
 	}
 
 	tScrollbar::tScrollbar(tAbstractBasicClass* _owner, nlohmann::json& js) :

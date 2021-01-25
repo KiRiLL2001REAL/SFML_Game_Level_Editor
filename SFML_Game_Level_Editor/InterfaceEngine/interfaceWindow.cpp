@@ -55,6 +55,8 @@ namespace edt {
 		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
 
 		initWindow();
+
+		setAnchor(anchor);
 	}
 
 	tWindow::tWindow(tAbstractBasicClass* _owner, nlohmann::json& js) :
