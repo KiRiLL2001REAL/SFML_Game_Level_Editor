@@ -1,4 +1,9 @@
 #include "stdafx.h"
+#include <string>
+#include <fstream>
+#include <vector>
+#include <map>
+
 #include "huffman.h"
 
 namespace huf {

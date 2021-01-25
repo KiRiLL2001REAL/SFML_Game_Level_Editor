@@ -30,9 +30,6 @@
     <ClCompile Include="myEditor.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
-    <ClCompile Include="huffman.cpp">
-      <Filter>Файлы ресурсов</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Файлы ресурсов</Filter>
     </ClCompile>
@@ -75,18 +72,15 @@
     <ClCompile Include="InterfaceEngine\interfaceWindow.cpp">
       <Filter>Файлы ресурсов\InterfaceEngine</Filter>
     </ClCompile>
+    <ClCompile Include="huffman.cpp">
+      <Filter>Файлы ресурсов</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="json.hpp">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="other.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="myEditor.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
-    <ClInclude Include="huffman.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -130,6 +124,12 @@
     </ClInclude>
     <ClInclude Include="InterfaceEngine\interfaceWindow.h">
       <Filter>Файлы заголовков\InterfaceEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="huffman.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="json.hpp">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
