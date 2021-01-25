@@ -22,6 +22,8 @@ namespace edt
 		setColor({ vuc[0], vuc[1], vuc[2], vuc[3] });
 
 		setPosition({ x, y });
+
+		setAnchor(anchor);
 	}
 
 	tRectShape::tRectShape(const tRectShape& s) :

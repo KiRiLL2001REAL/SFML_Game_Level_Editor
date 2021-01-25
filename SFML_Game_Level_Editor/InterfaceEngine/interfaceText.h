@@ -15,6 +15,7 @@ namespace edt {
 		} option_mask;
 
 	protected:
+		bool need_update_anchor;			// необходимо при загрузке из json (см. конструктор)
 		sf::Text text_object;				// SFML текст
 		sf::Font font;						// Шрифт текста
 
@@ -30,6 +31,8 @@ namespace edt {
 		virtual void updateTexture();
 
 		// Setters
+		void setStyle(const sf::Text::Style& new_style);
+		void setAnchor(const unsigned char& new_anchor);
 		void setString(const std::wstring& new_string);
 		void setTextColor(const sf::Color& new_color);
 		void setFont(const sf::Font& new_font);

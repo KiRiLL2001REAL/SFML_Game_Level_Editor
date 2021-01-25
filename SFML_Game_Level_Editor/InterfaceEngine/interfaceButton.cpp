@@ -6,9 +6,9 @@ namespace edt
 	tButton::tButton(tAbstractBasicClass* _owner, sf::FloatRect rect) :
 		tRenderRect(_owner, rect),
 		self_code(tEvent::codes.Nothing),
-		alignment(text_alignment_type.Left),
+		text_origin(text_origin_type.Left),
 		side_offset(10),
-		text_offset(sf::Vector2u(0, 0)),
+		text_offset({ 0.f, 0.f }),
 		text(new tText(this))
 	{
 		setOneOption(option_mask.custom_skin_loaded, false);
@@ -22,23 +22,25 @@ namespace edt
 		side_offset(10),
 		text(new tText(this, js["text"]))
 	{
-		vec<int> vi = js["text_offset"].get<vec<int>>();
-		text_offset = { vi[0], vi[1] };
+		vec<float> vf = js["text_offset"].get<vec<float>>();
+		text_offset = { vf[0], vf[1] };
 		self_code = js["code"].get<int>();
-		alignment = js["alignment"].get<char>();
+		text_origin = js["text_origin"].get<char>();
 		path_to_skin[0] = js["path_to_skin_0"].get<std::string>();
 		path_to_skin[1] = js["path_to_skin_1"].get<std::string>();
 		if (checkOption(option_mask.custom_skin_loaded)) {
 			loadCustomSkin(path_to_skin[0], 0);
 			loadCustomSkin(path_to_skin[1], 1);
 		}
+
+		setAnchor(anchor);
 	}
 
 	tButton::tButton(const tButton& b) :
 		tRenderRect(b),
 		side_offset(b.side_offset),
 		self_code(b.self_code),
-		alignment(b.alignment),
+		text_origin(b.text_origin),
 		text_offset(b.text_offset),
 		text(b.text)
 	{
@@ -61,25 +63,25 @@ namespace edt
 			case tEvent::types.Broadcast:
 			{
 				if (e.address == this)
-				{	// Для конкретно этой кнопки
+				{	// Г„Г«Гї ГЄГ®Г­ГЄГ°ГҐГІГ­Г® ГЅГІГ®Г© ГЄГ­Г®ГЇГЄГЁ
 					switch (e.code) {
 					case tEvent::codes.UpdateTexture:
-					{	// Обновить текстуру
+					{	// ГЋГЎГ­Г®ГўГЁГІГј ГІГҐГЄГ±ГІГіГ°Гі
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						need_rerender = true;
 						clearEvent(e);
 						break;
 					}
 					case tEvent::codes.StopAndDoNotMove:
-					{	// Сбросить флаг перетаскивания мышью
+					{	// Г‘ГЎГ°Г®Г±ГЁГІГј ГґГ«Г ГЈ ГЇГҐГ°ГҐГІГ Г±ГЄГЁГўГ Г­ГЁГї Г¬Г»ГёГјГѕ
 						setOneOption(option_mask.is_moving_by_mouse, false);
-						// Не обнуляем событие
+						// ГЌГҐ Г®ГЎГ­ГіГ«ГїГҐГ¬ Г±Г®ГЎГ»ГІГЁГҐ
 						break;
 					}
 					}
 				}
 				switch (e.code)
-				{	// Для всех остальных
+				{	// Г„Г«Гї ГўГ±ГҐГµ Г®Г±ГІГ Г«ГјГ­Г»Гµ
 				case tEvent::codes.ResetButtons:
 				{
 					if (e.from != this && e.from != getOwner())
@@ -102,7 +104,7 @@ namespace edt
 				case tEvent::codes.MouseMoved:
 				{
 					if (mouse_inside[0] != mouse_inside[1])
-					{	// Если произошло изменение, то генерируем текстуру заново с выделенным текстом
+					{	// Г…Г±Г«ГЁ ГЇГ°Г®ГЁГ§Г®ГёГ«Г® ГЁГ§Г¬ГҐГ­ГҐГ­ГЁГҐ, ГІГ® ГЈГҐГ­ГҐГ°ГЁГ°ГіГҐГ¬ ГІГҐГЄГ±ГІГіГ°Гі Г§Г Г­Г®ГўГ® Г± ГўГ»Г¤ГҐГ«ГҐГ­Г­Г»Г¬ ГІГҐГЄГ±ГІГ®Г¬
 						message(nullptr, tEvent::types.Button, tEvent::codes.ResetButtons, this);
 						message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
@@ -116,7 +118,7 @@ namespace edt
 						if (e.mouse.button == sf::Mouse::Left)
 						{
 							if (e.mouse.what_happened == sf::Event::MouseButtonReleased)
-							{	// Если левая кнопка мыши отпущена, и мышь находится внутри кнопки, то передаём владельцу свой код
+							{	// Г…Г±Г«ГЁ Г«ГҐГўГ Гї ГЄГ­Г®ГЇГЄГ  Г¬Г»ГёГЁ Г®ГІГЇГіГ№ГҐГ­Г , ГЁ Г¬Г»ГёГј Г­Г ГµГ®Г¤ГЁГІГ±Гї ГўГ­ГіГІГ°ГЁ ГЄГ­Г®ГЇГЄГЁ, ГІГ® ГЇГҐГ°ГҐГ¤Г ВёГ¬ ГўГ«Г Г¤ГҐГ«ГјГ¶Гі Г±ГўГ®Г© ГЄГ®Г¤
 								message(getOwner(), tEvent::types.Button, self_code, this);
 							}
 						}
@@ -136,7 +138,7 @@ namespace edt
 	{
 		render_texture.clear(clear_color);
 		if (checkOption(option_mask.custom_skin_loaded))
-		{	// Если загружен пользовательский скин кнопки, то выводим его
+		{	// Г…Г±Г«ГЁ Г§Г ГЈГ°ГіГ¦ГҐГ­ ГЇГ®Г«ГјГ§Г®ГўГ ГІГҐГ«ГјГ±ГЄГЁГ© Г±ГЄГЁГ­ ГЄГ­Г®ГЇГЄГЁ, ГІГ® ГўГ»ГўГ®Г¤ГЁГ¬ ГҐГЈГ®
 			sf::Sprite spr;
 			int index = 0;
 			if (mouse_inside[0])
@@ -152,7 +154,7 @@ namespace edt
 			render_texture.draw(spr);
 		}
 		else
-		{	// Иначе - рисуем стандартную кнопку
+		{	// Г€Г­Г Г·ГҐ - Г°ГЁГ±ГіГҐГ¬ Г±ГІГ Г­Г¤Г Г°ГІГ­ГіГѕ ГЄГ­Г®ГЇГЄГі
 			sf::Vector2f tex_size = (sf::Vector2f)render_texture.getSize();
 			float offset = (float)side_offset / 2;
 			sf::VertexArray arr(sf::Quads, 4);
@@ -174,13 +176,13 @@ namespace edt
 			};
 
 			for (int i = 0; i < 4; i++)
-			{	// Лицевая сторона
+			{	// Г‹ГЁГ¶ГҐГўГ Гї Г±ГІГ®Г°Г®Г­Г 
 				arr[i].color = front_color;
 				arr[i].position = point[4 + i];
 			}
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)
-			{	// Верхняя сторона
+			{	// Г‚ГҐГ°ГµГ­ГїГї Г±ГІГ®Г°Г®Г­Г 
 				arr[i].color = top_color;
 			}
 			arr[0].position = point[0];
@@ -189,7 +191,7 @@ namespace edt
 			arr[3].position = point[4];
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)
-			{	// Боковые стороны
+			{	// ГЃГ®ГЄГ®ГўГ»ГҐ Г±ГІГ®Г°Г®Г­Г»
 				arr[i].color = side_color;
 			}
 			arr[0].position = point[0];
@@ -203,7 +205,7 @@ namespace edt
 			arr[3].position = point[6];
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)
-			{	// Нижжняя сторона
+			{	// ГЌГЁГ¦Г¦Г­ГїГї Г±ГІГ®Г°Г®Г­Г 
 				arr[i].color = bottom_color;
 			}
 			arr[0].position = point[7];
@@ -213,53 +215,12 @@ namespace edt
 			render_texture.draw(arr);
 		}
 		if (checkOption(option_mask.text_can_be_showed))
-		{
+    {
 			if (text->getFontState())
-			{	// Если подгружен шрифт, то выводим текст
-				sf::Text text_to_display = text->getTextObject();
-				mouse_inside[0] ? text_to_display.setStyle(sf::Text::Style::Bold) : text_to_display.setStyle(sf::Text::Style::Regular);	// При наведении на кнопку мышью, текст подчёркивается
-				switch (alignment) {			// Настройка выравнивания
-				case text_alignment_type.Right: {
-					text_to_display.setOrigin({
-						(float)text_to_display.getLocalBounds().width,
-						(float)text_to_display.getLocalBounds().height
-						});
-					text_to_display.setPosition({
-						(float)render_texture.getSize().x - side_offset - text_offset.x,
-						(float)render_texture.getSize().y / 2 + text_offset.y
-						});
-					break;
-				}
-				case text_alignment_type.Middle: {
-					text_to_display.setOrigin({
-						text_to_display.getLocalBounds().width / 2,
-						(float)text_to_display.getLocalBounds().height
-						});
-					text_to_display.setPosition({
-						(float)render_texture.getSize().x / 2 + text_offset.x,
-						(float)render_texture.getSize().y / 2 + text_offset.y
-						});
-					break;
-				}
-				case text_alignment_type.Left:
-				default: {
-					text_to_display.setOrigin({
-						0,
-						(float)text_to_display.getLocalBounds().height
-						});
-					text_to_display.setPosition({
-						(float)side_offset + text_offset.x,
-						(float)render_texture.getSize().y / 2 + text_offset.x
-						});
-					break;
-				}
-				}
-				text_to_display.setFillColor(sf::Color::Black);	// Немного контраста
-				text_to_display.move({ 1, 1 });
-				render_texture.draw(text_to_display);
-				text_to_display.setFillColor(text->getFillColor());		// А это уже сам вывод текста
-				text_to_display.move({ -1, -1 });
-				render_texture.draw(text_to_display);
+      {	// Г…Г±Г«ГЁ ГЇГ®Г¤ГЈГ°ГіГ¦ГҐГ­ ГёГ°ГЁГґГІ, ГІГ® ГўГ»ГўГ®Г¤ГЁГ¬ ГІГҐГЄГ±ГІ
+				mouse_inside[0] ? text->setStyle(sf::Text::Style::Bold) : text->setStyle(sf::Text::Style::Regular);	// ГЏГ°ГЁ Г­Г ГўГҐГ¤ГҐГ­ГЁГЁ Г­Г  ГЄГ­Г®ГЇГЄГі Г¬Г»ГёГјГѕ, ГІГҐГЄГ±ГІ ГўГ»Г¤ГҐГ«ГїГҐГІГ±Гї
+				text->setAnchor(text->getAnchor());
+				text->draw(render_texture);
 			}
 			else
 			{
@@ -295,25 +256,37 @@ namespace edt
 		}
 	}
 
-	void tButton::setTextAlignment(const char& new_alignment)
-	{
-		switch (new_alignment)
-		{
-		case text_alignment_type.Middle:
-		case text_alignment_type.Right:
-		{
-			alignment = new_alignment;
-			break;
+	void tButton::setTextOrigin(const char& new_origin)
+  {
+		switch (new_origin)
+    {
+			case text_origin_type.Right:
+      {
+				text_origin = new_origin;
+				text->setAnchor(anchors.upper_right_corner);
+				text->setPosition({ getLocalBounds().width - side_offset, 0 });
+				break;
+			}
+			case text_origin_type.Middle:
+      {
+				text_origin = new_origin;
+				text->setAnchor(anchors.upper_side);
+				text->setPosition({ getLocalBounds().width / 2, 0 });
+				break;
+			}
+			case text_origin_type.Left:
+			default:
+      {
+				text_origin = new_origin;
+				text->setAnchor(anchors.upper_left_corner);
+				text->setPosition({ (float)side_offset, 0 });
+				break;
+			}
 		}
-		case text_alignment_type.Left:
-		default:
-		{
-			alignment = text_alignment_type.Left;
-			break;
-		}
-		}
+		text->move(text_offset);
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 	}
+
 
 	void tButton::setTextOffset(const sf::Vector2i& new_offset)
 	{
@@ -358,7 +331,7 @@ namespace edt
 		js["what_is_it"] = objects_json_ids.tButton;
 		js["what_is_it_string"] = "tButton";
 		js["code"] = self_code;
-		js["alignment"] = alignment;
+		js["text_origin"] = text_origin;
 		js["text_offset"] = { text_offset.x, text_offset.y };
 		js["text"] = text->getParamsInJson();
 		js["path_to_skin_0"] = path_to_skin[0];

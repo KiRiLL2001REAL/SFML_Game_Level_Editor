@@ -34,6 +34,8 @@ namespace edt
 		setTextureSize({ vui[0], vui[1] });
 
 		setPosition({ x, y });
+
+		setAnchor(anchor);
 	}
 
 	tRenderRect::tRenderRect(const tRenderRect& r) :

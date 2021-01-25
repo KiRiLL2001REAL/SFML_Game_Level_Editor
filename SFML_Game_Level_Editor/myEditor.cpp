@@ -26,11 +26,13 @@ void myDesktop::changeScreen(char new_screen_code) {
 		}
 		case button_codes.Menu :
 		default: {
+			/*
 			edt::tText* text = new edt::tText(this, { 0, 0 }, L"SFML_Game редактор игрового окружения");
 			text->setFont(getFont());
 			text->setCharSize(66);
+			text->setAnchor(edt::tObject::anchors.upper_side);
 			text->setTextColor({ 255, 255, 255, 255 });
-			text->setPosition({ window.getSize().x / 2 - text->getLocalBounds().width / 2, 50 });
+			text->setPosition({ (float)window.getSize().x / 2, 50 });
 			_insert(text);
 
 			edt::tButton* button = new edt::tButton(this, { 0, 0, 600, 80 });
@@ -39,7 +41,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
-			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
+			button->setTextOrigin(edt::tButton::text_origin_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -300, -40 + 320 - 340 });
@@ -51,7 +53,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
-			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
+			button->setTextOrigin(edt::tButton::text_origin_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -300, -40 + 320 - 255 });
@@ -63,7 +65,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 0, 255 });
-			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
+			button->setTextOrigin(edt::tButton::text_origin_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -300, -40 + 320 - 170 });
@@ -75,7 +77,7 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 255, 255, 255 });
-			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
+			button->setTextOrigin(edt::tButton::text_origin_type.Middle);
 			button->setTextOffset({ 0, 12 });
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -250, -40 + 320 - 85 });
@@ -87,13 +89,14 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setFont(getFont());
 			button->setCharSize(60);
 			button->setTextColor({ 255, 0, 0, 255 });
-			button->setTextAlignment(edt::tButton::text_alignment_type.Middle);
+			button->setTextOrigin(edt::tButton::text_origin_type.Middle);
 			button->setTextOffset({0, 8});
 			button->setAnchor(edt::tObject::anchors.center);
 			button->setPosition({ -250, -40 + 320 });
 			_insert(button);
+			*/
 
-			//makeObjectsFromJson(this, json_configuration["menu"]);
+			makeObjectsFromJson(this, json_configuration["menu"]);
 
 			break;
 		}

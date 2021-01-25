@@ -14,7 +14,7 @@ namespace edt
 		button_close->setTextColor({ 255, 255, 255, 255 });
 		button_close->setCharSize(20);
 		button_close->setOutlineThickness(1);
-		button_close->setTextAlignment(tButton::text_alignment_type.Middle);
+		button_close->setTextOrigin(tButton::text_origin_type.Middle);
 		button_close->setTextOffset({ 0, -3 });
 		message(button_close, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 
@@ -57,6 +57,8 @@ namespace edt
 		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
 
 		initWindow();
+
+		setAnchor(anchor);
 	}
 
 	tWindow::tWindow(tAbstractBasicClass* _owner, nlohmann::json& js) :

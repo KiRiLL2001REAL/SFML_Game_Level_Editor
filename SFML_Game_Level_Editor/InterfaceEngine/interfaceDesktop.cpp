@@ -90,6 +90,7 @@ namespace edt
 
 			sf::sleep(sf::milliseconds(5));
 		};
+		/*
 		sf::Vector2u size = window.getSize();
 		nlohmann::json js;
 		js["menu"] = getParamsInJson();
@@ -98,9 +99,11 @@ namespace edt
 		js["sfml_window"]["style"] = "Default";
 		js["sfml_window"]["font_default"] = "\\Content\\Fonts\\PT Sans.ttf";
 		print_json(js, path_to_folder + "\\Content\\Config\\forms.conf");
-		/*std::fstream file(path_to_folder + "\\Content\\Config\\forms.conf", std::fstream::out);
+		/*
+		std::fstream file(path_to_folder + "\\Content\\Config\\forms.conf", std::fstream::out);
 		file << js;
-		file.close();*/
+		file.close();
+		*/
 	}
 
 	void tDesktop::saveData() const

@@ -17,6 +17,8 @@ namespace edt
 	{
 		vec<float> vf = js["camera_offset"].get<vec<float>>();
 		setCameraOffset({ vf[0], vf[1] });
+
+		setAnchor(anchor);
 	}
 
 	tDisplay::tDisplay(const tDisplay& d) :

@@ -4,7 +4,8 @@
 namespace edt
 {
 	tText::tText(tAbstractBasicClass* _owner, sf::Vector2f position, std::wstring string) :
-		tObject(_owner)
+		tObject(_owner),
+		need_update_anchor(false)
 	{
 		tObject::setPosition(position);
 		setOneOption(option_mask.is_font_loaded, false);
@@ -16,7 +17,8 @@ namespace edt
 	}
 
 	tText::tText(tAbstractBasicClass* _owner, nlohmann::json& js) :
-		tObject(_owner, js)
+		tObject(_owner, js),
+		need_update_anchor(true)
 	{
 		setOneOption(option_mask.is_font_loaded, false);
 		vec<int> vi = js["text"].get<vec<int>>();
@@ -30,10 +32,17 @@ namespace edt
 		setOutlineThickness(js["outline_thickness"].get<unsigned int>());
 
 		setPosition({ x, y });
+
+		/*
+		Ñåé÷àñ øðèôò åù¸ íå çàãðóæåí, çíà÷èò, íå èçâåñòíû ðàçìåðû òåêñòîâîãî îáúåêòà
+		need_update_anchor = false
+		ßêîðü îáíîâèòñÿ òîãäà, êîãäà áóäåò ïîëó÷åí øðèôò
+		*/
 	}
 
 	tText::tText(const tText& t) :
 		tObject(t),
+		need_update_anchor(t.need_update_anchor),
 		text_object(t.text_object),
 		font(t.font)
 	{
@@ -48,11 +57,11 @@ namespace edt
 		if (checkOption(option_mask.can_be_drawn))
 		{
 			if (checkOption(option_mask.is_font_loaded))
-			{	// E��� ����� ��������, �� ������� ������� �� �����
+			{	// Eñëè øðèôò çàãðóæåí, òî âûâîäèì ýëåìåíò íà ýêðàí
 				target.draw(text_object);
 				return;
 			}
-			// � ��������� ������ ����������� ��� � Desktop
+			// Â ïðîòèâíîì ñëó÷àå çàïðàøèâàåì åãî ó Desktop
 			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, this);
 			tEvent e;
 			e.address = getOwner();
@@ -79,6 +88,10 @@ namespace edt
 					{
 						setOneOption(option_mask.is_font_loaded, true);
 						text_object.setFont(*e.font.font);
+						if (need_update_anchor)
+						{
+							setAnchor(anchor);
+						}
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
 						break;
@@ -107,8 +120,68 @@ namespace edt
 		return;
 	}
 	
+	void tText::setStyle(const sf::Text::Style& new_style)
+  {
+		text_object.setStyle(new_style);
+	}
+
+	void tText::setAnchor(const unsigned char& new_anchor)
+  {
+		tObject::setAnchor(new_anchor);
+		/*
+		0b00001001;		// ßêîðü íà âåðõíèé ëåâûé óãîë ðîäèòåëÿ
+		0b00001010;		// ßêîðü íà âåðõíþþ ñòîðîíó ðîäèòåëÿ
+		0b00001100;		// ßêîðü íà âåðõíèé ïðàâûé óãîë	ðîäèòåëÿ
+		0b00010001;		// ßêîðü íà ëåâóþ ñòîðîíó ðîäèòåëÿ
+		0b00010010;		// ßêîðü íà öåíòð ðîäèòåëÿ
+		0b00010100;		// ßêîðü íà ïðàâóþ ñòîðîíó ðîäèòåëÿ
+		0b00100001;		// ßêîðü íà íèæíèé ëåâûé óãîë ðîäèòåëÿ
+		0b00100010;		// ßêîðü íà íèæíþþ ñòîðîíó ðîäèòåëÿ
+		0b00100100;		// ßêîðü íà íèæíèé ïðàâûé óãîë ðîäèòåëÿ
+		*/
+		sf::Vector2f origin = { 0.f, 0.f };
+		sf::FloatRect text_bounds = text_object.getLocalBounds();
+		switch (new_anchor & 0b111)
+    {
+			case 0b001:
+      {	// Ëåâî
+				origin.x = 0;
+				break;
+			}
+			case 0b010:
+      {	// Ñåðåäèíà
+				origin.x = text_bounds.width / 2;
+				break;
+			}
+			case 0b100:
+      {	// Ïðàâî
+				origin.x = text_bounds.width;
+				break;
+			}
+		}
+		switch ((new_anchor >> 3) & 0b111)
+    {
+			case 0b001:
+      {	// Âåðõ
+				origin.y = 0;
+				break;
+			}
+			case 0b010:
+      {	// Ñåðåäèíà
+				origin.y = text_bounds.height / 2;
+				break;
+			}
+			case 0b100:
+      {	// Íèç
+				origin.y = text_bounds.height;
+				break;
+			}
+		}
+		text_object.setOrigin(origin);
+	}
+
 	void tText::setString(const std::wstring& new_string)
-	{
+  {
 		text_object.setString(new_string);
 	}
 
@@ -137,7 +210,7 @@ namespace edt
 	void tText::setPosition(const sf::Vector2f& new_position)
 	{
 		tObject::setPosition(new_position);
-		text_object.setPosition(new_position + getRelativeStartPosition());
+		text_object.setPosition(new_position);
 	}
 
 	bool tText::getFontState() const
