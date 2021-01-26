@@ -2,12 +2,6 @@
 
 namespace edt {
 
-	struct tEvent;
-	class tAbstractBasicClass;
-	class tButton;
-	class tDisplay;
-	class tScrollbar;
-
 	class tDropDownVariant : public tButton {
 	public:
 		tDropDownVariant(tAbstractBasicClass* _owner, std::wstring text, sf::FloatRect rect = { 0, 0, 128, 48 });
@@ -21,6 +15,22 @@ namespace edt {
 		virtual nlohmann::json getParamsInJson() const;
 	};
 
+	class tDropDownWindow : public tDisplay {
+	protected:
+		tScrollbar* scrollbar_v;	// Вертикальный скроллбар
+
+	public:
+		tDropDownWindow(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 100, 100 });
+		tDropDownWindow(tAbstractBasicClass* _owner, nlohmann::json& js);
+		tDropDownWindow(const tDropDownWindow& d);
+		virtual ~tDropDownWindow();
+
+		virtual void handleEvent(tEvent& e);
+
+		// Getters
+		virtual nlohmann::json getParamsInJson() const;
+	};
+
 	class tDropDownList : public tDropDownVariant {
 	public:
 		static const struct sDirectionTypes {	// В каком направлении будет развёртываться список
@@ -29,22 +39,6 @@ namespace edt {
 		} direction_types;
 	
 	protected:
-		class tDropDownWindow : public tDisplay {
-		protected:
-			tScrollbar* scrollbar_v;	// Вертикальный скроллбар
-
-		public:
-			tDropDownWindow(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 100, 100 });
-			tDropDownWindow(tAbstractBasicClass* _owner, nlohmann::json& js);
-			tDropDownWindow(const tDropDownWindow& d);
-			virtual ~tDropDownWindow();
-
-			virtual void handleEvent(tEvent& e);
-
-			// Getters
-			virtual nlohmann::json getParamsInJson() const;
-		};
-
 		int direction;				// Направление развёртывания
 		int selected_variant_code;	// Выбранный вариант. Если -1, то ничего не выбрано
 		tDropDownWindow *ddwindow;	// Окно с вариантами выбора

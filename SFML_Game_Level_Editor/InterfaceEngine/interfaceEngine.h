@@ -12,19 +12,23 @@
 #include "interfaceWindow.h"
 #include "interfaceDisplay.h"
 #include "interfaceScrollbar.h"
+#include "interfaceDropDownList.h"
 
 namespace edt {
 
 #define vec std::vector
 
 	static const struct sObjectsJsonIds {
-		static const unsigned int tDesktop		= 0;
-		static const unsigned int tWindow		= 1;
-		static const unsigned int tButton		= 2;
-		static const unsigned int tText			= 3;
-		static const unsigned int tRectShape	= 4;
-		static const unsigned int tDisplay		= 5;
-		static const unsigned int tScrollbar	= 6;
+		static const unsigned int tDesktop			= 0;
+		static const unsigned int tWindow			= 1;
+		static const unsigned int tButton			= 2;
+		static const unsigned int tText				= 3;
+		static const unsigned int tRectShape		= 4;
+		static const unsigned int tDisplay			= 5;
+		static const unsigned int tScrollbar		= 6;
+		static const unsigned int tDropDownVariant	= 7;
+		static const unsigned int tDropDownList		= 8;
+		static const unsigned int tDropDownWindow	= 9;
 	} objects_json_ids;
 
 }

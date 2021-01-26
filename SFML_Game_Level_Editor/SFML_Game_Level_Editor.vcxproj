@@ -162,6 +162,7 @@
     <ClCompile Include="InterfaceEngine\interfaceButton.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceDesktop.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceDisplay.cpp" />
+    <ClCompile Include="InterfaceEngine\interfaceDropDownList.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceEngine.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceEvent.cpp" />
     <ClCompile Include="InterfaceEngine\interfaceGroup.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="InterfaceEngine\interfaceButton.h" />
     <ClInclude Include="InterfaceEngine\interfaceDesktop.h" />
     <ClInclude Include="InterfaceEngine\interfaceDisplay.h" />
+    <ClInclude Include="InterfaceEngine\interfaceDropDownList.h" />
     <ClInclude Include="InterfaceEngine\interfaceEngine.h" />
     <ClInclude Include="InterfaceEngine\interfaceEvent.h" />
     <ClInclude Include="InterfaceEngine\interfaceGroup.h" />
