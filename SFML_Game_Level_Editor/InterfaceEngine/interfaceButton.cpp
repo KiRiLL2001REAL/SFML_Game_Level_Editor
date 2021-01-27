@@ -63,25 +63,19 @@ namespace edt
 			case tEvent::types.Broadcast:
 			{
 				if (e.address == this)
-				{	// Äëÿ êîíêðåòíî ýòîé êíîïêè
+				{	// Событие для этой кнопки
 					switch (e.code) {
 					case tEvent::codes.UpdateTexture:
-					{	// Îáíîâèòü òåêñòóðó
+					{	// Обновить текстуру
 						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						need_rerender = true;
 						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.StopAndDoNotMove:
-					{	// Ñáðîñèòü ôëàã ïåðåòàñêèâàíèÿ ìûøüþ
-						setOneOption(option_mask.is_moving_by_mouse, false);
-						// Íå îáíóëÿåì ñîáûòèå
-						break;
-					}
 					}
 				}
 				switch (e.code)
-				{	// Äëÿ âñåõ îñòàëüíûõ
+				{	// Событие для всех элементов
 				case tEvent::codes.ResetButtons:
 				{
 					if (e.from != this && e.from != getOwner())
@@ -104,7 +98,7 @@ namespace edt
 				case tEvent::codes.MouseMoved:
 				{
 					if (mouse_inside[0] != mouse_inside[1])
-					{	// Åñëè ïðîèçîøëî èçìåíåíèå, òî ãåíåðèðóåì òåêñòóðó çàíîâî ñ âûäåëåííûì òåêñòîì
+					{	// Если мышь наехала на кнопку, то она выделяется
 						message(nullptr, tEvent::types.Button, tEvent::codes.ResetButtons, this);
 						message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						clearEvent(e);
@@ -118,7 +112,7 @@ namespace edt
 						if (e.mouse.button == sf::Mouse::Left)
 						{
 							if (e.mouse.what_happened == sf::Event::MouseButtonReleased)
-							{	// Åñëè ëåâàÿ êíîïêà ìûøè îòïóùåíà, è ìûøü íàõîäèòñÿ âíóòðè êíîïêè, òî ïåðåäà¸ì âëàäåëüöó ñâîé êîä
+							{	// Если отжали левую кнопку мыши на кнопке, то она отправляет свой код владельцу
 								message(getOwner(), tEvent::types.Button, self_code, this);
 							}
 						}
@@ -138,7 +132,7 @@ namespace edt
 	{
 		render_texture.clear(clear_color);
 		if (checkOption(option_mask.custom_skin_loaded))
-		{	// Åñëè çàãðóæåí ïîëüçîâàòåëüñêèé ñêèí êíîïêè, òî âûâîäèì åãî
+		{	// Если загружен пользовательский скин, то выводим его
 			sf::Sprite spr;
 			int index = 0;
 			if (mouse_inside[0])
@@ -154,7 +148,7 @@ namespace edt
 			render_texture.draw(spr);
 		}
 		else
-		{	// Èíà÷å - ðèñóåì ñòàíäàðòíóþ êíîïêó
+		{	// Рисование стандартного скина
 			sf::Vector2f tex_size = (sf::Vector2f)render_texture.getSize();
 			float offset = (float)side_offset / 2;
 			sf::VertexArray arr(sf::Quads, 4);
@@ -176,13 +170,13 @@ namespace edt
 			};
 
 			for (int i = 0; i < 4; i++)
-			{	// Ëèöåâàÿ ñòîðîíà
+			{	// Центр кнопки
 				arr[i].color = front_color;
 				arr[i].position = point[4 + i];
 			}
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)
-			{	// Âåðõíÿÿ ñòîðîíà
+			{	// Верх кнопки
 				arr[i].color = top_color;
 			}
 			arr[0].position = point[0];
@@ -191,7 +185,7 @@ namespace edt
 			arr[3].position = point[4];
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)
-			{	// Áîêîâûå ñòîðîíû
+			{	// Бока кнопки
 				arr[i].color = side_color;
 			}
 			arr[0].position = point[0];
@@ -205,7 +199,7 @@ namespace edt
 			arr[3].position = point[6];
 			render_texture.draw(arr);
 			for (int i = 0; i < 4; i++)
-			{	// Íèææíÿÿ ñòîðîíà
+			{	// Низ кнопки
 				arr[i].color = bottom_color;
 			}
 			arr[0].position = point[7];
@@ -215,10 +209,11 @@ namespace edt
 			render_texture.draw(arr);
 		}
 		if (checkOption(option_mask.text_can_be_showed))
-    {
+		{
 			if (text->getFontState())
-      {	// Åñëè ïîäãðóæåí øðèôò, òî âûâîäèì òåêñò
-				mouse_inside[0] ? text->setStyle(sf::Text::Style::Bold) : text->setStyle(sf::Text::Style::Regular);	// Ïðè íàâåäåíèè íà êíîïêó ìûøüþ, òåêñò âûäåëÿåòñÿ
+			{	// Если подгружен шрифт, то выводим его
+				// Выделение кнопки выполняется посредством установки у текста жирного шрифта
+				mouse_inside[0] ? text->setStyle(sf::Text::Style::Bold) : text->setStyle(sf::Text::Style::Regular);
 				text->setAnchor(text->getAnchor());
 				text->draw(render_texture);
 			}
@@ -257,31 +252,31 @@ namespace edt
 	}
 
 	void tButton::setTextOrigin(const char& new_origin)
-  {
+	{
 		switch (new_origin)
-    {
-			case text_origin_type.Right:
-      {
-				text_origin = new_origin;
-				text->setAnchor(anchors.upper_right_corner);
-				text->setPosition({ getLocalBounds().width - side_offset, 0 });
-				break;
-			}
-			case text_origin_type.Middle:
-      {
-				text_origin = new_origin;
-				text->setAnchor(anchors.upper_side);
-				text->setPosition({ getLocalBounds().width / 2, 0 });
-				break;
-			}
-			case text_origin_type.Left:
-			default:
-      {
-				text_origin = new_origin;
-				text->setAnchor(anchors.upper_left_corner);
-				text->setPosition({ (float)side_offset, 0 });
-				break;
-			}
+		{
+		case text_origin_type.Right:
+		{
+			text_origin = new_origin;
+			text->setAnchor(anchors.upper_right_corner);
+			text->setPosition({ getLocalBounds().width - side_offset, 0 });
+			break;
+		}
+		case text_origin_type.Middle:
+		{
+			text_origin = new_origin;
+			text->setAnchor(anchors.upper_side);
+			text->setPosition({ getLocalBounds().width / 2, 0 });
+			break;
+		}
+		case text_origin_type.Left:
+		default:
+		{
+			text_origin = new_origin;
+			text->setAnchor(anchors.upper_left_corner);
+			text->setPosition({ (float)side_offset, 0 });
+			break;
+		}
 		}
 		text->move(text_offset);
 		message(this, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);

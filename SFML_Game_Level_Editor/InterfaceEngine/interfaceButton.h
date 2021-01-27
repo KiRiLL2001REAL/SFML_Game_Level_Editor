@@ -9,10 +9,10 @@ namespace edt {
 		static const struct sOptionMask {	// Маски флагов (переопределено для tButton)
 			static const unsigned char can_be_drawn = 1;		// Можно ли выводить этот объект на экран
 			static const unsigned char is_active = 2;			// Активен ли объект
-			static const unsigned char can_be_moved = 4;		// Можно ли перемещать объект при помощи мыши
-			static const unsigned char is_moving_by_mouse = 8;	// Объект перемещается при помощи мыши
-			static const unsigned char text_can_be_showed = 16;	// Может быть отображён текст
-			static const unsigned char custom_skin_loaded = 32;	// Загружен ли кастомный скин
+			static const unsigned char text_can_be_showed = 4;	// Может быть отображён текст
+			static const unsigned char custom_skin_loaded = 8;	// Загружен ли кастомный скин
+			static const unsigned char dummy_4 = 16;			// Бит не задействован
+			static const unsigned char dummy_5 = 32;			// Бит не задействован
 			static const unsigned char dummy_6 = 64;			// Бит не задействован
 			static const unsigned char dummy_7 = 128;			// Бит не задействован
 		} option_mask;
