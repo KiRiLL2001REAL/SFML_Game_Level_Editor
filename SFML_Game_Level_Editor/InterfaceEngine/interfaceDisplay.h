@@ -14,7 +14,6 @@ namespace edt{
 		virtual void draw(sf::RenderTarget& target);
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
 		// Setters
 		void setCameraOffset(const sf::Vector2f& new_offset);
@@ -22,8 +21,9 @@ namespace edt{
 		virtual void setTextureSize(const sf::Vector2u& new_size);
 
 		// Getters
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual tAbstractBasicClass* getOwner() const;
-		virtual sf::FloatRect getLocalBounds() const;
+		virtual const sf::FloatRect getLocalBounds() const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

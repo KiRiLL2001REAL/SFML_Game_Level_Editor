@@ -390,7 +390,7 @@ namespace edt
 		render_texture.display();
 	}
 
-	bool tWindow::pointIsInsideMe(sf::Vector2i point) const
+	const bool tWindow::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = getGlobalBounds();
 		return (
@@ -469,7 +469,7 @@ namespace edt
 		return display;
 	}
 
-	std::wstring tWindow::getCaption() const
+	const std::wstring& tWindow::getCaption() const
 	{
 		return caption;
 	}

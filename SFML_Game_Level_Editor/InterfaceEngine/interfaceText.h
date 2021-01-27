@@ -41,11 +41,11 @@ namespace edt {
 		virtual void setPosition(const sf::Vector2f& new_position);
 
 		// Getters
-		bool getFontState() const;	// Загружен или нет
-		sf::Text& getTextObject() const;
-		sf::Color getFillColor() const;
-		virtual sf::FloatRect getLocalBounds() const;
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
+		const bool getFontState() const;	// Загружен или нет
+		const sf::Text& getTextObject() const;
+		const sf::Color& getFillColor() const;
+		virtual const sf::FloatRect getLocalBounds() const;
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

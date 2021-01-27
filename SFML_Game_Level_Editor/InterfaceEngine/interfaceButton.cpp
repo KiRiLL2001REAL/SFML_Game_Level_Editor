@@ -225,7 +225,7 @@ namespace edt
 		render_texture.display();
 	}
 
-	bool tButton::pointIsInsideMe(sf::Vector2i point) const
+	const bool tButton::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = getGlobalBounds();
 		return (

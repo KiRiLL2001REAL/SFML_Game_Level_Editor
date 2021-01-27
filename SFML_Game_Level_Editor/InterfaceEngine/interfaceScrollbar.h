@@ -37,7 +37,6 @@ namespace edt {
 		void updateScrollerSize();
 		virtual void updateTexture();
 		virtual void handleEvent(tEvent& e);
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
 		// Setters
 		void moveSlider(const int& step);
@@ -46,7 +45,8 @@ namespace edt {
 		virtual void setTextureSize(const sf::Vector2u& new_size);
 
 		// Getters
-		float getPixelOffset() const;
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
+		const float getPixelOffset() const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

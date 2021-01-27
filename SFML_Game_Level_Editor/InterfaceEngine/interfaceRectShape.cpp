@@ -127,7 +127,7 @@ namespace edt
 		}
 	}
 
-	bool tRectShape::pointIsInsideMe(sf::Vector2i point) const
+	const bool tRectShape::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = getGlobalBounds();
 		return (
@@ -154,7 +154,7 @@ namespace edt
 		shape.setSize(new_size);
 	}
 
-	sf::FloatRect tRectShape::getLocalBounds() const
+	const sf::FloatRect tRectShape::getLocalBounds() const
 	{
 		return sf::FloatRect(
 			shape.getPosition().x,

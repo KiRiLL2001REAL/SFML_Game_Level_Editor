@@ -25,8 +25,8 @@ namespace edt {
 		virtual void setTextureSize(const sf::Vector2u& new_size);
 
 		// Getters
-		sf::Vector2u getTextureSize() const;
-		virtual sf::FloatRect getLocalBounds() const;
+		const sf::Vector2u getTextureSize() const;
+		virtual const sf::FloatRect getLocalBounds() const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

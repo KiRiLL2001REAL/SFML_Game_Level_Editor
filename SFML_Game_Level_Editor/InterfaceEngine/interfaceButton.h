@@ -41,7 +41,6 @@ namespace edt {
 
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
 		// Setters
 		void loadCustomSkin(const std::string& path_to_skin, const int& cell);
@@ -55,6 +54,7 @@ namespace edt {
 		void setOutlineThickness(const unsigned char& new_thickness);
 
 		// Getters
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 

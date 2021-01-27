@@ -65,7 +65,7 @@ namespace edt
 		return nlohmann::json();
 	}
 
-	sf::FloatRect tAbstractBasicClass::getLocalBounds() const
+	const sf::FloatRect tAbstractBasicClass::getLocalBounds() const
 	{
 		return sf::FloatRect(
 			0.f,
@@ -75,7 +75,7 @@ namespace edt
 		);
 	}
 
-	sf::FloatRect tAbstractBasicClass::getGlobalBounds() const
+	const sf::FloatRect tAbstractBasicClass::getGlobalBounds() const
 	{
 		if (owner != nullptr) {
 			sf::FloatRect owner_rect = getOwner()->getGlobalBounds();

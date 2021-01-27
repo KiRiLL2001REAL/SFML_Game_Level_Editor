@@ -53,7 +53,7 @@ namespace edt
 		return;
 	}
 
-	bool tObject::pointIsInsideMe(sf::Vector2i point) const
+	const bool tObject::pointIsInsideMe(sf::Vector2i point) const
 	{
 		return false;
 	}
@@ -91,28 +91,28 @@ namespace edt
 		return;
 	}
 
-	bool tObject::checkOption(unsigned char option) const
+	const bool tObject::checkOption(unsigned char option) const
 	{
 		// Если результат побитовой конъюнкции совпал с "option", то всё окей
 		return (options & option) == option;
 	}
 
-	sf::Vector2f tObject::getPosition() const
+	const sf::Vector2f tObject::getPosition() const
 	{
 		return sf::Vector2f(x, y);
 	}
 
-	unsigned char tObject::getOptions() const
+	const unsigned char& tObject::getOptions() const
 	{
 		return options;
 	}
 
-	unsigned char tObject::getAnchor() const
+	const unsigned char& tObject::getAnchor() const
 	{
 		return anchor;
 	}
 
-	sf::Vector2f tObject::getRelativeStartPosition() const
+	const sf::Vector2f tObject::getRelativeStartPosition() const
 	{
 		unsigned char i = 0;
 		sf::FloatRect owner_rect;

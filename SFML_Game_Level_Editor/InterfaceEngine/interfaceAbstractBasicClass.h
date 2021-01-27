@@ -25,7 +25,7 @@ namespace edt {
 		// Getters
 		virtual tAbstractBasicClass* getOwner() const;
 		virtual nlohmann::json getParamsInJson() const;
-		virtual sf::FloatRect getLocalBounds() const;
-		virtual sf::FloatRect getGlobalBounds() const;
+		virtual const sf::FloatRect getLocalBounds() const;
+		virtual const sf::FloatRect getGlobalBounds() const;
 	};
 }

@@ -27,7 +27,6 @@ namespace edt {
 		virtual void move(sf::Vector2f delta);
 		virtual void updateTexture();
 		virtual void handleEvent(tEvent& e);
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
 		// Setters
 		void setColor(const sf::Color& new_color);
@@ -35,7 +34,8 @@ namespace edt {
 		virtual void setSize(const sf::Vector2f& new_size);
 
 		// Getters
-		virtual sf::FloatRect getLocalBounds() const;
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
+		virtual const sf::FloatRect getLocalBounds() const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

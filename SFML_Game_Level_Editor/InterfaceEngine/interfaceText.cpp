@@ -207,27 +207,27 @@ namespace edt
 		text_object.setPosition(new_position);
 	}
 
-	bool tText::getFontState() const
+	const bool tText::getFontState() const
 	{
 		return checkOption(option_mask.is_font_loaded);
 	}
 
-	sf::Text& tText::getTextObject() const
+	const sf::Text& tText::getTextObject() const
 	{
-		return (sf::Text&)text_object;
+		return text_object;
 	}
 
-	sf::Color tText::getFillColor() const
+	const sf::Color& tText::getFillColor() const
 	{
 		return text_object.getFillColor();
 	}
 
-	sf::FloatRect tText::getLocalBounds() const
+	const sf::FloatRect tText::getLocalBounds() const
 	{
 		return text_object.getLocalBounds();
 	}
 
-	bool tText::pointIsInsideMe(sf::Vector2i point) const
+	const bool tText::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = getGlobalBounds();
 		return (
