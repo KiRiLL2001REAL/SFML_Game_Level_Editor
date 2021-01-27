@@ -135,11 +135,6 @@ namespace edt
 			if (*it == object)
 			{
 				success = true;
-				bool act = false;
-				if (*it == elem.back())
-				{
-					act = true;
-				}
 				delete *it;		// Удаляем его	1) из памяти
 				elem.erase(it);	//				2) из контейнера
 				((tObject*)elem.back())->setOneOption(tObject::option_mask.is_active, true);
