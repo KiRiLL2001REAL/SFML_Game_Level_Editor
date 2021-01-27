@@ -354,7 +354,7 @@ namespace edt
 		tGroup::draw(target);
 	}
 
-	sf::Font& tDesktop::getFont() const
+	const sf::Font& tDesktop::getFont() const
 	{
 		if (custom_font_loaded)
 		{
@@ -366,7 +366,7 @@ namespace edt
 		}
 	}
 
-	sf::FloatRect tDesktop::getLocalBounds() const
+	const sf::FloatRect tDesktop::getLocalBounds() const
 	{
 		return {
 			0,
@@ -376,7 +376,7 @@ namespace edt
 		};
 	}
 
-	bool tDesktop::pointIsInsideMe(sf::Vector2i point) const
+	const bool tDesktop::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::Vector2i size = (sf::Vector2i)window.getSize();
 		return (

@@ -124,7 +124,7 @@ namespace edt
 		render_texture.display();			// Обновить "лицевую" текстуру
 	}
 
-	bool tDisplay::pointIsInsideMe(sf::Vector2i point) const
+	const bool tDisplay::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = tRenderRect::getGlobalBounds();
 		return (
@@ -159,7 +159,7 @@ namespace edt
 		return owner;
 	}
 
-	sf::FloatRect tDisplay::getLocalBounds() const
+	const sf::FloatRect tDisplay::getLocalBounds() const
 	{
 		return tRenderRect::getLocalBounds();
 	}

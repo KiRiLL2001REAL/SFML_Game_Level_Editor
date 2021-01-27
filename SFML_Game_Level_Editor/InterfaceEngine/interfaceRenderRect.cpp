@@ -126,12 +126,12 @@ namespace edt
 		}
 	}
 
-	sf::Vector2u tRenderRect::getTextureSize() const
+	const sf::Vector2u tRenderRect::getTextureSize() const
 	{
 		return render_texture.getSize();
 	}
 
-	sf::FloatRect tRenderRect::getLocalBounds() const
+	const sf::FloatRect tRenderRect::getLocalBounds() const
 	{
 		return sf::FloatRect(
 			render_squad[0].position.x,

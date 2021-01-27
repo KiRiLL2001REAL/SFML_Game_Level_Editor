@@ -44,7 +44,6 @@ namespace edt {
 		virtual void move(sf::Vector2f delta);
 		virtual void draw(sf::RenderTarget& target);
 		virtual void updateTexture() = 0;
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
 		// Setters
 		void setAnchor(const unsigned char& new_anchor);
@@ -54,11 +53,12 @@ namespace edt {
 		virtual void setSize(const sf::Vector2f& new_size);
 
 		// Getters
-		bool checkOption(unsigned char option) const;
-		sf::Vector2f getPosition() const;
-		unsigned char getOptions() const;
-		unsigned char getAnchor() const;
-		virtual sf::Vector2f getRelativeStartPosition() const;	// Возвращает начальную точку системы координат (ориентируясь на якорь)
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
+		const bool checkOption(unsigned char option) const;
+		const sf::Vector2f getPosition() const;
+		const unsigned char& getOptions() const;
+		const unsigned char& getAnchor() const;
+		virtual const sf::Vector2f getRelativeStartPosition() const;	// Возвращает начальную точку системы координат (ориентируясь на якорь)
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

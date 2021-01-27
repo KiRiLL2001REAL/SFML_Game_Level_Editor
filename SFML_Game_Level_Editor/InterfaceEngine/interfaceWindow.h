@@ -51,7 +51,6 @@ namespace edt {
 		bool pointIsInHeap(sf::Vector2i point) const;
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
 
 		// Setters
 		void setCaption(const std::wstring& new_caption);
@@ -67,8 +66,9 @@ namespace edt {
 
 		// Getters
 		tDisplay* getDisplayPointer() const;
-		std::wstring getCaption() const;
+		const std::wstring& getCaption() const;
 		const int getHeapHeight() const;
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

@@ -32,12 +32,6 @@ namespace edt
 		setOutlineThickness(js["outline_thickness"].get<unsigned int>());
 
 		setPosition({ x, y });
-
-		/*
-		Ñåé÷àñ øðèôò åù¸ íå çàãðóæåí, çíà÷èò, íå èçâåñòíû ðàçìåðû òåêñòîâîãî îáúåêòà
-		need_update_anchor = false
-		ßêîðü îáíîâèòñÿ òîãäà, êîãäà áóäåò ïîëó÷åí øðèôò
-		*/
 	}
 
 	tText::tText(const tText& t) :
@@ -57,11 +51,11 @@ namespace edt
 		if (checkOption(option_mask.can_be_drawn))
 		{
 			if (checkOption(option_mask.is_font_loaded))
-			{	// Eñëè øðèôò çàãðóæåí, òî âûâîäèì ýëåìåíò íà ýêðàí
+			{	// Если подгружен шрифт, то выводим текст
 				target.draw(text_object);
 				return;
 			}
-			// Â ïðîòèâíîì ñëó÷àå çàïðàøèâàåì åãî ó Desktop
+			// Если шрифта нет, то запрос на получение направляется к главному элементу
 			message(nullptr, tEvent::types.Broadcast, tEvent::codes.FontRequest, this);
 			tEvent e;
 			e.address = getOwner();
@@ -129,53 +123,53 @@ namespace edt
   {
 		tObject::setAnchor(new_anchor);
 		/*
-		0b00001001;		// ßêîðü íà âåðõíèé ëåâûé óãîë ðîäèòåëÿ
-		0b00001010;		// ßêîðü íà âåðõíþþ ñòîðîíó ðîäèòåëÿ
-		0b00001100;		// ßêîðü íà âåðõíèé ïðàâûé óãîë	ðîäèòåëÿ
-		0b00010001;		// ßêîðü íà ëåâóþ ñòîðîíó ðîäèòåëÿ
-		0b00010010;		// ßêîðü íà öåíòð ðîäèòåëÿ
-		0b00010100;		// ßêîðü íà ïðàâóþ ñòîðîíó ðîäèòåëÿ
-		0b00100001;		// ßêîðü íà íèæíèé ëåâûé óãîë ðîäèòåëÿ
-		0b00100010;		// ßêîðü íà íèæíþþ ñòîðîíó ðîäèòåëÿ
-		0b00100100;		// ßêîðü íà íèæíèé ïðàâûé óãîë ðîäèòåëÿ
+		0b00001001;		// Якорь на верхний левый угол владельца
+		0b00001010;		// Якорь на верхнюю сторону владельца
+		0b00001100;		// Якорь на верхний правый угол владельца
+		0b00010001;		// Якорь на левую сторону владельца
+		0b00010010;		// Якорь на центр владельца
+		0b00010100;		// Якорь на правую сторону владельца
+		0b00100001;		// Якорь на нижний левый угол владельца
+		0b00100010;		// Якорь на нижнюю сторону владельца
+		0b00100100;		// Якорь на нижний правый угол владельца
 		*/
 		sf::Vector2f origin = { 0.f, 0.f };
 		sf::FloatRect text_bounds = text_object.getLocalBounds();
 		switch (new_anchor & 0b111)
-    {
-			case 0b001:
-      {	// Ëåâî
-				origin.x = 0;
-				break;
-			}
-			case 0b010:
-      {	// Ñåðåäèíà
-				origin.x = text_bounds.width / 2;
-				break;
-			}
-			case 0b100:
-      {	// Ïðàâî
-				origin.x = text_bounds.width;
-				break;
-			}
+		{
+		case 0b001:
+		{	// Лево
+			origin.x = 0;
+			break;
+		}
+		case 0b010:
+		{	// Середина
+			origin.x = text_bounds.width / 2;
+			break;
+		}
+		case 0b100:
+		{	// Право
+			origin.x = text_bounds.width;
+			break;
+		}
 		}
 		switch ((new_anchor >> 3) & 0b111)
-    {
-			case 0b001:
-      {	// Âåðõ
-				origin.y = 0;
-				break;
-			}
-			case 0b010:
-      {	// Ñåðåäèíà
-				origin.y = text_bounds.height / 2;
-				break;
-			}
-			case 0b100:
-      {	// Íèç
-				origin.y = text_bounds.height;
-				break;
-			}
+		{
+		case 0b001:
+		{	// Верх
+			origin.y = 0;
+			break;
+		}
+		case 0b010:
+		{	// Середина
+			origin.y = text_bounds.height / 2;
+			break;
+		}
+		case 0b100:
+		{	// Низ
+			origin.y = text_bounds.height;
+			break;
+		}
 		}
 		text_object.setOrigin(origin);
 	}
@@ -213,32 +207,32 @@ namespace edt
 		text_object.setPosition(new_position);
 	}
 
-	std::wstring& tText::getString() const
+	const std::wstring& tText::getString() const
 	{
-		return (std::wstring&)text_object.getString();
+		return text_object.getString();
 	}
 
-	bool tText::getFontState() const
+	const bool tText::getFontState() const
 	{
 		return checkOption(option_mask.is_font_loaded);
 	}
 
-	sf::Text& tText::getTextObject() const
+	const sf::Text& tText::getTextObject() const
 	{
-		return (sf::Text&)text_object;
+		return text_object;
 	}
 
-	sf::Color tText::getFillColor() const
+	const sf::Color& tText::getFillColor() const
 	{
 		return text_object.getFillColor();
 	}
 
-	sf::FloatRect tText::getLocalBounds() const
+	const sf::FloatRect tText::getLocalBounds() const
 	{
 		return text_object.getLocalBounds();
 	}
 
-	bool tText::pointIsInsideMe(sf::Vector2i point) const
+	const bool tText::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = getGlobalBounds();
 		return (

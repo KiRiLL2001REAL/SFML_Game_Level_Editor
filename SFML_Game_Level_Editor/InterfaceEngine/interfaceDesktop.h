@@ -32,9 +32,9 @@ namespace edt {
 		virtual void draw(sf::RenderTarget& target);
 
 		// Getters
-		sf::Font& getFont() const;					// ֿמכףקטעü רנטפע
-		virtual sf::FloatRect getLocalBounds() const;
-		virtual bool pointIsInsideMe(sf::Vector2i point) const;
+		const sf::Font& getFont() const;					// ֿמכףקטעü רנטפע
+		virtual const sf::FloatRect getLocalBounds() const;
+		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }

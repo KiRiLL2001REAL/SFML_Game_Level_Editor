@@ -258,7 +258,7 @@ namespace edt
 		}
 	}
 
-	bool tScrollbar::pointIsInsideMe(sf::Vector2i point) const
+	const bool tScrollbar::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = getGlobalBounds();
 		return (
@@ -310,7 +310,7 @@ namespace edt
 		updateScrollerSize();
 	}
 
-	float tScrollbar::getPixelOffset() const
+	const float tScrollbar::getPixelOffset() const
 	{
 		float length_of_moving_zone, slider_pos, targ_tex_size, targ_size;
 		if (checkOption(option_mask.vectically_orientated))
