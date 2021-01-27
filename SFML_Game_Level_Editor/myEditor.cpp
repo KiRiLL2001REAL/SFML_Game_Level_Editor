@@ -95,10 +95,10 @@ void myDesktop::changeScreen(char new_screen_code) {
 			button->setPosition({ -250, -40 + 320 });
 			_insert(button);
 			
-			edt::tDropDownList* list = new edt::tDropDownList(this, { 5, 150, 250, 75 }, edt::tDropDownList::direction_types.Down);
+			edt::tDropDownList* list = new edt::tDropDownList(this, { 5, 150, 250, 35 }, edt::tDropDownList::direction_types.Down);
 			_insert(list);
 
-			list = new edt::tDropDownList(this, { 256, 150, 250, 75 }, edt::tDropDownList::direction_types.Up);
+			list = new edt::tDropDownList(this, { 5, 250, 250, 35 }, edt::tDropDownList::direction_types.Up);
 			_insert(list);
 
 			//makeObjectsFromJson(this, json_configuration["menu"]);

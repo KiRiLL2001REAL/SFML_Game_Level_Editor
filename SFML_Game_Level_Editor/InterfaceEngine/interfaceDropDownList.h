@@ -12,6 +12,8 @@ namespace edt {
 		virtual void updateTexture();
 
 		//Getters
+		const int& getCode() const;
+		const std::wstring& getString() const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 
@@ -26,8 +28,13 @@ namespace edt {
 		virtual ~tDropDownWindow();
 
 		virtual void handleEvent(tEvent& e);
+		virtual void updateTexture();
+
+		// Setters
+		virtual void setSize(const sf::Vector2f& size);
 
 		// Getters
+		std::list<tDropDownVariant*>* getVariantList();
 		virtual nlohmann::json getParamsInJson() const;
 	};
 
@@ -51,12 +58,14 @@ namespace edt {
 
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
-		void insertVariant(const std::wstring& variant_text, const int& variant_code);
+		virtual void draw(sf::RenderTarget& target);
+		void insertVariant(const std::wstring& variant_text, const int& variant_code, const float& height, const sf::Vector2f& text_offset = { 0.f, 0.f });
 
 		bool deleteVariant(const std::wstring& variant_text);
 		bool deleteVariant(const int& variant_code);
 
 		// Setters
+		void setDropDownWindowSize(const sf::Vector2f& size);
 		void setDirection(const unsigned int &new_direction);
 
 		// Getters

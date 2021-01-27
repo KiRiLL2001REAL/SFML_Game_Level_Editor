@@ -41,6 +41,7 @@ namespace edt {
 		virtual void setPosition(const sf::Vector2f& new_position);
 
 		// Getters
+		std::wstring& getString() const;
 		bool getFontState() const;	// Загружен или нет
 		sf::Text& getTextObject() const;
 		sf::Color getFillColor() const;

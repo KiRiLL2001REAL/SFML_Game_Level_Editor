@@ -9,7 +9,7 @@ namespace edt
 		clear_color({ 0, 0, 0, 255 }),
 		need_rerender(true)
 	{
-		tObject::setPosition({ rect.left, rect.top });
+		setPosition({ rect.left, rect.top });
 		render_texture.create((unsigned int)rect.width, (unsigned int)rect.height);
 
 		setTextureSize({ (unsigned int)rect.width, (unsigned int)rect.height });
