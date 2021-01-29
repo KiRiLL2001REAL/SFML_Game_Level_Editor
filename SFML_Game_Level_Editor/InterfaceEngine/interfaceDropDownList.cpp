@@ -62,16 +62,6 @@ namespace edt
 		render_texture.display();
 	}
 
-	const int& tDropDownVariant::getCode() const
-	{
-		return self_code;
-	}
-
-	const std::wstring& tDropDownVariant::getString() const
-	{
-		return text->getString();
-	}
-
 	nlohmann::json tDropDownVariant::getParamsInJson() const
 	{
 		nlohmann::json js = tButton::getParamsInJson();

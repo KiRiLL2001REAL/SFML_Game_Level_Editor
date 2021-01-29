@@ -12,8 +12,6 @@ namespace edt {
 		virtual void updateTexture();
 
 		//Getters
-		const int& getCode() const;
-		const std::wstring& getString() const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 
