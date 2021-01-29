@@ -225,6 +225,16 @@ namespace edt
 		render_texture.display();
 	}
 
+	const std::wstring& tButton::getString() const
+	{
+		return text->getString();
+	}
+
+	const int& tButton::getCode() const
+	{
+		return self_code;
+	}
+
 	const bool tButton::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = getGlobalBounds();

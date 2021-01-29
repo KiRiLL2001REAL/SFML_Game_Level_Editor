@@ -207,6 +207,11 @@ namespace edt
 		text_object.setPosition(new_position);
 	}
 
+	const std::wstring& tText::getString() const
+	{
+		return text_object.getString();
+	}
+
 	const bool tText::getFontState() const
 	{
 		return checkOption(option_mask.is_font_loaded);

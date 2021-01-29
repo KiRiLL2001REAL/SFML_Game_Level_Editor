@@ -54,6 +54,8 @@ namespace edt {
 		void setOutlineThickness(const unsigned char& new_thickness);
 
 		// Getters
+		const std::wstring & getString() const;
+		const int& getCode() const;
 		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
