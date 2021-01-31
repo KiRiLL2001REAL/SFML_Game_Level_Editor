@@ -106,6 +106,11 @@ namespace edt
 		scrollbar_h(new tScrollbar(*w.scrollbar_h)),
 		last_scrollbar_offset(w.last_scrollbar_offset)
 	{
+		button_close->setOwner(this);
+		heap_shape->setOwner(this);
+		display->setOwner(this);
+		scrollbar_v->setOwner(this);
+		scrollbar_h->setOwner(this);
 	}
 
 	tWindow::~tWindow()

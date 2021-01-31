@@ -87,6 +87,9 @@ namespace edt
 		target_size(s.target_size),
 		target_texture_size(s.target_texture_size)
 	{
+		arrow_first->setOwner(this);
+		arrow_second->setOwner(this);
+		slider->setOwner(this);
 	}
 
 	tScrollbar::~tScrollbar()

@@ -44,6 +44,7 @@ namespace edt
 		text_offset(b.text_offset),
 		text(new tText(*b.text))
 	{
+		text->setOwner(this);
 		custom_skin[0] = b.custom_skin[0];
 		custom_skin[1] = b.custom_skin[1];
 	}
