@@ -79,9 +79,9 @@ namespace edt
 
 	tScrollbar::tScrollbar(const tScrollbar& s) :
 		tRenderRect(s),
-		arrow_first(s.arrow_first),
-		arrow_second(s.arrow_second),
-		slider(s.slider),
+		arrow_first(new tButton(*s.arrow_first)),
+		arrow_second(new tButton(*s.arrow_second)),
+		slider(new tRectShape(*s.slider)),
 		old_position(s.old_position),
 		color_scroller_area(s.color_scroller_area),
 		target_size(s.target_size),

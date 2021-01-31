@@ -99,11 +99,11 @@ namespace edt
 		color_caption_active(w.color_caption_active),
 		color_caption_inactive(w.color_caption_inactive),
 		caption_offset(w.caption_offset),
-		button_close(w.button_close),
-		heap_shape(w.heap_shape),
-		display(w.display),
-		scrollbar_v(w.scrollbar_v),
-		scrollbar_h(w.scrollbar_h),
+		button_close(new tButton(*w.button_close)),
+		heap_shape(new tRectShape(*w.heap_shape)),
+		display(new tDisplay(*w.display)),
+		scrollbar_v(new tScrollbar(*w.scrollbar_v)),
+		scrollbar_h(new tScrollbar(*w.scrollbar_h)),
 		last_scrollbar_offset(w.last_scrollbar_offset)
 	{
 	}

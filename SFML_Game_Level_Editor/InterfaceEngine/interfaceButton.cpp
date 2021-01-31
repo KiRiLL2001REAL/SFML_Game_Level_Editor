@@ -42,7 +42,7 @@ namespace edt
 		self_code(b.self_code),
 		text_origin(b.text_origin),
 		text_offset(b.text_offset),
-		text(b.text)
+		text(new tText(*b.text))
 	{
 		custom_skin[0] = b.custom_skin[0];
 		custom_skin[1] = b.custom_skin[1];
