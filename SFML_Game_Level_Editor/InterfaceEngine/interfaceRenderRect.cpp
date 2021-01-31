@@ -104,6 +104,14 @@ namespace edt
 		render_squad[1].position = { x + new_size.x, y };
 		render_squad[2].position = { x + new_size.x, y + new_size.y };
 		render_squad[3].position = { x, y + new_size.y };
+
+		sf::FloatRect rect = {
+			render_squad[0].texCoords.x,
+			render_squad[0].texCoords.y,
+			new_size.x,
+			new_size.y
+		};
+		setTextureRect(rect);
 	}
 
 	void tRenderRect::setPosition(const sf::Vector2f& new_position)

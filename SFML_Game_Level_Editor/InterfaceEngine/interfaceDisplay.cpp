@@ -124,6 +124,11 @@ namespace edt
 		render_texture.display();			// Обновить "лицевую" текстуру
 	}
 
+	const sf::Vector2f& tDisplay::getCameraOffset() const
+	{
+		return render_squad[0].texCoords;
+	}
+
 	const bool tDisplay::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = tRenderRect::getGlobalBounds();
@@ -162,6 +167,26 @@ namespace edt
 	const sf::FloatRect tDisplay::getLocalBounds() const
 	{
 		return tRenderRect::getLocalBounds();
+	}
+
+	const sf::FloatRect tDisplay::getGlobalBounds() const
+	{
+		if (owner != nullptr) {
+			sf::FloatRect owner_rect = getOwner()->getGlobalBounds();
+			sf::FloatRect local_rect = getLocalBounds();
+
+			sf::Vector2f offset = getCameraOffset();
+			local_rect.left -= offset.x;
+			local_rect.top -= offset.y;
+
+			return {
+				owner_rect.left + local_rect.left,
+				owner_rect.top + local_rect.top,
+				local_rect.width,
+				local_rect.height
+			};
+		}
+		return sf::FloatRect(0.f, 0.f, 0.f, 0.f);
 	}
 
 	nlohmann::json tDisplay::getParamsInJson() const

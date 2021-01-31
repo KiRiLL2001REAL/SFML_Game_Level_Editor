@@ -21,9 +21,11 @@ namespace edt{
 		virtual void setTextureSize(const sf::Vector2u& new_size);
 
 		// Getters
+		const sf::Vector2f& getCameraOffset() const;
 		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual tAbstractBasicClass* getOwner() const;
 		virtual const sf::FloatRect getLocalBounds() const;
+		virtual const sf::FloatRect getGlobalBounds() const;
 		virtual nlohmann::json getParamsInJson() const;
 	};
 }
