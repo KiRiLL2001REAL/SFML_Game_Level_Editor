@@ -124,6 +124,11 @@ namespace edt
 		render_texture.display();			// Обновить "лицевую" текстуру
 	}
 
+	std::list<tAbstractBasicClass*>* tDisplay::getElements() const
+	{
+		return &(std::list<tAbstractBasicClass*>)elem;
+	}
+
 	const bool tDisplay::pointIsInsideMe(sf::Vector2i point) const
 	{
 		sf::FloatRect rect = tRenderRect::getGlobalBounds();

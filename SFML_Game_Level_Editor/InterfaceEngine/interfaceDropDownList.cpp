@@ -30,7 +30,7 @@ namespace edt
 		Просто текст обведённый рамкой =)
 		*/
 		render_texture.clear(clear_color);
-		
+
 		// Рамка вокруг кнопки
 		sf::Vector2f tex_size = (sf::Vector2f)render_texture.getSize();
 		sf::VertexArray arr(sf::PrimitiveType::LinesStrip, 5);
@@ -79,12 +79,10 @@ namespace edt
 	{
 		if (!_direction)
 		{	// Раскрытие вниз
-			//ddwindow = new tDropDownWindow(this, { rect.left, rect.top + rect.height, rect.width, 200 });
 			ddwindow = new tDropDownWindow(this, { 0, rect.height, rect.width, 200 });
 		}
 		else
 		{	// Раскрытие вверх
-			//ddwindow = new tDropDownWindow(this, { rect.left, rect.top - 200, rect.width, 200 });
 			ddwindow = new tDropDownWindow(this, { 0, -200, rect.width, 200 });
 		}
 		ddwindow->setClearColor({ 80, 80, 80, 255 });
@@ -106,7 +104,7 @@ namespace edt
 		ddwindow(d.ddwindow)
 	{
 	}
-	
+
 	tDropDownList::~tDropDownList()
 	{
 		delete ddwindow;
@@ -211,11 +209,11 @@ namespace edt
 		b.setPointCount(3);
 		b.setOutlineThickness(1.5f);
 		b.setOutlineColor({ 0, 0, 0, 255 });
-		b.setFillColor({ 200, 200, 200, 255});
-		
+		b.setFillColor({ 200, 200, 200, 255 });
+
 		static const float pi = 3.1415926535f;
 		float radius = MAX(tex_size.y * 0.5f - 5.f, 5.f);
-		sf::Vector2f triangle_offset = { tex_size.x - tex_size.y * 0.5f - 5, tex_size.y * 0.45f  };
+		sf::Vector2f triangle_offset = { tex_size.x - tex_size.y * 0.5f - 5, tex_size.y * 0.45f };
 		static const float koef = pi / 180.f;
 		sf::Vector3f triangle_point_angle = {	// Положение - вверх
 			30.f * koef,
@@ -287,7 +285,7 @@ namespace edt
 				updateTexture();
 			}
 			message((tRenderRect*)ddwindow, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
-			
+
 			if (ddwindow->checkOption(tDropDownWindow::option_mask.can_be_drawn))
 			{
 				sf::FloatRect bounds = getLocalBounds();
@@ -296,7 +294,7 @@ namespace edt
 				ddwindow->draw(target);
 				ddwindow->setPosition(ddw_position);
 			}
-			
+
 			// Отобразиться
 			target.draw(render_squad, &render_texture.getTexture());
 		}
@@ -304,9 +302,9 @@ namespace edt
 
 	void tDropDownList::insertVariant(const std::wstring& variant_text, const int& variant_code, const float& height, const sf::Vector2f& text_offset)
 	{
-		tDropDownVariant* variant = new tDropDownVariant(this, variant_text, { 0.f, 0.f, ddwindow->getLocalBounds().width - tScrollbar::thickness, height});
+		tDropDownVariant* variant = new tDropDownVariant(this, variant_text, { 0.f, 0.f, ddwindow->getLocalBounds().width - tScrollbar::thickness, height });
 		variant->setCode(variant_code);
-		ddwindow->_insert(variant);
+		ddwindow->getDisplayPointer()->_insert(variant);
 	}
 
 	bool tDropDownList::deleteVariant(const std::wstring& variant_text)
@@ -352,8 +350,6 @@ namespace edt
 		ddwindow->setSize(size);
 		if (direction)
 		{	// Если раскрывается вверх, то меняем положение
-			//sf::Vector2f owner_offset = { getLocalBounds().width, getLocalBounds().height };
-			//ddwindow->setPosition( owner_offset + sf::Vector2f{ 0.f, -size.y });
 			ddwindow->setPosition({ 0.f, -size.y });
 		}
 	}
@@ -362,7 +358,7 @@ namespace edt
 	{
 	}
 
-	unsigned int tDropDownList::getSelectedVariantCode() const
+	const unsigned int& tDropDownList::getSelectedVariantCode() const
 	{
 		return selected_variant_code;
 	}
@@ -387,24 +383,46 @@ namespace edt
 	}
 
 	tDropDownWindow::tDropDownWindow(tAbstractBasicClass* _owner, sf::FloatRect rect) :
-		tDisplay(_owner, rect),
-		scrollbar_v(new tScrollbar((tRenderRect*)this, true, {0, 0, tScrollbar::thickness, rect.height }))
+		tRenderRect(_owner, rect),
+		color_area({ 80, 80, 80, 255 }),
+		color_border({ 150, 150, 150, 255 }),
+		display(new tDisplay((tRenderRect*)this, { 1, 1, rect.width - 2 - tScrollbar::thickness, rect.height - 2 })),
+		scrollbar_v(new tScrollbar((tRenderRect*)this, true, { 0, 0, tScrollbar::thickness, rect.height - 2 })),
+		last_scrollbar_offset(0.f)
 	{
+		display->setClearColor(color_area);
+		display->setSize({ rect.width - 2 - tScrollbar::thickness, rect.height - 2 });
+
+		sf::FloatRect display_bounds = display->getLocalBounds();
 		scrollbar_v->setAnchor(anchors.upper_right_corner);
 		scrollbar_v->setPosition({ -tScrollbar::thickness - 1, 0 });
-		scrollbar_v->setTargetSize({ getLocalBounds().width, getLocalBounds().height });
-		scrollbar_v->setTargetTextureSize(getTextureSize());
+		scrollbar_v->setTargetSize({ display_bounds.width, display_bounds.height });
+		scrollbar_v->setTargetTextureSize(display->getTextureSize());
 	}
 	
 	tDropDownWindow::tDropDownWindow(tAbstractBasicClass* _owner, nlohmann::json& js) :
-		tDisplay(_owner, js),
-		scrollbar_v(new tScrollbar((tRenderRect*)this, js["scrollbar_v"]))
+		tRenderRect(_owner, js),
+		display(new tDisplay((tRenderRect*)this, js["display"])),
+		scrollbar_v(new tScrollbar((tRenderRect*)this, js["scrollbar_v"])),
+		last_scrollbar_offset(0.f)
 	{
+		vec<unsigned char> vuc = {};
+
+		vuc = js["color_area"].get<vec<unsigned char>>();
+		color_area = { vuc[0], vuc[1], vuc[2], vuc[3] };
+		vuc.clear();
+
+		vuc = js["color_border"].get<vec<unsigned char>>();
+		color_border = { vuc[0], vuc[1], vuc[2], vuc[3] };
 	}
 	
 	tDropDownWindow::tDropDownWindow(const tDropDownWindow& d) :
-		tDisplay(d),
-		scrollbar_v(d.scrollbar_v)
+		tRenderRect(d),
+		color_area(d.color_area),
+		color_border(d.color_border),
+		display(new tDisplay(*d.display)),
+		scrollbar_v(new tScrollbar(*d.scrollbar_v)),
+		last_scrollbar_offset(d.last_scrollbar_offset)
 	{
 	}
 	
@@ -417,64 +435,60 @@ namespace edt
 	{
 		if (checkOption(option_mask.can_be_drawn))
 		{
-			tGroup::handleEvent(e);
+			display->handleEvent(e);
 			scrollbar_v->handleEvent(e);
+
+			float scrollbar_offset = scrollbar_v->getPixelOffset();
+			if (scrollbar_offset != last_scrollbar_offset)
+			{
+				setCameraOffset({ 0.f, scrollbar_offset });
+				last_scrollbar_offset = scrollbar_offset;
+			}
+
 			switch (e.type)
 			{
 			case tEvent::types.Broadcast:
 			{
-				if (e.address == (tRenderRect*)this)
-				{
+				if (e.address == this)
+				{	// Для конкретно этого окна
 					switch (e.code)
 					{
 					case tEvent::codes.Activate:
-					{	// Установить фокус на объекта
-						((tObject*)e.from)->setOneOption(option_mask.is_active, true);
-						tAbstractBasicClass::clearEvent(e);
+					{	// Установить фокус на объект
+						((tObject*)e.from)->setOneOption(tObject::option_mask.is_active, true);
+						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.Activate, this);
+						clearEvent(e);
 						break;
 					}
 					case tEvent::codes.Deactivate:
 					{	// Снять фокус с объекта
-						((tObject*)e.from)->setOneOption(option_mask.is_active, false);
-						tAbstractBasicClass::clearEvent(e);
+						((tObject*)e.from)->setOneOption(tObject::option_mask.is_active, false);
+						clearEvent(e);
 						break;
 					}
 					case tEvent::codes.Show:
 					{	// Показать объект (если он скрыт)
-						((tObject*)e.from)->setOneOption(option_mask.can_be_drawn, true);
-						tAbstractBasicClass::clearEvent(e);
+						((tObject*)e.from)->setOneOption(tObject::option_mask.can_be_drawn, true);
+						clearEvent(e);
 						break;
 					}
 					case tEvent::codes.Hide:
 					{	// Спрятать объект (если он не скрыт)
-						((tObject*)e.from)->setOneOption(option_mask.can_be_drawn, false);
-						tAbstractBasicClass::clearEvent(e);
+						((tObject*)e.from)->setOneOption(tObject::option_mask.can_be_drawn, false);
+						clearEvent(e);
 						break;
 					}
-					case tEvent::codes.Adopt:
-					{	// Стать владельцем объекта
-						e.from->setOwner((tRenderRect*)this);
-						tAbstractBasicClass::clearEvent(e);
-						break;
-					}
-					case tEvent::codes.UpdateTexture:
-					{	// Обновить текстуру
-						tAbstractBasicClass::message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, (tRenderRect*)this);
+					case tEvent::codes.UpdateTexture: {	// Обновить текстуру
+						message(getOwner(), tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
 						need_rerender = true;
-						tAbstractBasicClass::clearEvent(e);
-						break;
-					}
-					case tEvent::codes.StopAndDoNotMove:
-					{	// Сбросить флаг перетаскивания мышью
-						forEach(tEvent::codes.StopAndDoNotMove);
-						// Не обнуляем событие
+						clearEvent(e);
 						break;
 					}
 					default:
 					{	// Если не обработалось, то "проталкиваем" на уровень ниже
 						e.address = getOwner();
-						tAbstractBasicClass::message(e);
-						tAbstractBasicClass::clearEvent(e);
+						message(e);
+						clearEvent(e);
 						break;
 					}
 					}
@@ -483,13 +497,14 @@ namespace edt
 			}
 			case tEvent::types.Button:
 			{
-				if (e.address == (tRenderRect*)this)
-				{
-					tAbstractBasicClass::message(getOwner(), tEvent::types.Button, e.code, e.from);
+				if (e.address == this)
+				{	// Для конкретно этого окна
+					message(getOwner(), tEvent::types.Button, e.code, e.from);
 					setOneOption(option_mask.can_be_drawn, false);
-					tAbstractBasicClass::clearEvent(e);
+					clearEvent(e);
 					break;
 				}
+				break;
 			}
 			case tEvent::types.Mouse:
 			{
@@ -503,16 +518,16 @@ namespace edt
 	void tDropDownWindow::updateTexture()
 	{
 		render_texture.clear(clear_color);	// Очиститься
-		tGroup::draw(render_texture);		// Нарисовать подэлементы
+
+		display->draw(render_texture);		// Нарисовать display
 		scrollbar_v->draw(render_texture);	// Нарисовать scrollbar
 
 		sf::VertexArray arr(sf::PrimitiveType::LinesStrip, 5);
-		sf::Color color = { 150, 150, 150, 255 };
 		for (int i = 0; i < 5; i++)
 		{
-			arr[i].color = color;
+			arr[i].color = color_border;
 		}
-		sf::FloatRect bounds = getLocalBounds();
+		sf::FloatRect bounds = tRenderRect::getLocalBounds();
 		arr[0].position = { 1.f, 0.f };
 		arr[1].position = { bounds.width, 0};
 		arr[2].position = { bounds.width, bounds.height - 1 };
@@ -523,10 +538,15 @@ namespace edt
 		render_texture.display();			// Обновить "лицевую" текстуру
 	}
 
+	void tDropDownWindow::draw(sf::RenderTarget& target)
+	{
+		tRenderRect::draw(target);
+	}
+
 	void tDropDownWindow::setSize(const sf::Vector2f& size)
 	{
-		tDisplay::setSize(size);
-		tDisplay::setTextureSize({ (unsigned int)size.x, (unsigned int)size.y });
+		tRenderRect::setSize(size);
+		tRenderRect::setTextureSize({ (unsigned int)size.x, (unsigned int)size.y });
 
 		float scrollbar_width = scrollbar_v->getLocalBounds().width;
 		scrollbar_v->setSize({ scrollbar_width, size.y - 2 });
@@ -534,22 +554,35 @@ namespace edt
 		scrollbar_v->setPosition({ -scrollbar_width - 2, 1 });
 		scrollbar_v->setTargetSize({ getLocalBounds().width, getLocalBounds().height });
 		scrollbar_v->setTargetTextureSize(getTextureSize());
-		tAbstractBasicClass::message(scrollbar_v, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, (tRenderRect*)this);
+		message(scrollbar_v, tEvent::types.Broadcast, tEvent::codes.UpdateTexture, this);
+	}
+
+	void tDropDownWindow::setCameraOffset(const sf::Vector2f& new_offset)
+	{
+		display->setCameraOffset(new_offset);
+	}
+
+	tDisplay* tDropDownWindow::getDisplayPointer() const
+	{
+		return display;
 	}
 
 	std::list<tDropDownVariant*>* tDropDownWindow::getVariantList()
 	{
-		return (std::list<tDropDownVariant*>*)&elem;
+		return (std::list<tDropDownVariant*>*)getDisplayPointer()->getElements();
 	}
 
 	nlohmann::json tDropDownWindow::getParamsInJson() const
 	{
-		nlohmann::json js = tDisplay::getParamsInJson();
+		nlohmann::json js = tRenderRect::getParamsInJson();
+
+		js["color_area"] = { color_area.r, color_area.g, color_area.b, color_area.a };
+		js["color_border"] = { color_border.r, color_border.g, color_border.b, color_border.a };
+		js["display"] = display->getParamsInJson();
+		js["scrollbar_v"] = scrollbar_v->getParamsInJson();
 
 		js["what_is_it"] = objects_json_ids.tDropDownWindow;
 		js["what_is_it_string"] = "tDropDownWindow";
-
-		js["scrollbar_v"] = scrollbar_v->getParamsInJson();
 
 		return js;
 	}

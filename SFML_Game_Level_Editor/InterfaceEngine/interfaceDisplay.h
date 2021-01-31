@@ -21,6 +21,7 @@ namespace edt{
 		virtual void setTextureSize(const sf::Vector2u& new_size);
 
 		// Getters
+		std::list<tAbstractBasicClass*>* getElements() const;
 		virtual const bool pointIsInsideMe(sf::Vector2i point) const;
 		virtual tAbstractBasicClass* getOwner() const;
 		virtual const sf::FloatRect getLocalBounds() const;

@@ -15,9 +15,13 @@ namespace edt {
 		virtual nlohmann::json getParamsInJson() const;
 	};
 
-	class tDropDownWindow : public tDisplay {
+	class tDropDownWindow : public tRenderRect {
 	protected:
-		tScrollbar* scrollbar_v;	// Вертикальный скроллбар
+		sf::Color color_area;			// Цвет заливки списка
+		sf::Color color_border;			// Цвет рамки вокруг списка
+		tDisplay* display;				// Область отрисовки вариантов
+		tScrollbar* scrollbar_v;		// Вертикальный ползунок
+		float last_scrollbar_offset;	// Смещение ползунка
 
 	public:
 		tDropDownWindow(tAbstractBasicClass* _owner, sf::FloatRect rect = { 0, 0, 100, 100 });
@@ -27,11 +31,14 @@ namespace edt {
 
 		virtual void handleEvent(tEvent& e);
 		virtual void updateTexture();
+		virtual void draw(sf::RenderTarget& target);
 
 		// Setters
 		virtual void setSize(const sf::Vector2f& size);
+		void setCameraOffset(const sf::Vector2f& new_offset);
 
 		// Getters
+		tDisplay* getDisplayPointer() const;
 		std::list<tDropDownVariant*>* getVariantList();
 		virtual nlohmann::json getParamsInJson() const;
 	};
@@ -67,7 +74,7 @@ namespace edt {
 		void setDirection(const unsigned int &new_direction);
 
 		// Getters
-		unsigned int getSelectedVariantCode() const;
+		const unsigned int& getSelectedVariantCode() const;
 		virtual nlohmann::json getParamsInJson() const;
 
 	protected:

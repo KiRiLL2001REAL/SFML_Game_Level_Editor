@@ -81,6 +81,24 @@ namespace edt
 				_insert((tRenderRect*)el);
 				break;
 			}
+			case objects_json_ids.tDropDownVariant:
+			{
+				tDropDownVariant* el = new tDropDownVariant(_owner, *it);
+				_insert(el);
+				break;
+			}
+			case objects_json_ids.tDropDownList:
+			{
+				tDropDownList* el = new tDropDownList(_owner, *it);
+				_insert(el);
+				break;
+			}
+			case objects_json_ids.tDropDownWindow:
+			{
+				tDropDownWindow* el = new tDropDownWindow(_owner, *it);
+				_insert(el);
+				break;
+			}
 			}
 		}
 	}
